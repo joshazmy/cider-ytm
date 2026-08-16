@@ -20,7 +20,6 @@
 		UserGroup02Icon
 	} from '@hugeicons/core-free-icons';
 	import LastFmIcon from './LastFmIcon.svelte';
-	import DiscordIcon from './DiscordIcon.svelte';
 	import AccountMenu from './AccountMenu.svelte';
 	import * as api from '$lib/api';
 	import { openMiniPlayer, toast, ui } from '$lib/player.svelte';

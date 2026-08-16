@@ -134,6 +134,14 @@
 		e.stopPropagation();
 		goto(`/album/${encodeURIComponent(albumId)}`);
 	}
+
+	// YouTube letter tiles (and 404s from a rewritten size) must not sit in the bar as a lone "D".
+	let artFailed = $state(false);
+	const letterTile = $derived(/\/\/yt3\./.test(playback.now?.thumbnail ?? ''));
+	$effect(() => {
+		playback.now?.videoId;
+		artFailed = false;
+	});
 </script>
 
 <!-- The chevron button below is the keyboard equivalent of clicking the bar, so the bar itself
@@ -145,13 +153,14 @@
 	class="desk-glass flex h-14 items-center gap-2 rounded-[1.1rem] px-1.5 pr-2"
 >
 	{#key playback.now?.videoId}
-		{#if playback.now?.thumbnail}
+		{#if playback.now?.thumbnail && !artFailed && !letterTile}
 			<img
 				src={thumb(playback.now.thumbnail, 80)}
 				alt=""
 				style="max-width:none"
 				class="h-10 w-10 shrink-0 rounded-md object-cover ring-1 ring-white/10"
 				in:fade={{ duration: 250 }}
+				onerror={() => (artFailed = true)}
 			/>
 		{:else}
 			<div
