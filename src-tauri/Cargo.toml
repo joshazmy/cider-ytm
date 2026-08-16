@@ -3,8 +3,12 @@ name = "limusic-app"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Limusic — desktop YouTube Music client"
+description = "Yapel — desktop YouTube Music player"
 rust-version = "1.80"
+
+[[bin]]
+name = "Yapel"
+path = "src/main.rs"
 
 [lib]
 name = "app_lib"
