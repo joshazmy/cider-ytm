@@ -198,6 +198,35 @@
 		await api.setSetting('fade_secs', settings.fade_secs);
 	}
 
+	const eqPreset = $derived(settings.eq_preset ?? 'flat');
+	const notifyOn = $derived(settings.notifications !== 'false');
+	let sleepMins = $state(0);
+	let sleepHandle: ReturnType<typeof setTimeout> | null = null;
+
+	async function setEq(preset: string) {
+		settings.eq_preset = preset;
+		await api.setSetting('eq_preset', preset);
+	}
+
+	async function setNotify(on: boolean) {
+		settings.notifications = on ? 'true' : 'false';
+		await api.setSetting('notifications', settings.notifications);
+	}
+
+	async function setSleep(mins: number) {
+		sleepMins = mins;
+		if (sleepHandle) clearTimeout(sleepHandle);
+		sleepHandle = null;
+		await api.setSetting('sleep_mins', String(mins));
+		if (mins > 0) {
+			sleepHandle = setTimeout(() => {
+				api.togglePause();
+				toast.success('Sleep timer — paused');
+			}, mins * 60_000);
+			toast.success(`Sleep in ${mins} min`);
+		}
+	}
+
 	async function setHideVideos(on: boolean) {
 		settings.hide_videos = on ? 'true' : 'false';
 		await api.setSetting('hide_videos', settings.hide_videos);
@@ -601,6 +630,42 @@
 							>
 								DimiSco (spatial approx)
 							</Button>
+						</div>
+					</div>
+					<div class="border-b py-3">
+						<div class="font-medium">EQ</div>
+						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">
+							Three cheap presets in the player filter chain. Not a studio 10-band.
+						</p>
+						<div class="flex gap-2">
+							{#each ['flat', 'bass', 'vocal'] as p (p)}
+								<Button
+									variant={eqPreset === p ? 'default' : 'outline'}
+									size="sm"
+									class="capitalize"
+									onclick={() => setEq(p)}>{p}</Button
+								>
+							{/each}
+						</div>
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Track notifications</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">System notify on each new track.</p>
+						</div>
+						<Switch checked={notifyOn} onCheckedChange={setNotify} />
+					</div>
+					<div class="border-b py-3">
+						<div class="font-medium">Sleep timer</div>
+						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">Pause after this many minutes.</p>
+						<div class="flex gap-2">
+							{#each [0, 15, 30, 45, 60] as m (m)}
+								<Button
+									variant={sleepMins === m ? 'default' : 'outline'}
+									size="sm"
+									onclick={() => setSleep(m)}>{m === 0 ? 'Off' : `${m}m`}</Button
+								>
+							{/each}
 						</div>
 					</div>
 					<div class="flex items-start justify-between gap-4 border-b py-3">

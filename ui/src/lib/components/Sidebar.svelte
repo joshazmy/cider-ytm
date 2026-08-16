@@ -36,10 +36,15 @@
 
 	const nav = [
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
+		{ href: '/library?tab=albums', label: 'Albums', icon: LibraryIcon },
+		{ href: '/library?tab=artists', label: 'Artists', icon: LibraryIcon },
 		{ href: '/', label: 'Explore', icon: Home01Icon }
 	];
-	const isActive = (href: string) =>
-		href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
+	const isActive = (href: string) => {
+		if (href === '/') return page.url.pathname === '/';
+		if (href.includes('tab=')) return page.url.href.includes(href.split('?')[1] ?? '');
+		return page.url.pathname.startsWith('/library') && !page.url.searchParams.get('tab');
+	};
 
 	// Pinned first (in pin order), then everything else by last played. Derived here rather than in
 	// the shared `library` store so the Library page keeps YouTube's own ordering. Playlists saved

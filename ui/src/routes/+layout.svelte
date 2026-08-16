@@ -29,7 +29,10 @@
 	import MiniPlayer from '$lib/components/MiniPlayer.svelte';
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import NowPlayingRail from '$lib/components/NowPlayingRail.svelte';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import { thumb } from '$lib/thumb';
+
+	let paletteOpen = $state(false);
 	import { Button } from '$lib/components/ui/button';
 	import {
 		auth,
@@ -78,7 +81,7 @@
 		}
 		if (e.shiftKey && e.code === 'Space') {
 			e.preventDefault();
-			ui.settingsOpen = true;
+			paletteOpen = true;
 			return;
 		}
 		if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
@@ -95,6 +98,24 @@
 		} else if (e.code === 'KeyH') {
 			e.preventDefault();
 			goto('/library');
+		} else if (e.code === 'KeyL') {
+			e.preventDefault();
+			goto('/');
+		} else if (e.code === 'KeyN') {
+			e.preventDefault();
+			goto('/library');
+		} else if (e.code === 'Digit1') {
+			e.preventDefault();
+			goto('/library');
+		} else if (e.code === 'Digit2') {
+			e.preventDefault();
+			goto('/library?tab=all');
+		} else if (e.code === 'Digit3') {
+			e.preventDefault();
+			goto('/library?tab=albums');
+		} else if (e.code === 'Digit4') {
+			e.preventDefault();
+			goto('/library?tab=artists');
 		}
 	}
 
@@ -171,6 +192,7 @@
 		</div>
 	</div>
 
+	<CommandPalette bind:open={paletteOpen} />
 	<AddToPlaylist />
 	<SettingsDialog />
 	<ChannelPicker />

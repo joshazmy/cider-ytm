@@ -1568,6 +1568,11 @@ impl AppState {
             d.set_track(item);
         }
         self.lastfm.set_track(item);
+        if self.db.get_setting("notifications").as_deref() != Some("false") {
+            let _ = std::process::Command::new("notify-send")
+                .args(["-a", "Yapel", "--", &item.title, &item.artists])
+                .spawn();
+        }
         // New track ⇒ let the next position tick through immediately instead of waiting out the
         // ~1s throttle, so a restored seek position (and the play-state self-heal) lands at once.
         self.last_media_push.store(0, Ordering::Relaxed);

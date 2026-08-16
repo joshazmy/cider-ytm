@@ -180,7 +180,7 @@ pub async fn get_queue(state: St<'_>) -> Result<serde_json::Value, String> {
 /// `visitor_data`) and internal blobs (`queue_json`, `queue_position`) never cross into the webview
 /// — they'd otherwise ship the login credential to the renderer on every open — and the webview
 /// can't overwrite them either.
-const UI_SETTINGS: [&str; 18] = [
+const UI_SETTINGS: [&str; 21] = [
     "volume",
     "proxy",
     "quality",
@@ -199,6 +199,9 @@ const UI_SETTINGS: [&str; 18] = [
     "audio_profile",
     "fade_secs",
     "warn_before_queue_override",
+    "eq_preset",
+    "notifications",
+    "sleep_mins",
 ];
 
 #[tauri::command]
@@ -242,6 +245,12 @@ pub async fn set_setting(
         let profile = player::AudioProfile::parse(&value);
         state.player.set_profile(profile).map_err(|e| e.to_string())?;
         crate::state::write_desk_profile(profile);
+    }
+    if key == "eq_preset" {
+        state
+            .player
+            .set_eq(player::EqPreset::parse(&value))
+            .map_err(|e| e.to_string())?;
     }
     // Registers/removes the login autostart entry on toggle; the OS persists it from there.
     // ponytail: no startup re-sync against the OS state — add reconciliation only if drift is

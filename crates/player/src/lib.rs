@@ -72,6 +72,42 @@ pub struct Player {
     volume_percent: std::sync::Mutex<i64>,
     fade_scale: std::sync::Mutex<f64>,
     speed: std::sync::Mutex<f64>,
+    eq: std::sync::Mutex<EqPreset>,
+}
+
+/// Cheap named EQ. Not a 10-band studio desk — three presets so we do not store ten extra
+/// sliders in the hot af path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EqPreset {
+    Flat,
+    Bass,
+    Vocal,
+}
+
+impl EqPreset {
+    pub fn parse(s: &str) -> Self {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "bass" => Self::Bass,
+            "vocal" => Self::Vocal,
+            _ => Self::Flat,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Bass => "bass",
+            Self::Vocal => "vocal",
+        }
+    }
+
+    fn lavfi(self) -> Option<&'static str> {
+        match self {
+            Self::Flat => None,
+            Self::Bass => Some("lavfi=[equalizer=f=80:t=q:w=0.8:g=4,equalizer=f=200:t=q:w=0.8:g=2]"),
+            Self::Vocal => Some("lavfi=[equalizer=f=3000:t=q:w=1:g=3,equalizer=f=250:t=q:w=1:g=-2]"),
+        }
+    }
 }
 
 /// Mutually exclusive desk profiles. Dry is speakers (no spatial). Dimisco is a local
@@ -131,6 +167,9 @@ impl Player {
         mpv.set_property("cache", "yes")?;
         mpv.set_property("cache-on-disk", "yes")?;
         mpv.set_property("demuxer-cache-dir", cache_dir)?;
+        // Cap RAM: one 256 kbps minute is ~2 MB. 48 MiB is a few minutes ahead, not a second Cider.
+        mpv.set_property("demuxer-max-bytes", "48MiB")?;
+        mpv.set_property("demuxer-max-back-bytes", "12MiB")?;
         let mpv = Arc::new(mpv);
 
         let (tx, rx) = unbounded_channel();
@@ -153,6 +192,7 @@ impl Player {
             volume_percent: std::sync::Mutex::new(100),
             fade_scale: std::sync::Mutex::new(1.0),
             speed: std::sync::Mutex::new(1.15),
+            eq: std::sync::Mutex::new(EqPreset::Flat),
         })
     }
 
@@ -290,6 +330,11 @@ impl Player {
         self.af.lock().unwrap().2
     }
 
+    pub fn set_eq(&self, preset: EqPreset) -> Result<(), Error> {
+        *self.eq.lock().unwrap() = preset;
+        self.apply_af()
+    }
+
     /// Tempo, 0.25–2.0. Pitch preserve is **off**: speed resamples (pitch rises with tempo).
     pub fn set_speed(&self, speed: f64) -> Result<(), Error> {
         let speed = speed.clamp(0.25, 2.0);
@@ -321,17 +366,20 @@ impl Player {
 
     fn apply_af(&self) -> Result<(), Error> {
         let (gain_db, semitones, profile) = *self.af.lock().unwrap();
-        self.mpv.set_property("af", af_chain(gain_db, semitones, profile).as_str())?;
+        let eq = *self.eq.lock().unwrap();
+        self.mpv.set_property("af", af_chain(gain_db, semitones, profile, eq).as_str())?;
         Ok(())
     }
 }
 
-/// The whole `af` chain: optional spatial profile, then loudness gain, then pitch.
-/// Empty when nothing is in play, so the dry path stays filterless aside from gain/pitch.
-fn af_chain(gain_db: Option<f64>, semitones: i32, profile: AudioProfile) -> String {
+/// Spatial profile, optional EQ, loudness, then pitch. Empty when nothing is in play.
+fn af_chain(gain_db: Option<f64>, semitones: i32, profile: AudioProfile, eq: EqPreset) -> String {
     let mut chain = Vec::new();
     if let Some(spatial) = profile.lavfi() {
         chain.push(spatial.to_string());
+    }
+    if let Some(eqf) = eq.lavfi() {
+        chain.push(eqf.to_string());
     }
     if let Some(g) = gain_db {
         chain.push(format!("lavfi=[volume={g}dB]"));
@@ -463,24 +511,30 @@ fn perceptual_to_mpv(percent: i64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{af_chain, perceptual_to_mpv, quoted, AudioProfile};
+    use super::{af_chain, perceptual_to_mpv, quoted, AudioProfile, EqPreset};
 
     #[test]
     fn gain_and_pitch_share_one_chain() {
         // The bug this exists for: either setter clobbering the other's filter.
-        assert_eq!(af_chain(None, 0, AudioProfile::Dry), "");
-        assert_eq!(af_chain(Some(-3.5), 0, AudioProfile::Dry), "lavfi=[volume=-3.5dB]");
-        assert_eq!(af_chain(None, 12, AudioProfile::Dry), "rubberband=pitch-scale=2");
+        assert_eq!(af_chain(None, 0, AudioProfile::Dry, EqPreset::Flat), "");
         assert_eq!(
-            af_chain(Some(-6.0), -12, AudioProfile::Dry),
+            af_chain(Some(-3.5), 0, AudioProfile::Dry, EqPreset::Flat),
+            "lavfi=[volume=-3.5dB]"
+        );
+        assert_eq!(
+            af_chain(None, 12, AudioProfile::Dry, EqPreset::Flat),
+            "rubberband=pitch-scale=2"
+        );
+        assert_eq!(
+            af_chain(Some(-6.0), -12, AudioProfile::Dry, EqPreset::Flat),
             "lavfi=[volume=-6dB],rubberband=pitch-scale=0.5"
         );
-        // One semitone up is the twelfth root of two.
-        assert!(af_chain(None, 1, AudioProfile::Dry).ends_with("1.0594630943592953"));
-        let dimi = af_chain(None, 0, AudioProfile::Dimisco);
+        assert!(af_chain(None, 1, AudioProfile::Dry, EqPreset::Flat).ends_with("1.0594630943592953"));
+        let dimi = af_chain(None, 0, AudioProfile::Dimisco, EqPreset::Flat);
         assert!(dimi.contains("crossfeed"), "dimisco missing crossfeed: {dimi}");
         assert!(dimi.contains("alimiter"), "dimisco missing limiter: {dimi}");
-        assert!(!af_chain(None, 0, AudioProfile::Dry).contains("crossfeed"));
+        assert!(!af_chain(None, 0, AudioProfile::Dry, EqPreset::Flat).contains("crossfeed"));
+        assert!(af_chain(None, 0, AudioProfile::Dry, EqPreset::Bass).contains("equalizer"));
     }
 
     /// Everything above is string-building; this drives a real libmpv and reads `af` back out of
