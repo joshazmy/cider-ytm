@@ -167,6 +167,14 @@
 					text={playback.now?.title ?? 'Nothing playing'}
 					class="text-[13px] font-medium leading-tight"
 				/>
+				{#if playback.now?.bitrate}
+					<span
+						class="shrink-0 rounded bg-white/10 px-1 py-px text-[9px] font-semibold tracking-wide text-muted-foreground"
+						title="Stream bitrate (kbps)"
+					>
+						{playback.now.bitrate}
+					</span>
+				{/if}
 				{#if autoplayTrack}
 					<span
 						class="shrink-0 text-muted-foreground"

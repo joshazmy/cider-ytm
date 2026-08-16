@@ -66,6 +66,8 @@ pub struct AppState {
     last_pos_persist: AtomicU64,
     /// Wall-clock secs of the last position push to the OS media controls (throttled ~1s).
     last_media_push: AtomicU64,
+    /// Last resolved YouTube itag — drives the small bitrate badge. 0 = unknown.
+    last_itag: AtomicU64,
 }
 
 /// Repeat mode for the queue. Serialized lowercase for the UI + `queue_json`.
@@ -319,6 +321,7 @@ impl AppState {
             latest_position: AtomicU64::new(0),
             last_pos_persist: AtomicU64::new(0),
             last_media_push: AtomicU64::new(0),
+            last_itag: AtomicU64::new(0),
         }
     }
 
@@ -1387,6 +1390,7 @@ impl AppState {
                 }
             }
         }
+        self.last_itag.store(data.itag.max(0) as u64, Ordering::Relaxed);
         self.emit_now_playing(&item, &data.stream_client);
         // We just told mpv to play, but its `pause` flag was already `false`, so no property event
         // will announce it (see `Player::is_playing`). Say so ourselves — otherwise MPRIS and
@@ -1517,7 +1521,7 @@ impl AppState {
     /// Everything the `now-playing` event carries. Shared with [`Self::playback_snapshot`] so a
     /// window that asks for the current track can't be told a different shape than one that
     /// listened for it.
-    fn now_playing_json(item: &SongItem, stream_client: &str) -> serde_json::Value {
+    fn now_playing_json(&self, item: &SongItem, stream_client: &str) -> serde_json::Value {
         serde_json::json!({
             "videoId": item.video_id,
             "title": item.title,
@@ -1529,6 +1533,7 @@ impl AppState {
             "duration": item.duration,
             "streamClient": stream_client,
             "rating": item.rating,
+            "bitrate": bitrate_label(self.last_itag.load(Ordering::Relaxed) as i64),
         })
     }
 
@@ -1541,7 +1546,7 @@ impl AppState {
             (q.duration, q.items.get(q.current).cloned())
         };
         serde_json::json!({
-            "now": item.as_ref().map(|i| Self::now_playing_json(i, "current")),
+            "now": item.as_ref().map(|i| self.now_playing_json(i, "current")),
             "paused": !self.is_playing.load(Ordering::Relaxed),
             "position": self.current_position(),
             "duration": duration,
@@ -1550,7 +1555,7 @@ impl AppState {
     }
 
     fn emit_now_playing(&self, item: &SongItem, stream_client: &str) {
-        let _ = self.app.emit("now-playing", Self::now_playing_json(item, stream_client));
+        let _ = self.app.emit("now-playing", self.now_playing_json(item, stream_client));
         let _ = self.app.emit("playback-state", "playing");
         // Push the same metadata to the OS media widget (context/16) and Discord.
         if let Some(m) = &self.media {
@@ -2922,6 +2927,18 @@ fn backfill_metadata(item: &mut SongItem, length_seconds: Option<&str>, author: 
 /// The level to come up at: what the user left the slider on last run. Written by the UI on
 /// commit rather than by `set_volume`, which a drag calls every frame (and every settings write
 /// is an fsync). mpv would start at 100 otherwise.
+/// Honest stereo labels for the itags YouTube Music actually serves. Unknown itags stay hidden.
+fn bitrate_label(itag: i64) -> Option<&'static str> {
+    match itag {
+        141 => Some("256"),
+        140 => Some("128"),
+        251 => Some("160"),
+        250 => Some("70"),
+        249 => Some("50"),
+        _ => None,
+    }
+}
+
 pub fn saved_volume(db: &Db) -> i64 {
     let v = db.get_setting("volume").and_then(|s| s.parse().ok());
     v.filter(|v| (0..=100).contains(v)).unwrap_or(100)

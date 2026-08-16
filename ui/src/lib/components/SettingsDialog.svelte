@@ -11,7 +11,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
-	import { ui, toast } from '$lib/player.svelte';
+	import { desk, ui, toast } from '$lib/player.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import {
 		THEMES,
@@ -150,6 +150,7 @@
 	const boiduOn = $derived(settings.lyrics_boidu === 'true');
 	const audioProfile = $derived(settings.audio_profile === 'dimisco' ? 'dimisco' : 'dry');
 	const fadeOn = $derived(settings.fade_secs !== '0');
+	const warnQueueOn = $derived(settings.warn_before_queue_override !== 'false');
 	const preventDuplicatesOn = $derived(settings.prevent_duplicates === 'true');
 	const updateBannerOn = $derived(settings.update_banner !== 'false');
 	const discordOn = $derived(settings.discord_rpc === 'true');
@@ -196,6 +197,12 @@
 	async function setFade(on: boolean) {
 		settings.fade_secs = on ? '5' : '0';
 		await api.setSetting('fade_secs', settings.fade_secs);
+	}
+
+	async function setWarnQueue(on: boolean) {
+		settings.warn_before_queue_override = on ? 'true' : 'false';
+		await api.setSetting('warn_before_queue_override', settings.warn_before_queue_override);
+		desk.warnQueue = on;
 	}
 
 	const eqPreset = $derived(settings.eq_preset ?? 'flat');
@@ -654,6 +661,15 @@
 							<p class="mt-0.5 text-sm text-muted-foreground">System notify on each new track.</p>
 						</div>
 						<Switch checked={notifyOn} onCheckedChange={setNotify} />
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Warn before replacing queue</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								Ask if eight or more tracks are still waiting.
+							</p>
+						</div>
+						<Switch checked={warnQueueOn} onCheckedChange={setWarnQueue} />
 					</div>
 					<div class="border-b py-3">
 						<div class="font-medium">Sleep timer</div>

@@ -60,6 +60,8 @@ export interface NowPlaying {
 	streamClient: string;
 	/** The user's rating of the track (null if unknown). */
 	rating?: Rating | null;
+	/** kbps label when we know the itag (e.g. "256"). */
+	bitrate?: string | null;
 }
 
 export type RepeatMode = 'off' | 'all' | 'one';

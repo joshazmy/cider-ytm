@@ -49,7 +49,10 @@ function remainingQueue(): number {
 	return Math.max(0, items - idx);
 }
 
+export const desk = $state({ warnQueue: true });
+
 function confirmReplaceQueue(): boolean {
+	if (!desk.warnQueue) return true;
 	if (remainingQueue() < 8) return true;
 	return window.confirm('Replace the current queue? Cancel keeps what’s already queued.');
 }
@@ -731,6 +734,7 @@ export function initApp(mini = false): () => void {
 		.catch(() => {});
 	api.getSettings()
 		.then((s) => {
+			desk.warnQueue = s.warn_before_queue_override !== 'false';
 			const speed = Number.parseFloat(s.playback_speed ?? '1.15');
 			const semitones = Number.parseInt(s.playback_semitones ?? '0', 10);
 			playback.speed = Number.isFinite(speed) ? speed : 1.15;
