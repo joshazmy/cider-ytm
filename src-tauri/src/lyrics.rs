@@ -165,7 +165,7 @@ async fn fetch(state: &AppState, mut req: LyricsRequest) -> (Option<Lyrics>, boo
     //    timings, and those are what the karaoke sweep renders. Going first also means it is the
     //    one provider that sees every track played rather than only the ones LRCLIB misses, so it
     //    is behind a setting. Off falls straight through to the chain as it was before.
-    if state.db.get_setting("lyrics_boidu").as_deref() != Some("false") {
+    if state.db.get_setting("lyrics_boidu").as_deref() == Some("true") {
         if let Ok(Some(l)) = boidu_get(req).await {
             return (Some(l), req.duration.is_some());
         }

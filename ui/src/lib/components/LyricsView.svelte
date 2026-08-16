@@ -169,10 +169,10 @@
 					class="block w-full origin-left cursor-pointer text-left font-heading font-bold leading-snug transition-[color,transform] duration-300 ease-out hover:text-foreground
 						{expanded ? 'py-3 text-3xl' : 'py-2 text-xl'}
 						{isActive
-						? 'scale-[1.04] text-foreground'
+						? 'scale-[1.045] text-foreground [text-shadow:0_0_22px_color-mix(in_oklab,var(--foreground)_34%,transparent),0_0_40px_color-mix(in_oklab,var(--primary)_40%,transparent)]'
 						: isPast
-							? 'text-muted-foreground/40'
-							: 'text-muted-foreground/70'}"
+							? 'text-muted-foreground/28'
+							: 'text-muted-foreground/42'}"
 				>
 					{#if line.words && line.words.length > 0}
 						<!-- Word-by-Word Karaoke Sweep Animation (Better-Lyrics style, highly optimized) -->
@@ -197,7 +197,7 @@
 										{cleanText}
 									</span>
 								{:else}
-									<span class="inline-block {isWordEnd ? 'mr-[0.26em]' : ''} {isPast ? 'text-muted-foreground/40' : 'text-muted-foreground/70'}">
+									<span class="inline-block {isWordEnd ? 'mr-[0.26em]' : ''} {isPast ? 'text-muted-foreground/28' : 'text-muted-foreground/42'}">
 										{cleanText}
 									</span>
 								{/if}
@@ -209,7 +209,11 @@
 
 					<!-- Translation line rendering -->
 					{#if line.translation}
-						<p class="mt-1 text-sm font-normal italic tracking-wide opacity-80 transition-opacity">
+						<p
+							class="mt-1 text-sm font-normal italic tracking-wide transition-opacity {isActive
+								? 'text-foreground/70'
+								: 'text-muted-foreground/50'}"
+						>
 							{line.translation}
 						</p>
 					{/if}

@@ -221,6 +221,9 @@ pub fn run() {
             // Before anything can play: the first track of a restored queue has to come out at the
             // level the user left, not at 100.
             let _ = player.set_volume(state::saved_volume(&db));
+            let _ = player.set_speed(state::saved_speed(&db));
+            let _ = player.set_pitch(state::saved_semitones(&db));
+            let _ = player.set_profile(state::saved_profile(&db));
             let events = player.take_events().expect("player events");
 
             // Phase 2 extraction stack: cipher + PoToken hidden webviews behind the orchestrator.
@@ -441,7 +444,7 @@ pub fn run() {
                             .app_handle()
                             .try_state::<Arc<AppState>>()
                             .map(|s| close_hides(s.db.get_setting("close_to_tray").as_deref()))
-                            .unwrap_or(true);
+                            .unwrap_or(false);
                         if hide {
                             api.prevent_close();
                             let _ = window.hide();
@@ -476,9 +479,9 @@ pub fn run() {
         });
 }
 
-/// ✕ hides to tray unless the user explicitly set close_to_tray=false (unset → default on).
+/// ✕ hides to tray only when the user explicitly enabled it (Cider desk: closeToTray false).
 fn close_hides(setting: Option<&str>) -> bool {
-    setting != Some("false")
+    setting == Some("true")
 }
 
 /// Decide whether a position tick is worth forwarding to the UI. Passes ~4 Hz of steady
@@ -573,9 +576,9 @@ mod tests {
 
     #[test]
     fn close_hides_unless_explicitly_disabled() {
-        assert!(close_hides(None)); // fresh install → tray on
+        assert!(!close_hides(None)); // fresh install → quit
         assert!(close_hides(Some("true")));
-        assert!(close_hides(Some("garbage")));
+        assert!(!close_hides(Some("garbage")));
         assert!(!close_hides(Some("false")));
     }
 

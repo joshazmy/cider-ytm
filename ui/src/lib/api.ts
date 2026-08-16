@@ -280,7 +280,7 @@ export const setRepeat = (mode: RepeatMode) => invoke<void>('set_repeat', { mode
 export const togglePause = () => invoke<void>('toggle_pause');
 export const seek = (position: number) => invoke<void>('seek', { position });
 export const setVolume = (volume: number) => invoke<void>('set_volume', { volume });
-/** Tempo (0.25–2.0) + pitch (−12..=12 semitones). Not persisted: resets on restart. */
+/** Tempo (0.25–2.0) + pitch (−12..=12 semitones). Speed is persisted. */
 export const setPlaybackParams = (speed: number, semitones: number) =>
 	invoke<void>('set_playback_params', { speed, semitones });
 export const getQueue = () => invoke<QueueState>('get_queue');

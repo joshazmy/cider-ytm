@@ -86,8 +86,8 @@
         }
     }
 
-    // The album's artist image becomes the hero backdrop (like the artist page). Non-blocking —
-    // the page already shows; the backdrop fades in when it arrives. Guarded against navigation.
+    // Artist image is a wash fallback when the album has no cover. Non-blocking — the page
+    // already shows; the backdrop fades in when it arrives. Guarded against navigation.
     // ponytail: reuses the full artist browse just for its hero image; `album.artistThumbnail`
     // already carries a straplineThumbnail — swap to it to drop this second fetch if it ever matters.
     function loadHero(aid: string, a: AlbumPage) {
@@ -205,21 +205,21 @@
 </script>
 
 {#if loading}
-    <div class="flex flex-col gap-5 p-6 pt-10">
-        <div class="flex items-end gap-5">
-            <Skeleton class="h-28 w-28 shrink-0 rounded-xl" />
-            <div class="flex-1 space-y-3">
-                <Skeleton class="h-3 w-16 rounded" />
-                <Skeleton class="h-10 w-1/2 rounded-lg" />
-                <Skeleton class="h-4 w-40 rounded" />
-            </div>
+    <div class="flex flex-col items-center gap-5 px-6 pb-8 pt-14">
+        <Skeleton class="h-52 w-52 shrink-0 rounded-3xl" />
+        <div class="flex flex-col items-center space-y-3">
+            <Skeleton class="h-3 w-16 rounded" />
+            <Skeleton class="h-12 w-64 rounded-lg" />
+            <Skeleton class="h-4 w-40 rounded" />
         </div>
         <div class="flex gap-3">
-            <Skeleton class="h-11 w-28 rounded-full" />
-            <Skeleton class="h-11 w-28 rounded-full" />
+            <Skeleton class="h-10 w-28 rounded-full" />
+            <Skeleton class="h-10 w-28 rounded-full" />
         </div>
     </div>
-    <div class="p-6 pt-2">
+    <div
+        class="mx-6 mb-6 overflow-hidden rounded-2xl bg-background/40 p-2 ring-1 ring-white/10 backdrop-blur-md"
+    >
         {#each Array(8) as _, i (i)}
             <TrackRowSkeleton hideThumb />
         {/each}
@@ -227,223 +227,218 @@
 {:else if error}
     <div class="p-6"><ErrorState message={error} onRetry={() => load(id)} /></div>
 {:else if album}
-    <!-- Header with the artist image as a hero backdrop -->
-    <div class="content-in relative overflow-hidden">
-        {#if artistHero}
-            <img
-                src={artistHero}
-                alt=""
-                class="absolute inset-0 h-full w-full object-cover object-top"
-            />
-        {:else if album.thumbnail}
-            <!-- Blurred backdrop: blur-2xl destroys any detail a bigger source would carry, so
-                 ask for the smallest thing that still reads as the cover's colours. -->
+    <!-- Playlist-matching hero: cover wash, large rounded art, Play + Shuffle pills. -->
+    <div
+        class="content-in relative flex min-h-[48vh] flex-col items-center overflow-hidden px-6 pb-8 pt-14 text-center"
+    >
+        {#if album.thumbnail}
+            <!-- Blur-2xl destroys detail, so the smallest source that still holds the cover colours. -->
             <img
                 src={thumb(album.thumbnail, 96)}
                 alt=""
-                class="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
+                class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-80 blur-2xl saturate-150"
+            />
+        {:else if artistHero}
+            <img
+                src={artistHero}
+                alt=""
+                class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-80 blur-2xl saturate-150"
             />
         {/if}
         <div
-            class="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/40"
+            class="absolute inset-0 bg-gradient-to-b from-black/20 via-background/55 to-background"
         ></div>
 
-        <div class="absolute right-6 top-6 z-10">
+        <div class="absolute right-5 top-5 z-10">
             <TrackFilter bind:value={query} placeholder="Search this album" />
         </div>
 
-        <div class="relative flex flex-col gap-5 p-6 pt-10">
-            <div class="flex items-end gap-5">
-                <!-- Inline width/height so the size holds even against a stale dev-server CSS that -->
-                <!-- hasn't regenerated a newly-used spacing utility (would fall back to intrinsic size). -->
-                {#if album.thumbnail}
-                    <img
-                        src={thumb(album.thumbnail, 400)}
-                        alt=""
-                        style="width:7rem;height:7rem"
-                        class="shrink-0 rounded-xl object-cover shadow-2xl"
-                    />
-                {:else}
-                    <div
-                        style="width:7rem;height:7rem"
-                        class="shrink-0 rounded-xl bg-muted"
-                    ></div>
-                {/if}
-                <div class="min-w-0">
-                    <div
-                        class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                    >
-                        {album.subtitle ?? "Album"}
-                    </div>
-                    <h1
-                        class="mt-1 font-heading text-4xl font-bold tracking-tight drop-shadow"
-                    >
-                        {album.title ?? "Album"}
-                    </h1>
-                    <div
-                        class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"
-                    >
-                        {#if album.explicit}
-                            <ExplicitIcon class="h-4 w-4 shrink-0" />
-                        {/if}
-                        {#if album.artist}
-                            <span
-                                class="flex items-center gap-1.5 font-medium text-foreground"
-                            >
-                                {#if album.artistThumbnail}
-                                    <img
-                                        src={album.artistThumbnail}
-                                        alt=""
-                                        class="h-5 w-5 rounded-full object-cover"
-                                    />
-                                {/if}
-                                <ArtistLine
-                                    runs={album.artistRuns}
-                                    text={album.artist}
-                                />
-                            </span>
-                        {/if}
-                        {#if album.secondSubtitle}
-                            <span class="text-muted-foreground/60">•</span>
-                            <span>{album.secondSubtitle}</span>
-                        {/if}
-                    </div>
-                </div>
+        {#if album.thumbnail}
+            <img
+                src={thumb(album.thumbnail, 400)}
+                alt=""
+                class="relative h-52 w-52 rounded-3xl object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+            />
+        {:else}
+            <div
+                class="relative h-52 w-52 rounded-3xl bg-muted ring-1 ring-white/10"
+            ></div>
+        {/if}
+
+        <div class="relative mt-6 min-w-0 max-w-3xl">
+            <div
+                class="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase"
+            >
+                {album.subtitle ?? "Album"}
             </div>
-
-            {#if album.description}
-                <div class="max-w-2xl">
-                    <p
-                        class="text-sm text-foreground/80 {expanded
-                            ? ''
-                            : 'line-clamp-2'}"
-                    >
-                        {album.description}
-                    </p>
-                    <button
-                        class="mt-1 cursor-pointer text-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
-                        onclick={() => (expanded = !expanded)}
-                    >
-                        {expanded ? "Less" : "More"}
-                    </button>
-                </div>
-            {/if}
-
-            <!-- Controls -->
-            <div class="relative flex items-center gap-3">
-                <button
-                    class="flex cursor-pointer items-center gap-2 rounded-full text-foreground bg-primary px-6 py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-50"
-                    onclick={() => playAll(null)}
-                    disabled={!album.items.length}
-                >
-                    <HugeiconsIcon icon={PlayIcon} class="h-4 w-4" /> Play
-                </button>
-                <button
-                    class="flex cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:bg-accent/10 disabled:opacity-50"
-                    onclick={shuffle}
-                    disabled={!album.items.length}
-                >
-                    <HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4" /> Shuffle
-                </button>
-                <!-- Local albums are already in the Local tab; everything else is savable, signed
-                     in or not. -->
-                {#if !isLocal}
-                    <button
-                        class="flex cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition hover:bg-accent/10 disabled:opacity-50"
-                        class:border-primary={inLibrary}
-                        class:text-primary={inLibrary}
-                        onclick={toggleLibrary}
-                        disabled={savingLibrary}
-                    >
-                        <!-- altIcon/showAlt, not a ternary: `icon` is read once at mount. -->
-                        <HugeiconsIcon
-                            icon={BookmarkAdd02Icon}
-                            altIcon={BookmarkCheck02Icon}
-                            showAlt={inLibrary}
-                            class="h-4 w-4"
-                        />
-                        {inLibrary ? "In library" : "Save to library"}
-                    </button>
+            <h1
+                class="mt-2 font-heading text-5xl font-bold tracking-tight drop-shadow-lg"
+            >
+                {album.title ?? "Album"}
+            </h1>
+            <div
+                class="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted-foreground"
+            >
+                {#if album.explicit}
+                    <ExplicitIcon class="h-4 w-4 shrink-0" />
                 {/if}
-                <button
-                    class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-muted-foreground transition hover:bg-accent/10 hover:text-foreground"
-                    onclick={() => (menuOpen = !menuOpen)}
-                    aria-label="More options"
-                >
-                    <HugeiconsIcon icon={MoreVerticalIcon} class="h-5 w-5" />
-                </button>
-
-                {#if menuOpen}
-                    <button
-                        class="fixed inset-0 z-40 cursor-default"
-                        onclick={() => (menuOpen = false)}
-                        aria-label="Close menu"
-                    ></button>
-                    <div
-                        class="absolute bottom-12 left-40 z-50 min-w-48 origin-bottom-left animate-in rounded-lg border bg-popover p-1 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95"
+                {#if album.artist}
+                    <span
+                        class="flex items-center gap-1.5 font-medium text-foreground"
                     >
-                        <button
-                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
-                            onclick={() => queue(true)}
-                        >
-                            <HugeiconsIcon
-                                icon={ArrowUpNarrowWideIcon}
-                                class="h-4 w-4"
-                            /> Play next
-                        </button>
-                        <button
-                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
-                            onclick={() => queue(false)}
-                        >
-                            <HugeiconsIcon
-                                icon={ArrowDownWideNarrowIcon}
-                                class="h-4 w-4"
-                            /> Add to queue
-                        </button>
-                        <!-- The album's audio playlist is what a radio seeds from; an album page
-                             without one (rare) has nothing to ask YouTube for. -->
-                        {#if !isLocal && album.playlistId}
-                            <button
-                                class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
-                                onclick={radio}
-                            >
-                                <HugeiconsIcon
-                                    icon={Radio02Icon}
-                                    class="h-4 w-4"
-                                /> Start radio
-                            </button>
+                        {#if album.artistThumbnail}
+                            <img
+                                src={album.artistThumbnail}
+                                alt=""
+                                class="h-5 w-5 rounded-full object-cover"
+                            />
                         {/if}
-                        {#if !isLocal}
-                            <button
-                                class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
-                                onclick={saveToPlaylist}
-                            >
-                                <HugeiconsIcon
-                                    icon={PlayListAddIcon}
-                                    class="h-4 w-4"
-                                /> Save to playlist
-                            </button>
-                        {/if}
-                        <button
-                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
-                            onclick={() => {
-                                menuOpen = false;
-                                addPick(asItem());
-                            }}
-                        >
-                            <HugeiconsIcon
-                                icon={DashboardSquare02Icon}
-                                class="h-4 w-4"
-                            /> Add to shortcuts
-                        </button>
-                    </div>
+                        <ArtistLine
+                            runs={album.artistRuns}
+                            text={album.artist}
+                        />
+                    </span>
+                {/if}
+                {#if album.secondSubtitle}
+                    <span class="text-muted-foreground/60">•</span>
+                    <span>{album.secondSubtitle}</span>
                 {/if}
             </div>
         </div>
+
+        {#if album.description}
+            <div class="relative mt-4 max-w-2xl">
+                <p
+                    class="text-sm text-foreground/80 {expanded
+                        ? ''
+                        : 'line-clamp-2'}"
+                >
+                    {album.description}
+                </p>
+                <button
+                    class="mt-1 cursor-pointer text-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
+                    onclick={() => (expanded = !expanded)}
+                >
+                    {expanded ? "Less" : "More"}
+                </button>
+            </div>
+        {/if}
+
+        <div class="relative mt-5 flex flex-wrap items-center justify-center gap-3">
+            <button
+                class="flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-foreground transition hover:opacity-90 disabled:opacity-50"
+                onclick={() => playAll(null)}
+                disabled={!album.items.length}
+            >
+                <HugeiconsIcon icon={PlayIcon} class="h-4 w-4" /> Play
+            </button>
+            <button
+                class="flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-foreground transition hover:opacity-90 disabled:opacity-50"
+                onclick={shuffle}
+                disabled={!album.items.length}
+            >
+                <HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4" /> Shuffle
+            </button>
+            <!-- Local albums are already in the Local tab; everything else is savable, signed
+                 in or not. -->
+            {#if !isLocal}
+                <button
+                    class="flex h-10 cursor-pointer items-center gap-2 rounded-full border px-5 text-sm font-semibold transition hover:bg-accent/10 disabled:opacity-50"
+                    class:border-primary={inLibrary}
+                    class:text-primary={inLibrary}
+                    onclick={toggleLibrary}
+                    disabled={savingLibrary}
+                >
+                    <!-- altIcon/showAlt, not a ternary: `icon` is read once at mount. -->
+                    <HugeiconsIcon
+                        icon={BookmarkAdd02Icon}
+                        altIcon={BookmarkCheck02Icon}
+                        showAlt={inLibrary}
+                        class="h-4 w-4"
+                    />
+                    {inLibrary ? "In library" : "Save to library"}
+                </button>
+            {/if}
+            <button
+                class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-muted-foreground transition hover:bg-accent/10 hover:text-foreground"
+                onclick={() => (menuOpen = !menuOpen)}
+                aria-label="More options"
+            >
+                <HugeiconsIcon icon={MoreVerticalIcon} class="h-5 w-5" />
+            </button>
+
+            {#if menuOpen}
+                <button
+                    class="fixed inset-0 z-40 cursor-default"
+                    onclick={() => (menuOpen = false)}
+                    aria-label="Close menu"
+                ></button>
+                <div
+                    class="absolute bottom-full left-1/2 z-50 mb-2 min-w-48 -translate-x-1/2 origin-bottom animate-in rounded-lg border bg-popover p-1 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95"
+                >
+                    <button
+                        class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
+                        onclick={() => queue(true)}
+                    >
+                        <HugeiconsIcon
+                            icon={ArrowUpNarrowWideIcon}
+                            class="h-4 w-4"
+                        /> Play next
+                    </button>
+                    <button
+                        class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
+                        onclick={() => queue(false)}
+                    >
+                        <HugeiconsIcon
+                            icon={ArrowDownWideNarrowIcon}
+                            class="h-4 w-4"
+                        /> Add to queue
+                    </button>
+                    <!-- The album's audio playlist is what a radio seeds from; an album page
+                         without one (rare) has nothing to ask YouTube for. -->
+                    {#if !isLocal && album.playlistId}
+                        <button
+                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
+                            onclick={radio}
+                        >
+                            <HugeiconsIcon
+                                icon={Radio02Icon}
+                                class="h-4 w-4"
+                            /> Start radio
+                        </button>
+                    {/if}
+                    {#if !isLocal}
+                        <button
+                            class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
+                            onclick={saveToPlaylist}
+                        >
+                            <HugeiconsIcon
+                                icon={PlayListAddIcon}
+                                class="h-4 w-4"
+                            /> Save to playlist
+                        </button>
+                    {/if}
+                    <button
+                        class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
+                        onclick={() => {
+                            menuOpen = false;
+                            addPick(asItem());
+                        }}
+                    >
+                        <HugeiconsIcon
+                            icon={DashboardSquare02Icon}
+                            class="h-4 w-4"
+                        /> Add to shortcuts
+                    </button>
+                </div>
+            {/if}
+        </div>
     </div>
 
-    <!-- Numbered track list -->
-    <div class="content-in p-6 pt-2">
+    <!-- Numbered track list on a frosted plate over the page. -->
+    <div
+        class="content-in relative mx-6 mb-6 overflow-hidden rounded-2xl bg-background/40 p-2 ring-1 ring-white/10 backdrop-blur-md"
+    >
         {#each shown as item, i (item.video_id + i)}
             <TrackRow
                 song={item}

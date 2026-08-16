@@ -9,9 +9,6 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Search01Icon } from '@hugeicons/core-free-icons';
-	import { Button } from '$lib/components/ui/button';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import MediaCardSkeleton from '$lib/components/MediaCardSkeleton.svelte';
 	import SearchSuggest from '$lib/components/SearchSuggest.svelte';
@@ -19,6 +16,7 @@
 	import TrackRowSkeleton from '$lib/components/TrackRowSkeleton.svelte';
 	import ErrorState from '$lib/components/ErrorState.svelte';
 	import Shelf from '$lib/components/Shelf.svelte';
+	import ResultStrip from '$lib/components/ResultStrip.svelte';
 	import * as api from '$lib/api';
 	import type { SearchResults } from '$lib/api';
 	import { getCached, putCached } from '$lib/pagecache';
@@ -85,14 +83,15 @@
 		if (!urlQuery && query) runSearch();
 	});
 
-	// Sections are horizontal card rows, except Songs which is a vertical list. `top` has no "show more".
+	// Cider order: top cards, artist circles, album covers, then a compact song list. Playlists
+	// stay as a cover shelf after songs. `top` has no "show more".
 	const sections = $derived(
 		res
 			? [
 					{ key: 'top', label: 'Top results', items: res.top, max: 4, more: false, list: false },
-					{ key: 'songs', label: 'Songs', items: res.songs, max: 6, more: true, list: true },
+					{ key: 'artists', label: 'Artists', items: res.artists, max: 6, more: true, list: false },
 					{ key: 'albums', label: 'Albums', items: res.albums, max: 5, more: true, list: false },
-					{ key: 'artists', label: 'Artists', items: res.artists, max: 3, more: true, list: false },
+					{ key: 'songs', label: 'Songs', items: res.songs, max: 6, more: true, list: true },
 					{ key: 'playlists', label: 'Playlists', items: res.playlists, max: 5, more: true, list: false }
 				].filter((s) => s.items.length)
 			: []
@@ -101,10 +100,9 @@
 </script>
 
 <div class="flex h-full flex-col">
-	<div class="border-b p-6">
-		<h1 class="mb-4 font-heading text-2xl font-bold">Search</h1>
+	<div class="px-6 pb-4 pt-5">
 		<form
-			class="flex max-w-xl gap-2"
+			class="flex max-w-xl"
 			onsubmit={(e) => {
 				e.preventDefault();
 				runSearch();
@@ -115,30 +113,49 @@
 				placeholder="Search songs, albums, artists, playlists…"
 				onpick={() => (lastQuery = query)}
 			/>
-			<Button type="submit" class="gap-2" disabled={searching}>
-				<HugeiconsIcon icon={Search01Icon} class="h-4 w-4" />
-				{searching ? 'Searching…' : 'Search'}
-			</Button>
 		</form>
 		{#if error}<div class="mt-2"><ErrorState message={error} onRetry={runSearch} /></div>{/if}
 	</div>
 
-	<div class="min-h-0 flex-1 overflow-y-auto p-6">
+	<div class="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
 		{#if searching}
-			<div class="flex flex-col gap-10">
+			<div class="flex flex-col gap-12">
 				<section>
-					<Skeleton class="mb-3 h-6 w-40 rounded" />
-					{#each Array(5) as _, i (i)}
-						<TrackRowSkeleton />
-					{/each}
+					<Skeleton class="mb-3 h-6 w-36 rounded" />
+					<div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
+						{#each Array(4) as _, i (i)}
+							<div class="flex items-center gap-4 rounded-2xl bg-white/[0.04] px-3.5 py-3">
+								<Skeleton class="h-[72px] w-[72px] shrink-0 rounded-xl" />
+								<div class="min-w-0 flex-1">
+									<Skeleton class="mb-2 h-2.5 w-16 rounded" />
+									<Skeleton class="mb-2 h-4 w-44 rounded" />
+									<Skeleton class="h-3 w-28 rounded" />
+								</div>
+							</div>
+						{/each}
+					</div>
 				</section>
 				<section>
-					<Skeleton class="mb-3 h-6 w-32 rounded" />
+					<Skeleton class="mb-3 h-6 w-24 rounded" />
+					<div class="flex gap-2 overflow-hidden pb-2">
+						{#each Array(6) as _, i (i)}
+							<div class="w-40 shrink-0"><MediaCardSkeleton round /></div>
+						{/each}
+					</div>
+				</section>
+				<section>
+					<Skeleton class="mb-3 h-6 w-24 rounded" />
 					<div class="flex gap-2 overflow-hidden pb-2">
 						{#each Array(5) as _, i (i)}
 							<div class="w-40 shrink-0"><MediaCardSkeleton /></div>
 						{/each}
 					</div>
+				</section>
+				<section>
+					<Skeleton class="mb-3 h-6 w-20 rounded" />
+					{#each Array(6) as _, i (i)}
+						<TrackRowSkeleton />
+					{/each}
 				</section>
 			</div>
 		{:else if !res}
@@ -146,11 +163,11 @@
 		{:else if !sections.length}
 			<p class="text-sm text-muted-foreground">No results for “{searched}”.</p>
 		{:else}
-			<div class="content-in flex flex-col gap-10">
+			<div class="content-in flex flex-col gap-12">
 				{#each sections as sec (sec.key)}
 					<section>
 						<div class="mb-3 flex items-center justify-between">
-							<h2 class="font-heading text-xl font-bold">{sec.label}</h2>
+							<h2 class="font-heading text-lg font-semibold">{sec.label}</h2>
 							{#if sec.more}
 								<button
 									class="cursor-pointer text-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
@@ -160,10 +177,16 @@
 								</button>
 							{/if}
 						</div>
-						{#if sec.list}
+						{#if sec.key === 'top'}
+							<div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
+								{#each sec.items.slice(0, sec.max) as item (item.id)}
+									<ResultStrip {item} />
+								{/each}
+							</div>
+						{:else if sec.list}
 							{#each sec.items.slice(0, sec.max) as item (item.id)}
 								{@const song = asSong(item)}
-								<TrackRow {song} onplay={() => playSong(song)} onAdd={() => openAddToPlaylist(song)} />
+								<TrackRow {song} hideRating onplay={() => playSong(song)} onAdd={() => openAddToPlaylist(song)} />
 							{/each}
 						{:else}
 							<Shelf items={sec.items.slice(0, sec.max)} />

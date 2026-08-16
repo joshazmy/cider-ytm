@@ -24,9 +24,8 @@ export const playback = $state({
 	position: 0,
 	duration: 0,
 	volume: 100,
-	// Tempo + pitch ("Advanced"). Frontend-owned because nothing persists them: mpv starts at
-	// 1.0 / 0 every launch and so does this, so the two can't drift apart.
-	speed: 1,
+	// Tempo + pitch. Default matches the Cider desk (1.15×, pitch preserve off).
+	speed: 1.15,
 	semitones: 0,
 	// Rating of the current track — seeded from its real `likeStatus` on each change, then
 	// optimistic on toggle. Owned here rather than in `ratings` below because the mini player is a
@@ -40,12 +39,24 @@ export const playback = $state({
  * "play this" path already goes through this module. The open has to happen at the click: a
  * gapless advance looks exactly like a user play from the `now-playing` event alone.
  */
-export const np = $state({ open: false, tab: 'queue' as 'queue' | 'lyrics' });
+export const np = $state({ open: false, tab: 'lyrics' as 'queue' | 'lyrics' });
 
 export const openPlayer = () => (np.open = true);
 
+function remainingQueue(): number {
+	const items = playback.queue.items?.length ?? 0;
+	const idx = playback.queue.currentIndex ?? 0;
+	return Math.max(0, items - idx);
+}
+
+function confirmReplaceQueue(): boolean {
+	if (remainingQueue() < 8) return true;
+	return window.confirm('Replace the current queue? Cancel keeps what’s already queued.');
+}
+
 /** Play one track (a search row, a song card, a shelf), and show it. */
 export function playSong(song: SongItem) {
+	if (!confirmReplaceQueue()) return Promise.resolve();
 	openPlayer();
 	return api.play(song);
 }
@@ -510,6 +521,7 @@ export function playFrom(
 	shuffle?: boolean,
 	continuation?: string
 ) {
+	if (!confirmReplaceQueue()) return Promise.resolve();
 	pl.noteRecent(personal, source);
 	pl.touchPick(personal, source.id);
 	savePersonal();
@@ -553,6 +565,7 @@ export async function startRadio(
 	id: string,
 	name?: string
 ) {
+	if (!confirmReplaceQueue()) return;
 	toast('Starting radio…');
 	openPlayer();
 	try {
@@ -714,6 +727,15 @@ export function initApp(mini = false): () => void {
 			playback.paused = s.paused;
 			playback.position = s.position;
 			playback.duration = s.duration;
+		})
+		.catch(() => {});
+	api.getSettings()
+		.then((s) => {
+			const speed = Number.parseFloat(s.playback_speed ?? '1.15');
+			const semitones = Number.parseInt(s.playback_semitones ?? '0', 10);
+			playback.speed = Number.isFinite(speed) ? speed : 1.15;
+			playback.semitones = Number.isFinite(semitones) ? semitones : 0;
+			return api.setPlaybackParams(playback.speed, playback.semitones);
 		})
 		.catch(() => {});
 	if (mini) return teardown;

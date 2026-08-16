@@ -71,9 +71,11 @@
 	const duration = $derived(/^[\d:]+$/.test(song.duration ?? '') ? song.duration : undefined);
 
 	const rated = $derived(ratingOf(song));
-	// A local file has no YouTube identity, so there is nothing to rate (the same guard the ⋯ menu
-	// applies to its like item). The compact variant has no room: it keeps its single heart.
-	const showRating = $derived(!compact && !hideRating && !api.isLocalId(song.video_id));
+	// Thumbs stay off unless the caller wants them (`hideRating` is false) *and* the song already
+	// carries a rating. Empty hover-revealed thumbs are not the playlist row; the ⋯ menu still rates.
+	const showRating = $derived(
+		!compact && !hideRating && rated !== 'indifferent' && !api.isLocalId(song.video_id)
+	);
 
 	// The whole row is a play target (role="button"), so mirror native button keyboard activation.
 	// Only when the key lands on the row itself — keydowns bubble up from nested interactive
@@ -110,70 +112,92 @@
 {/snippet}
 
 <!-- content-visibility: a liked-songs playlist runs to thousands of rows and WebKit keeps every one
-     in style, layout and paint. 3.5rem is a row (8px padding, 40px thumbnail, 8px); `auto` swaps in
-     the measured size after first paint. Not on the compact variant: that one is laid out in CSS
+     in style, layout and paint. 3rem is a row (48px: 8px padding, 32px thumbnail, 8px); `auto` swaps
+     in the measured size after first paint. Not on the compact variant: that one is laid out in CSS
      columns (ForgottenFavourites), where an unsized fragment would upset column balancing, and it
-     never has more than 15 rows to skip. -->
+     never has more than 15 rows to skip. @container: the artist column hides when this row is
+     narrower than 28rem (queue panel, squeezed playlist), not when the window is. -->
 <div
 	role="button"
 	tabindex="0"
 	onclick={onplay}
 	onkeydown={onKey}
 	aria-label={guestAdd ? `Add ${song.title} to the session queue` : `Play ${song.title}`}
-	class="group flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent/10 {active
-		? 'bg-accent/10'
-		: ''} {compact ? '' : '[content-visibility:auto] [contain-intrinsic-size:auto_3.5rem]'}"
+	class="@container group flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-white/[0.08] {active
+		? 'bg-white/[0.07]'
+		: ''} {compact ? '' : '[content-visibility:auto] [contain-intrinsic-size:auto_3rem]'}"
 >
-	<div class="flex min-w-0 flex-1 items-center gap-3">
-		<div class="flex min-w-0 shrink-0 items-center gap-3">
-			{#if index !== undefined}
+	{#if index !== undefined}
+		<span class="relative w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+			<span class="group-hover:opacity-0">{index + 1}</span>
+			<HugeiconsIcon
+				icon={guestAdd ? PlayListAddIcon : PlayIcon}
+				class="absolute inset-0 m-auto h-3.5 w-3.5 text-foreground opacity-0 group-hover:opacity-100"
+			/>
+		</span>
+	{/if}
+	{#if !hideThumb}
+		{#if song.thumbnail}
+			<img
+				src={thumb(song.thumbnail, 96)}
+				alt=""
+				class="h-8 w-8 shrink-0 rounded-md object-cover"
+				loading="lazy"
+			/>
+		{:else}
+			<!-- An untagged file has no artwork of its own. A music note keeps the row aligned
+			     with its neighbours and says so plainly. -->
+			<div
+				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
+			>
+				<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
+			</div>
+		{/if}
+	{/if}
+
+	<div class="min-w-0 flex-1">
+		<div class="flex min-w-0 items-center gap-2">
+			<span class="min-w-0 truncate text-sm font-medium leading-[18px]">{song.title}</span>
+			{#if song.queued_by}
 				<span
-					class="relative w-5 shrink-0 text-center text-xs {active
-						? 'text-primary'
-						: 'text-muted-foreground'}"
+					class="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
 				>
-					<span class="group-hover:opacity-0">{index + 1}</span>
-					<HugeiconsIcon
-						icon={guestAdd ? PlayListAddIcon : PlayIcon}
-						class="absolute inset-0 m-auto h-3.5 w-3.5 opacity-0 group-hover:opacity-100"
-					/>
+					{song.queued_by}
 				</span>
-			{/if}
-			{#if !hideThumb}
-				{#if song.thumbnail}
-					<img src={thumb(song.thumbnail, 96)} alt="" class="h-10 w-10 shrink-0 rounded-md object-cover" loading="lazy" />
-				{:else}
-					<!-- An untagged file has no artwork of its own. A music note keeps the row aligned
-					     with its neighbours and says so plainly. -->
-					<div
-						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
-					>
-						<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
-					</div>
-				{/if}
 			{/if}
 		</div>
-		<div class="min-w-0 flex-1">
-			<div class="flex min-w-0 items-center gap-2">
-				<span class="min-w-0 truncate text-sm font-medium {active ? 'text-primary' : ''}">
-					{song.title}
-				</span>
-				{#if song.queued_by}
-					<span
-						class="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-					>
-						{song.queued_by}
-					</span>
+		{#if compact}
+			<div class="flex min-w-0 items-center gap-1 text-[11px] leading-[14px] text-muted-foreground">
+				{#if song.album}
+					<span class="truncate">{song.album}</span>
+					<span class="shrink-0">·</span>
 				{/if}
-			</div>
-			<div class="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
 				<ArtistLine runs={song.artist_runs} text={song.artists} />
-				{#if compact && duration}
+				{#if duration}
 					<span class="shrink-0">· {duration}</span>
 				{/if}
 			</div>
-		</div>
+		{:else if song.album}
+			<div class="truncate text-[11px] leading-[14px] text-muted-foreground">{song.album}</div>
+		{:else}
+			<!-- No album: keep the artist under the title when the wide column is hidden. -->
+			<ArtistLine
+				runs={song.artist_runs}
+				text={song.artists}
+				class="block text-[11px] leading-[14px] text-muted-foreground @md:hidden"
+			/>
+		{/if}
 	</div>
+
+	{#if !compact}
+		<div class="hidden min-w-0 flex-1 @md:block">
+			<ArtistLine
+				runs={song.artist_runs}
+				text={song.artists}
+				class="block text-sm text-muted-foreground"
+			/>
+		</div>
+	{/if}
 
 	<!-- Album rows only. Wide rows are mostly empty between the title and the duration, so it takes a
 	     centred column of its own there; narrow ones sit it next to the duration at its natural width
@@ -191,21 +215,13 @@
 			<ExplicitIcon class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
 		{/if}
 		{#if showRating}
-			<!-- Hover-revealed, except on a row that carries a rating: at rest that filled thumb is the
-			     only place the state shows at all. Faded rather than removed, so the duration and the ⋯
-			     don't shift sideways when the pointer arrives. -->
-			<div
-				class="flex items-center gap-0.5 transition-opacity focus-within:opacity-100 group-hover:opacity-100 {rated ===
-				'indifferent'
-					? 'opacity-0'
-					: ''}"
-			>
+			<div class="flex items-center gap-0.5">
 				{@render rateButton(ThumbsUpIcon, 'like', 'Like')}
 				{@render rateButton(ThumbsDownIcon, 'dislike', 'Dislike')}
 			</div>
 		{/if}
 		{#if duration && !compact}
-			<span class="shrink-0 text-xs tabular-nums text-muted-foreground">{duration}</span>
+			<span class="min-w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{duration}</span>
 		{/if}
 		{#if compact}
 			<!-- Persistent, not hover-only: a filled heart is state the row has to keep showing. -->

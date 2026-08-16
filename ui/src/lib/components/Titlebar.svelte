@@ -1,9 +1,8 @@
 <script lang="ts">
-	// Custom titlebar (the window runs undecorated — tauri.conf `decorations: false`). Everything
-	// on the bar is a drag region except the buttons; double-click maximizes (handled by Tauri's
-	// drag region itself). Right cluster: Last.fm scrobbler | separator | minimize / maximize /
-	// close — per the design, the scrobbler lives with the window controls but visually apart.
-	// Account (sign in/out) sits first in that cluster, in its own component.
+	// Custom titlebar (undecorated window — tauri.conf `decorations: false`). The header is the
+	// drag region; buttons stay ordinary children so they remain clickable. Chrome is quiet so the
+	// album wash in +layout shows through: back/forward, account, window controls. Discord /
+	// Last.fm / Listen Together stay mounted but `hidden`.
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -23,7 +22,6 @@
 	import LastFmIcon from './LastFmIcon.svelte';
 	import DiscordIcon from './DiscordIcon.svelte';
 	import AccountMenu from './AccountMenu.svelte';
-	import logo from '$lib/assets/favicon.svg';
 	import * as api from '$lib/api';
 	import { openMiniPlayer, toast, ui } from '$lib/player.svelte';
 	import { lt } from '$lib/lt.svelte';
@@ -135,48 +133,37 @@
      at this z — it must outrank the panels below (LyricsPanel/QueuePanel, z-30). -->
 <header
 	data-tauri-drag-region
-	class="relative z-50 flex h-9 shrink-0 select-none items-center justify-between border-b border-border/60 bg-background"
+	class="relative z-50 flex h-9 shrink-0 select-none items-center justify-between bg-transparent"
 >
-	<span
-		class="pointer-events-none absolute inset-x-0 text-center text-xs font-medium tracking-wide text-muted-foreground"
-	>
-		Limusic
-	</span>
-
-	<div class="flex h-full items-center">
-		<!-- pointer-events-none: the logo is decoration; clicks on it should drag the window. -->
-		<img src={logo} alt="" class="pointer-events-none ml-3 mr-1 h-4 w-4" />
-		<!-- Bigger and heavier than the icons on the right: these are navigation, and at their
-		     weight the arrow read as decoration and got missed. -->
+	<div class="flex h-full items-center pl-1.5">
+		<!-- Heavier stroke than the window icons: at default weight these read as decoration. -->
 		<button
-			class="flex h-full w-9 items-center justify-center text-foreground/80 transition-colors hover:bg-accent/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
 			onclick={() => history.back()}
 			disabled={depth === 0}
 			title="Back"
 			aria-label="Back"
 		>
-			<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} class="h-5 w-5" />
+			<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} class="h-4 w-4" />
 		</button>
 		<button
-			class="flex h-full w-9 items-center justify-center text-foreground/80 transition-colors hover:bg-accent/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
 			onclick={() => history.forward()}
 			disabled={depth === deepest}
 			title="Forward"
 			aria-label="Forward"
 		>
-			<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} class="h-5 w-5" />
+			<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} class="h-4 w-4" />
 		</button>
 	</div>
 
 	<div class="flex h-full items-center">
-		<!-- Account first, then the integrations, then the window controls. The drag region lives on
-		     <header> only, so these children are ordinary buttons — don't add the attribute here. -->
+		<!-- Account, then hidden integrations, then window controls. Drag lives on <header> only. -->
 		<AccountMenu />
-		<div class="mx-1.5 h-4 w-px bg-border"></div>
 
 		<!-- Opens the same modal as the home hero's button (one dialog, mounted in +layout). -->
 		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {lt.role !==
+			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {lt.role !==
 			'none'
 				? 'text-primary'
 				: ''}"
@@ -200,7 +187,7 @@
 		</button>
 
 		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {discordOn
+			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {discordOn
 				? 'text-foreground'
 				: ''}"
 			onclick={toggleDiscord}
@@ -219,7 +206,7 @@
 		</button>
 
 		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {connected
+			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {connected
 				? 'text-foreground'
 				: ''}"
 			onclick={onScrobblerClick}
@@ -249,7 +236,7 @@
 		     It sits with the integrations rather than the window controls because it swaps what
 		     you're using, not the size of this window. -->
 		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={openMiniPlayer}
 			title="Mini player"
 			aria-label="Mini player"
@@ -257,24 +244,24 @@
 			<HugeiconsIcon icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</button>
 
-		<div class="mx-1.5 h-4 w-px bg-border"></div>
+		<div class="mx-1 h-3.5 w-px bg-white/10"></div>
 
 		<button
-			class="flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={() => win.minimize()}
 			aria-label="Minimize"
 		>
 			<HugeiconsIcon icon={MinusSignIcon} class="h-4 w-4" />
 		</button>
 		<button
-			class="flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={() => win.toggleMaximize()}
 			aria-label="Maximize"
 		>
 			<HugeiconsIcon icon={SquareIcon} class="h-3.5 w-3.5" />
 		</button>
 		<button
-			class="flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:text-destructive"
+			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/80 hover:text-white"
 			onclick={() => win.close()}
 			aria-label="Close"
 		>

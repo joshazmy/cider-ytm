@@ -66,10 +66,47 @@ fn friendly_error(e: &libmpv2::Error) -> String {
 pub struct Player {
     mpv: Arc<Mpv>,
     events: Option<UnboundedReceiver<PlayerEvent>>,
-    /// `(loudness gain dB, pitch semitones)`. mpv's `af` is one global chain, so the two things
-    /// that write to it have to be re-applied together: a bare `set_property("af", ...)` from
-    /// either one would drop the other's filter.
-    af: std::sync::Mutex<(Option<f64>, i32)>,
+    /// `(loudness gain dB, pitch semitones, named desk profile)`. mpv's `af` is one global chain,
+    /// so every writer has to re-apply the whole thing together.
+    af: std::sync::Mutex<(Option<f64>, i32, AudioProfile)>,
+    volume_percent: std::sync::Mutex<i64>,
+    fade_scale: std::sync::Mutex<f64>,
+    speed: std::sync::Mutex<f64>,
+}
+
+/// Mutually exclusive desk profiles. Dry is speakers (no spatial). Dimisco is a local
+/// headphone/IEM spatial approximation — not Dolby Atmos.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AudioProfile {
+    Dry,
+    Dimisco,
+}
+
+impl AudioProfile {
+    pub fn parse(s: &str) -> Self {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "dimisco" => Self::Dimisco,
+            _ => Self::Dry,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Dry => "dry",
+            Self::Dimisco => "dimisco",
+        }
+    }
+
+    fn lavfi(self) -> Option<&'static str> {
+        match self {
+            Self::Dry => None,
+            Self::Dimisco => Some(concat!(
+                "lavfi=[extrastereo=m=1.2:c=0,",
+                "crossfeed=strength=0.35:range=0.55:slope=0.5:level_in=0.85:level_out=0.95,",
+                "alimiter=limit=0.89:attack=5:release=50:asc=1:level=0:latency=1]"
+            )),
+        }
+    }
 }
 
 impl Player {
@@ -88,6 +125,9 @@ impl Player {
         let mpv = Mpv::new()?;
         mpv.set_property("vid", "no")?; // audio only
         mpv.set_property("gapless-audio", "yes")?;
+        // Cider desk: 1.15× with pitch preserve off (resample / chipmunk, not scaletempo2).
+        mpv.set_property("audio-pitch-correction", "no")?;
+        mpv.set_property("speed", 1.15)?;
         mpv.set_property("cache", "yes")?;
         mpv.set_property("cache-on-disk", "yes")?;
         mpv.set_property("demuxer-cache-dir", cache_dir)?;
@@ -106,7 +146,14 @@ impl Player {
             .spawn(move || event_loop(ev, tx))
             .expect("spawn mpv event thread");
 
-        Ok(Player { mpv, events: Some(rx), af: std::sync::Mutex::new((None, 0)) })
+        Ok(Player {
+            mpv,
+            events: Some(rx),
+            af: std::sync::Mutex::new((None, 0, AudioProfile::Dry)),
+            volume_percent: std::sync::Mutex::new(100),
+            fade_scale: std::sync::Mutex::new(1.0),
+            speed: std::sync::Mutex::new(1.15),
+        })
     }
 
     /// Take the event receiver (once).
@@ -183,8 +230,25 @@ impl Player {
     /// the bottom jump ~18 dB while the same drag near the top moves ~3 dB. Map the percent
     /// linearly onto a 40 dB loudness range instead, so every slider step sounds the same size.
     pub fn set_volume(&self, volume: i64) -> Result<(), Error> {
-        self.mpv.set_property("volume", perceptual_to_mpv(volume))?;
+        *self.volume_percent.lock().unwrap() = volume;
+        self.apply_volume()
+    }
+
+    /// 1.0 = the user's volume. Used for the sequential ~5s fade (not overlapping automix).
+    pub fn set_fade_scale(&self, scale: f64) -> Result<(), Error> {
+        *self.fade_scale.lock().unwrap() = scale.clamp(0.0, 1.0);
+        self.apply_volume()
+    }
+
+    fn apply_volume(&self) -> Result<(), Error> {
+        let percent = *self.volume_percent.lock().unwrap();
+        let fade = *self.fade_scale.lock().unwrap();
+        self.mpv.set_property("volume", perceptual_to_mpv(percent) * fade)?;
         Ok(())
+    }
+
+    pub fn speed(&self) -> f64 {
+        *self.speed.lock().unwrap()
     }
 
     fn apply_headers(&self, headers: &HashMap<String, String>) -> Result<(), Error> {
@@ -217,10 +281,21 @@ impl Player {
         self.apply_af()
     }
 
-    /// Tempo, 0.25–2.0. Pitch is unaffected: `audio-pitch-correction` (mpv's default) time-stretches
-    /// rather than resamples, so this is Metrolist's `PlaybackParameters.speed` exactly.
+    pub fn set_profile(&self, profile: AudioProfile) -> Result<(), Error> {
+        self.af.lock().unwrap().2 = profile;
+        self.apply_af()
+    }
+
+    pub fn profile(&self) -> AudioProfile {
+        self.af.lock().unwrap().2
+    }
+
+    /// Tempo, 0.25–2.0. Pitch preserve is **off**: speed resamples (pitch rises with tempo).
     pub fn set_speed(&self, speed: f64) -> Result<(), Error> {
-        self.mpv.set_property("speed", speed.clamp(0.25, 2.0))?;
+        let speed = speed.clamp(0.25, 2.0);
+        self.mpv.set_property("audio-pitch-correction", "no")?;
+        self.mpv.set_property("speed", speed)?;
+        *self.speed.lock().unwrap() = speed;
         Ok(())
     }
 
@@ -245,16 +320,19 @@ impl Player {
     }
 
     fn apply_af(&self) -> Result<(), Error> {
-        let (gain_db, semitones) = *self.af.lock().unwrap();
-        self.mpv.set_property("af", af_chain(gain_db, semitones).as_str())?;
+        let (gain_db, semitones, profile) = *self.af.lock().unwrap();
+        self.mpv.set_property("af", af_chain(gain_db, semitones, profile).as_str())?;
         Ok(())
     }
 }
 
-/// The whole `af` chain: loudness gain, then pitch. Empty when neither is in play, so the default
-/// path stays exactly the filterless one it was before pitch existed.
-fn af_chain(gain_db: Option<f64>, semitones: i32) -> String {
+/// The whole `af` chain: optional spatial profile, then loudness gain, then pitch.
+/// Empty when nothing is in play, so the dry path stays filterless aside from gain/pitch.
+fn af_chain(gain_db: Option<f64>, semitones: i32, profile: AudioProfile) -> String {
     let mut chain = Vec::new();
+    if let Some(spatial) = profile.lavfi() {
+        chain.push(spatial.to_string());
+    }
     if let Some(g) = gain_db {
         chain.push(format!("lavfi=[volume={g}dB]"));
     }
@@ -385,17 +463,24 @@ fn perceptual_to_mpv(percent: i64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{af_chain, perceptual_to_mpv, quoted};
+    use super::{af_chain, perceptual_to_mpv, quoted, AudioProfile};
 
     #[test]
     fn gain_and_pitch_share_one_chain() {
         // The bug this exists for: either setter clobbering the other's filter.
-        assert_eq!(af_chain(None, 0), "");
-        assert_eq!(af_chain(Some(-3.5), 0), "lavfi=[volume=-3.5dB]");
-        assert_eq!(af_chain(None, 12), "rubberband=pitch-scale=2");
-        assert_eq!(af_chain(Some(-6.0), -12), "lavfi=[volume=-6dB],rubberband=pitch-scale=0.5");
+        assert_eq!(af_chain(None, 0, AudioProfile::Dry), "");
+        assert_eq!(af_chain(Some(-3.5), 0, AudioProfile::Dry), "lavfi=[volume=-3.5dB]");
+        assert_eq!(af_chain(None, 12, AudioProfile::Dry), "rubberband=pitch-scale=2");
+        assert_eq!(
+            af_chain(Some(-6.0), -12, AudioProfile::Dry),
+            "lavfi=[volume=-6dB],rubberband=pitch-scale=0.5"
+        );
         // One semitone up is the twelfth root of two.
-        assert!(af_chain(None, 1).ends_with("1.0594630943592953"));
+        assert!(af_chain(None, 1, AudioProfile::Dry).ends_with("1.0594630943592953"));
+        let dimi = af_chain(None, 0, AudioProfile::Dimisco);
+        assert!(dimi.contains("crossfeed"), "dimisco missing crossfeed: {dimi}");
+        assert!(dimi.contains("alimiter"), "dimisco missing limiter: {dimi}");
+        assert!(!af_chain(None, 0, AudioProfile::Dry).contains("crossfeed"));
     }
 
     /// Everything above is string-building; this drives a real libmpv and reads `af` back out of

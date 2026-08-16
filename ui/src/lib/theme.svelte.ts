@@ -290,7 +290,8 @@ export function fontAvailable(name: string): boolean {
 /** Apply the stored theme + customization on startup (defaults to rose, no overrides). */
 export function initTheme(): void {
 	const stored = localStorage.getItem(KEY) as ThemeId | null;
-	theme.id = stored && THEMES.some((t) => t.id === stored) ? stored : 'rose';
+	theme.id = stored && THEMES.some((t) => t.id === stored) ? stored : 'blue';
+	if (custom.hue === null && !localStorage.getItem(CUSTOM_KEY)) custom.hue = 250;
 	try {
 		const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY) ?? '{}');
 		// Only keys we know about, only the shape we expect: a hand-edited or older localStorage
@@ -314,6 +315,7 @@ export function initTheme(): void {
 	} catch {
 		// unparseable — keep the defaults
 	}
+	document.documentElement.classList.add('dark');
 	apply();
 	// Async (each file needs its URL granted first), so the app paints in the fallback font for a
 	// frame or two before a loaded font swaps in.

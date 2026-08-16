@@ -19,7 +19,9 @@
 		BookmarkMinus02Icon,
 		ListRestartIcon,
 		Sorting01Icon,
-		ArrowUpDownIcon
+		ArrowUpDownIcon,
+		MusicNote01Icon,
+		Clock01Icon
 	} from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
@@ -107,6 +109,40 @@
 			? (pl.subtitle ?? '').replace(/^[\d,.]+ songs?/i, `${pl.items.length} songs`)
 			: pl?.subtitle
 	);
+	// Hero chips from the same subtitle / loaded count: "127 TRACKS", leftover duration or recency.
+	const heroPills = $derived.by(() => {
+		if (!pl) return [] as string[];
+		const extra: string[] = [];
+		let fromSub: string | null = null;
+		for (const part of (subtitle ?? '')
+			.split(/\s*[•·|]\s*/)
+			.map((s) => s.trim())
+			.filter(Boolean)) {
+			const m = part.match(/^([\d,.]+)\s+(?:songs?|tracks?)\b(.*)$/i);
+			if (m && !fromSub) {
+				fromSub = m[1];
+				const tail = m[2].replace(/^[\s,;:-]+/, '').trim();
+				if (tail) extra.push(tail);
+			} else if (!/^playlists?$/i.test(part)) {
+				extra.push(part);
+			}
+		}
+		const n =
+			!pl.continuation && pl.items.length
+				? pl.items.length
+				: fromSub
+					? Number(fromSub.replace(/,/g, ''))
+					: pl.items.length;
+		const pills: string[] = [];
+		if (n) pills.push(`${n} TRACK${n === 1 ? '' : 'S'}`);
+		else if (fromSub) pills.push(`${fromSub} TRACKS`);
+		for (const e of extra) {
+			if (e.length > 22) continue;
+			const ago = e.match(/(?:updated\s+)?(.+?\s+ago)\s*$/i);
+			pills.push((ago ? ago[1] : e).toUpperCase());
+		}
+		return pills;
+	});
 	// --- sorting (`$lib/sort`) ---------------------------------------------------------------
 	let sort = $state<SortKey>('default');
 	let desc = $state(false);
@@ -647,13 +683,16 @@
 
 <div class="flex h-full flex-col">
 	{#if loading}
-		<div class="flex items-end gap-6 border-b p-6">
-			<Skeleton class="h-40 w-40 shrink-0 rounded-xl" />
-			<div class="flex-1 space-y-3">
-				<Skeleton class="h-3 w-16 rounded" />
-				<Skeleton class="h-10 w-2/3 rounded-lg" />
-				<Skeleton class="h-4 w-40 rounded" />
-				<Skeleton class="h-9 w-24 rounded-4xl" />
+		<div class="flex min-h-[46vh] flex-col items-center px-6 pb-8 pt-12">
+			<Skeleton style="width:220px;height:220px" class="shrink-0 rounded-[28px]" />
+			<Skeleton class="mt-5 h-10 w-56 rounded-lg" />
+			<div class="mt-3 flex gap-1.5">
+				<Skeleton class="h-5 w-24 rounded-full" />
+				<Skeleton class="h-5 w-24 rounded-full" />
+			</div>
+			<div class="mt-5 flex gap-2">
+				<Skeleton class="h-11 w-28 rounded-full" />
+				<Skeleton class="h-11 w-28 rounded-full" />
 			</div>
 		</div>
 		<div class="p-4">
@@ -664,82 +703,118 @@
 	{:else if error}
 		<div class="p-6"><ErrorState message={error} onRetry={() => load(id)} /></div>
 	{:else if pl}
-		<div class="content-in relative flex min-h-[38vh] items-end gap-6 overflow-hidden border-b p-6">
-			{#if bgImage}
+		<div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+			{#if pl.thumbnail || bgImage}
 				<img
-					src={bgImage}
+					src={hiRes((pl.thumbnail ?? bgImage)!)}
 					alt=""
-					class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+					class="pointer-events-none absolute inset-0 h-full w-full scale-150 object-cover object-center blur-3xl brightness-110 saturate-[1.85]"
 				/>
 			{/if}
-			<!-- Fade the cover into the page so the text stays readable: solid at the bottom and on the
-			     left (behind the title), the image itself visible toward the top-right. -->
 			<div
-				class="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20"
+				class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/80"
 			></div>
-			<div class="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent"></div>
-			{#if isOnRepeat}
-				<div
-					class="relative flex h-40 w-40 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-lg"
-				>
-					<HugeiconsIcon icon={ListRestartIcon} class="h-20 w-20" />
-				</div>
-			{:else if pl.thumbnail}
-				<img
-					src={pl.thumbnail}
-					alt=""
-					class="relative h-40 w-40 rounded-xl object-cover shadow-lg"
-				/>
-			{:else}
-				<div class="relative h-40 w-40 rounded-xl bg-muted"></div>
-			{/if}
-			<div class="relative min-w-0 flex-1">
-				<div class="text-xs font-medium uppercase text-muted-foreground">Playlist</div>
-				{#if editingName}
-					<div class="mt-1 flex items-center gap-2">
-						<input
-							use:autofocus
-							bind:value={nameDraft}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') saveRename();
-								else if (e.key === 'Escape') (editingName = false);
-							}}
-							class="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 font-heading text-3xl font-bold outline-none focus:border-accent"
-							aria-label="Playlist name"
-						/>
-						<Button size="icon" aria-label="Save name" onclick={saveRename}>
-							<HugeiconsIcon icon={Tick02Icon} class="h-5 w-5" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label="Cancel rename"
-							onclick={() => (editingName = false)}
-						>
-							<HugeiconsIcon icon={Cancel01Icon} class="h-5 w-5 text-muted-foreground" />
-						</Button>
+			<div
+				class="content-in relative flex min-h-[46vh] shrink-0 flex-col items-center px-6 pb-7 pt-12 text-center"
+			>
+				{#if isOnRepeat}
+					<div
+						style="width:220px;height:220px"
+						class="relative flex shrink-0 items-center justify-center rounded-[28px] bg-primary/10 text-primary shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+					>
+						<HugeiconsIcon icon={ListRestartIcon} class="h-24 w-24" />
 					</div>
+				{:else if pl.thumbnail}
+					<img
+						src={hiRes(pl.thumbnail)}
+						alt=""
+						style="width:220px;height:220px"
+						class="relative shrink-0 rounded-[28px] object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+					/>
 				{:else}
-					<h1 class="mt-1 font-heading text-4xl font-bold tracking-tight drop-shadow-lg">
-					{pl.title ?? 'Playlist'}
-				</h1>
+					<div
+						style="width:220px;height:220px"
+						class="relative shrink-0 rounded-[28px] bg-muted ring-1 ring-white/10"
+					></div>
 				{/if}
-				{#if subtitle}<p class="mt-2 text-sm text-muted-foreground">{subtitle}</p>{/if}
-				<div class="mt-4 flex items-center justify-between gap-2">
-					<div class="flex items-center gap-2">
+				<div class="relative mt-5 min-w-0">
+					{#if editingName}
+						<div class="flex items-center justify-center gap-2">
+							<input
+								use:autofocus
+								bind:value={nameDraft}
+								onkeydown={(e) => {
+									if (e.key === 'Enter') saveRename();
+									else if (e.key === 'Escape') (editingName = false);
+								}}
+								class="min-w-0 max-w-xl flex-1 rounded-md border bg-black/35 px-3 py-1 text-center font-heading text-3xl font-bold text-white outline-none focus:border-accent"
+								aria-label="Playlist name"
+							/>
+							<Button size="icon" aria-label="Save name" onclick={saveRename}>
+								<HugeiconsIcon icon={Tick02Icon} class="h-5 w-5" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								aria-label="Cancel rename"
+								onclick={() => (editingName = false)}
+							>
+								<HugeiconsIcon icon={Cancel01Icon} class="h-5 w-5 text-white/70" />
+							</Button>
+						</div>
+					{:else}
+						<h1
+							class="font-heading text-5xl font-bold tracking-tight text-white drop-shadow-lg"
+						>
+							{pl.title ?? 'Playlist'}
+						</h1>
+					{/if}
+					{#if heroPills.length}
+						<div class="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+							{#each heroPills as pill (pill)}
+								<span
+									class="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-[3px] text-[10px] font-semibold tracking-[0.14em] text-white/75 ring-1 ring-white/10"
+								>
+									{#if /TRACK/.test(pill)}
+										<HugeiconsIcon icon={MusicNote01Icon} class="h-3 w-3" />
+									{:else if /AGO|DAY|WEEK|MONTH|YEAR|MIN|HR|HOUR/.test(pill)}
+										<HugeiconsIcon icon={Clock01Icon} class="h-3 w-3" />
+									{/if}
+									{pill}
+								</span>
+							{/each}
+						</div>
+					{/if}
+					<div class="mt-5 flex flex-wrap items-center justify-center gap-2">
 						<Button
-							class="gap-2"
+							class="h-11 min-w-[7.5rem] gap-2 rounded-full px-8 text-[13px] font-semibold"
 							onclick={() => playAll(null)}
 							disabled={!pl.items.length || preparing || resorting}
 						>
 							<HugeiconsIcon icon={PlayIcon} class="h-4 w-4" />
 							{preparing || resorting ? 'Sorting…' : 'Play'}
 						</Button>
+						<Button
+							class="h-11 min-w-[7.5rem] gap-2 rounded-full px-8 text-[13px] font-semibold"
+							onclick={() => run(shufflePlay)}
+							disabled={!pl.items.length || preparing || resorting}
+						>
+							<HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4" />
+							Shuffle
+						</Button>
 						{#if confirmingDelete}
-							<div class="flex items-center gap-2 rounded-lg border border-destructive/40 px-2 py-1">
-								<span class="text-xs text-muted-foreground">Delete this playlist?</span>
-								<Button variant="destructive" size="sm" onclick={deleteThisPlaylist}>Delete</Button>
-								<Button variant="ghost" size="sm" onclick={() => (confirmingDelete = false)}>
+							<div
+								class="flex items-center gap-2 rounded-lg border border-destructive/40 bg-black/40 px-2 py-1"
+							>
+								<span class="text-xs text-white/70">Delete this playlist?</span>
+								<Button variant="destructive" size="sm" onclick={deleteThisPlaylist}
+									>Delete</Button
+								>
+								<Button
+									variant="ghost"
+									size="sm"
+									onclick={() => (confirmingDelete = false)}
+								>
 									Cancel
 								</Button>
 							</div>
@@ -747,99 +822,102 @@
 							<Button
 								variant="ghost"
 								size="icon"
+								class="h-10 w-10 rounded-full bg-black/30 text-white/75 ring-1 ring-white/10 hover:bg-black/45 hover:text-white"
 								aria-label="Playlist options"
 								onclick={openMenu}
 							>
-								<HugeiconsIcon icon={MoreVerticalIcon} class="h-5 w-5 text-muted-foreground" />
+								<HugeiconsIcon icon={MoreVerticalIcon} class="h-5 w-5" />
 							</Button>
 						{/if}
 					</div>
-					<!-- Pushed to the far end of the header, away from the play controls. -->
-					<div class="flex items-center gap-1">
-						<Button
-							variant="ghost"
-							size="sm"
-							class="gap-2 {sort === 'default' ? 'text-muted-foreground' : ''}"
-							onclick={openSort}
-							disabled={!pl.items.length}
-						>
-							<HugeiconsIcon icon={Sorting01Icon} class="h-4 w-4" />
-							{sortLabel}
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							class={desc ? '' : 'text-muted-foreground'}
-							aria-label="Sort direction: {desc ? 'descending' : 'ascending'}"
-							onclick={toggleDesc}
-							disabled={!pl.items.length}
-						>
-							<HugeiconsIcon icon={ArrowUpDownIcon} class="h-4 w-4" />
-						</Button>
-					</div>
 				</div>
 			</div>
-			<div class="absolute right-6 top-6">
-				<TrackFilter bind:value={query} placeholder="Search this playlist" />
-			</div>
-		</div>
-		<div
-			class="content-in min-h-0 flex-1 overflow-y-auto p-4 transition-opacity {resorting
-				? 'opacity-50'
-				: ''}"
-			aria-busy={resorting}
-			{@attach sc.attach}
-		>
-			{#if shown.length}
-				<!-- The padding stands in for the rows outside the window, so the scrollbar is the
-				     length of the whole playlist even though only ~30 rows exist. -->
-				<div style="padding-top:{win.padTop}px;padding-bottom:{win.padBottom}px">
-					{#each shown.slice(win.start, win.end) as item, i (item.video_id + (win.start + i))}
-						{@const n = win.start + i}
-						<!-- data-row: what the scroller measures a row's real height from. -->
-						<div data-row>
-							<TrackRow
-								song={item}
-								index={n}
-								active={item.video_id === nowId}
-								onplay={() => playAll(n)}
-								onAdd={() => openAddToPlaylist(item)}
-								onRemove={isLiked || (editable && item.set_video_id)
-									? () => removeTrack(item)
-									: undefined}
-							/>
-						</div>
-					{/each}
+			<div
+				class="relative flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/5 bg-black/70 backdrop-blur-xl"
+			>
+				<div class="flex shrink-0 items-center justify-end gap-1 px-4 pb-1 pt-3">
+					<Button
+						variant="ghost"
+						size="sm"
+						class="gap-2 {sort === 'default' ? 'text-white/55' : 'text-white/85'}"
+						onclick={openSort}
+						disabled={!pl.items.length}
+					>
+						<HugeiconsIcon icon={Sorting01Icon} class="h-4 w-4" />
+						{sortLabel}
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						class={desc ? 'text-white/85' : 'text-white/55'}
+						aria-label="Sort direction: {desc ? 'descending' : 'ascending'}"
+						onclick={toggleDesc}
+						disabled={!pl.items.length}
+					>
+						<HugeiconsIcon icon={ArrowUpDownIcon} class="h-4 w-4" />
+					</Button>
+					<TrackFilter bind:value={query} placeholder="Search this playlist" />
 				</div>
-			{:else if filtering}
-				<p class="p-4 text-sm text-muted-foreground">
-					No tracks match “{query.trim()}”{pl.continuation && !moreError
-						? ' yet, still loading'
-						: ''}.
-				</p>
-			{:else}
-				<p class="p-4 text-sm text-muted-foreground">This playlist is empty.</p>
-			{/if}
-			{#if pl.continuation}
-				{#if moreError}
-					<div class="p-3 text-center">
-						<Button variant="outline" size="sm" onclick={loadMore} disabled={loadingMore}>
-							{loadingMore ? 'Loading…' : 'Try again'}
-						</Button>
-					</div>
-				{:else}
-					<!-- The sentinel sits above the skeletons: it triggers the next page as it scrolls
-					     into range, so the rest of a long playlist arrives without a button. -->
-					<div aria-busy={loadingMore}>
-						<div {@attach sentinel}></div>
-						{#if loadingMore}
-							{#each Array(4) as _, i (i)}
-								<TrackRowSkeleton />
+				<div
+					class="content-in min-h-0 flex-1 overflow-y-auto px-3 pb-4 transition-opacity {resorting
+						? 'opacity-50'
+						: ''}"
+					aria-busy={resorting}
+					{@attach sc.attach}
+				>
+					{#if shown.length}
+						<!-- The padding stands in for the rows outside the window, so the scrollbar is the
+						     length of the whole playlist even though only ~30 rows exist. -->
+						<div style="padding-top:{win.padTop}px;padding-bottom:{win.padBottom}px">
+							{#each shown.slice(win.start, win.end) as item, i (item.video_id + (win.start + i))}
+								{@const n = win.start + i}
+								<!-- data-row: what the scroller measures a row's real height from. -->
+								<div data-row>
+									<TrackRow
+										song={item}
+										index={n}
+										active={item.video_id === nowId}
+										hideRating
+										onplay={() => playAll(n)}
+										onAdd={() => openAddToPlaylist(item)}
+										onRemove={isLiked || (editable && item.set_video_id)
+											? () => removeTrack(item)
+											: undefined}
+									/>
+								</div>
 							{/each}
+						</div>
+					{:else if filtering}
+						<p class="p-4 text-sm text-white/50">
+							No tracks match “{query.trim()}”{pl.continuation && !moreError
+								? ' yet, still loading'
+								: ''}.
+						</p>
+					{:else}
+						<p class="p-4 text-sm text-white/50">This playlist is empty.</p>
+					{/if}
+					{#if pl.continuation}
+						{#if moreError}
+							<div class="p-3 text-center">
+								<Button variant="outline" size="sm" onclick={loadMore} disabled={loadingMore}>
+									{loadingMore ? 'Loading…' : 'Try again'}
+								</Button>
+							</div>
+						{:else}
+							<!-- The sentinel sits above the skeletons: it triggers the next page as it scrolls
+							     into range, so the rest of a long playlist arrives without a button. -->
+							<div aria-busy={loadingMore}>
+								<div {@attach sentinel}></div>
+								{#if loadingMore}
+									{#each Array(4) as _, i (i)}
+										<TrackRowSkeleton />
+									{/each}
+								{/if}
+							</div>
 						{/if}
-					</div>
-				{/if}
-			{/if}
+					{/if}
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>

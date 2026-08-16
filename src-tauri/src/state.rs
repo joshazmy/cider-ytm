@@ -11,7 +11,7 @@ use innertube::{
     AccountIdentity, AccountInfo, AudioQuality, Clients, InnerTube, SongItem, MAIN_CLIENT,
 };
 use listen_protocol::{Playback, PlaybackKind, Track};
-use player::Player;
+use player::{AudioProfile, Player};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::Mutex;
 
@@ -1696,6 +1696,8 @@ impl AppState {
     /// gated on the `enable_history` setting + being logged in. Best-effort (errors logged).
     pub async fn on_position(&self, pos: f64) {
         self.record_position(pos);
+        let duration = self.queue.lock().await.duration;
+        self.apply_simple_fade(pos, duration);
         let crossed = {
             let mut q = self.queue.lock().await;
             if q.history_pinged {
@@ -1762,10 +1764,9 @@ impl AppState {
         self.db.get_setting("enable_history").map(|v| v != "false").unwrap_or(true)
     }
 
-    /// Autoplay enabled? Default on; only an explicit `"false"` disables it (mirrors
-    /// `history_enabled`).
+    /// Autoplay enabled? Default **off** (Cider desk `autoplayByDefault: false`).
     fn autoplay_enabled(&self) -> bool {
-        self.db.get_setting("autoplay").map(|v| v != "false").unwrap_or(true)
+        self.db.get_setting("autoplay").as_deref() == Some("true")
     }
 
     /// Extend the queue with radio continuation when it's nearly out (autoplay). Returns how many
@@ -1882,6 +1883,7 @@ impl AppState {
         let pos = self.db.get_setting("queue_position").and_then(|s| s.parse::<f64>().ok());
         if let Some(p) = pos.filter(|p| *p > 0.0) {
             *self.pending_seek.lock().unwrap() = Some((items[current].video_id.clone(), p));
+            self.latest_position.store(p.to_bits(), Ordering::SeqCst);
         }
         {
             let mut q = self.queue.lock().await;
@@ -2918,6 +2920,75 @@ fn backfill_metadata(item: &mut SongItem, length_seconds: Option<&str>, author: 
 pub fn saved_volume(db: &Db) -> i64 {
     let v = db.get_setting("volume").and_then(|s| s.parse().ok());
     v.filter(|v| (0..=100).contains(v)).unwrap_or(100)
+}
+
+/// Desk default is 1.15× (Cider playback-speed plugin).
+pub fn saved_speed(db: &Db) -> f64 {
+    db.get_setting("playback_speed")
+        .and_then(|s| s.parse().ok())
+        .filter(|s| (0.25..=2.0).contains(s))
+        .unwrap_or(1.15)
+}
+
+pub fn saved_semitones(db: &Db) -> i32 {
+    db.get_setting("playback_semitones")
+        .and_then(|s| s.parse().ok())
+        .filter(|s| (-12..=12).contains(s))
+        .unwrap_or(0)
+}
+
+fn desk_profile_path() -> std::path::PathBuf {
+    let base = std::env::var_os("XDG_CONFIG_HOME")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::var_os("HOME")
+                .map(|h| std::path::PathBuf::from(h).join(".config"))
+                .unwrap_or_else(|| std::path::PathBuf::from("."))
+        });
+    base.join("ytm-desk/profile")
+}
+
+pub fn write_desk_profile(profile: AudioProfile) {
+    let path = desk_profile_path();
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = std::fs::write(path, profile.as_str());
+}
+
+pub fn saved_profile(db: &Db) -> AudioProfile {
+    if let Ok(raw) = std::fs::read_to_string(desk_profile_path()) {
+        return AudioProfile::parse(&raw);
+    }
+    AudioProfile::parse(&db.get_setting("audio_profile").unwrap_or_default())
+}
+
+impl AppState {
+    fn apply_simple_fade(&self, pos: f64, duration: f64) {
+        let fade_secs = self
+            .db
+            .get_setting("fade_secs")
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(5.0);
+        if fade_secs <= 0.0 || duration <= fade_secs {
+            let _ = self.player.set_fade_scale(1.0);
+            return;
+        }
+        let window = fade_secs * self.player.speed();
+        if window <= 0.0 {
+            let _ = self.player.set_fade_scale(1.0);
+            return;
+        }
+        let remaining = duration - pos;
+        let scale = if pos < window {
+            (pos / window).clamp(0.0, 1.0)
+        } else if remaining > 0.0 && remaining < window {
+            (remaining / window).clamp(0.0, 1.0)
+        } else {
+            1.0
+        };
+        let _ = self.player.set_fade_scale(scale);
+    }
 }
 
 /// Per-track loudness gain (dB) from YouTube's `loudnessDb` (context/03, context/14). Attenuate

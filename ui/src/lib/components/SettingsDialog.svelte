@@ -145,13 +145,15 @@
 
 	const quality = $derived(settings.quality ?? 'HIGH');
 	const historyOn = $derived(settings.enable_history !== 'false');
-	const autoplayOn = $derived(settings.autoplay !== 'false');
+	const autoplayOn = $derived(settings.autoplay === 'true');
 	const hideVideosOn = $derived(settings.hide_videos === 'true');
-	const boiduOn = $derived(settings.lyrics_boidu !== 'false');
+	const boiduOn = $derived(settings.lyrics_boidu === 'true');
+	const audioProfile = $derived(settings.audio_profile === 'dimisco' ? 'dimisco' : 'dry');
+	const fadeOn = $derived(settings.fade_secs !== '0');
 	const preventDuplicatesOn = $derived(settings.prevent_duplicates === 'true');
 	const updateBannerOn = $derived(settings.update_banner !== 'false');
 	const discordOn = $derived(settings.discord_rpc === 'true');
-	const trayOn = $derived(settings.close_to_tray !== 'false');
+	const trayOn = $derived(settings.close_to_tray === 'true');
 	const autostartOn = $derived(settings.autostart === 'true');
 	const disabled = $derived(
 		new Set(
@@ -184,6 +186,16 @@
 	async function setAutoplay(on: boolean) {
 		settings.autoplay = on ? 'true' : 'false';
 		await api.setSetting('autoplay', settings.autoplay);
+	}
+
+	async function setAudioProfile(profile: 'dry' | 'dimisco') {
+		settings.audio_profile = profile;
+		await api.setSetting('audio_profile', profile);
+	}
+
+	async function setFade(on: boolean) {
+		settings.fade_secs = on ? '5' : '0';
+		await api.setSetting('fade_secs', settings.fade_secs);
 	}
 
 	async function setHideVideos(on: boolean) {
@@ -568,6 +580,38 @@
 						</Button>
 					</div>
 				{:else if tab === 'playback'}
+					<div class="border-b py-3">
+						<div class="font-medium">Speaker / IEM profile</div>
+						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">
+							The app cannot see what is plugged into the ZH3. Pick one. DimiSco is a local
+							spatial approximation on stereo YouTube Music — not Dolby Atmos, not lossless.
+						</p>
+						<div class="flex gap-2">
+							<Button
+								variant={audioProfile === 'dry' ? 'default' : 'outline'}
+								size="sm"
+								onclick={() => setAudioProfile('dry')}
+							>
+								Speakers (305P dry)
+							</Button>
+							<Button
+								variant={audioProfile === 'dimisco' ? 'default' : 'outline'}
+								size="sm"
+								onclick={() => setAudioProfile('dimisco')}
+							>
+								DimiSco (spatial approx)
+							</Button>
+						</div>
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Simple 5s fade</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								Fades out the last five seconds and in the first five. Not overlapping automix.
+							</p>
+						</div>
+						<Switch checked={fadeOn} onCheckedChange={setFade} />
+					</div>
 					<div class="border-b py-3">
 						<div class="font-medium">Audio quality</div>
 						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">

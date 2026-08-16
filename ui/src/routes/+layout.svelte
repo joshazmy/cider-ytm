@@ -10,6 +10,7 @@
 	} from '@hugeicons/core-free-icons';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -27,8 +28,18 @@
 	import ListenTogether from '$lib/components/ListenTogether.svelte';
 	import MiniPlayer from '$lib/components/MiniPlayer.svelte';
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
+	import NowPlayingRail from '$lib/components/NowPlayingRail.svelte';
+	import { thumb } from '$lib/thumb';
 	import { Button } from '$lib/components/ui/button';
-	import { auth, initApp, np, playback, ui } from '$lib/player.svelte';
+	import {
+		auth,
+		initApp,
+		np,
+		openMiniPlayer,
+		playback,
+		ui
+	} from '$lib/player.svelte';
+	import * as playerApi from '$lib/api';
 	import { win, initWin } from '$lib/win.svelte';
 	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
 
@@ -54,20 +65,59 @@
 
 	// Wire the Tauri event bridge once for the whole app; teardown on destroy. Check for an update
 	// on every app open (silent unless one exists).
+	function onDeskKey(e: KeyboardEvent) {
+		const el = e.target as HTMLElement | null;
+		const typing =
+			el &&
+			(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+		if (typing) return;
+		if (e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+			e.preventDefault();
+			playerApi.togglePause();
+			return;
+		}
+		if (e.shiftKey && e.code === 'Space') {
+			e.preventDefault();
+			ui.settingsOpen = true;
+			return;
+		}
+		if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+		if (e.code === 'KeyP') {
+			e.preventDefault();
+			np.open = !np.open;
+			if (np.open) np.tab = 'lyrics';
+		} else if (e.code === 'KeyK') {
+			e.preventDefault();
+			openMiniPlayer();
+		} else if (e.code === 'KeyF') {
+			e.preventDefault();
+			goto('/search');
+		} else if (e.code === 'KeyH') {
+			e.preventDefault();
+			goto('/library');
+		}
+	}
+
 	onMount(() => {
 		if (isMini) return initApp(true);
+		if (window.location.pathname === '/' && !sessionStorage.getItem('ytm-desk-landed')) {
+			sessionStorage.setItem('ytm-desk-landed', '1');
+			goto('/library', { replaceState: true });
+		}
 		checkForUpdatesQuiet();
 		const teardownApp = initApp();
 		const teardownWin = initWin();
+		window.addEventListener('keydown', onDeskKey);
 		return () => {
 			teardownApp();
 			teardownWin();
+			window.removeEventListener('keydown', onDeskKey);
 		};
 	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<ModeWatcher />
+<ModeWatcher defaultMode="dark" />
 
 <!-- The mini player is the whole window when it is the window: no titlebar, no sidebar, no routes,
      and no toasts (a banner would cover most of a 560x180 widget). -->
@@ -77,25 +127,30 @@
 	<!-- The window itself is transparent; this root paints the background and, when not maximized,
 	     rounds the corners (the compositor can't round an undecorated window for us). -->
 	<div
-		class="flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized
+		class="relative flex h-screen flex-col overflow-hidden bg-background text-foreground {win.maximized
 			? ''
 			: 'rounded-lg'}"
 	>
+		{#if playback.now?.thumbnail}
+			<img
+				src={thumb(playback.now.thumbnail, 120)}
+				alt=""
+				class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-45 blur-3xl saturate-150"
+			/>
+			<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-background/70 to-background/90"></div>
+		{/if}
 		<ResizeBorders />
+		<div class="relative z-10 flex min-h-0 flex-1 flex-col">
 		<Titlebar />
-		<!-- relative: the queue and lyrics panels are absolute overlays inside it (see QueuePanel). -->
 		<div class="relative flex min-h-0 flex-1">
 			<Sidebar />
-			<!-- dragScroll: dragging a card up to home's Shortcuts grid has to be possible from anywhere in
-			     the feed, so aiming at the top edge scrolls this container while the drag is in flight. -->
-			<main class="min-w-0 flex-1 overflow-y-auto" {@attach dragScroll}>
-				<!-- Remount the current page on sign-in/out so it refetches with the new account. -->
+			<main class="min-w-0 flex-1 overflow-y-auto bg-transparent" {@attach dragScroll}>
 				{#key auth.epoch}
 					{@render children()}
 				{/key}
 			</main>
+			{#if playback.now}<NowPlayingRail />{/if}
 			{#if np.open && playback.now}<NowPlaying />{/if}
-			<!-- Lyrics before queue: side by side over the page, lyrics on the left, queue on the right. -->
 			{#if lyricsOpen}<LyricsPanel onClose={() => (lyricsOpen = false)} {queueOpen} />{/if}
 			{#if queueOpen}<QueuePanel onClose={() => (queueOpen = false)} />{/if}
 		</div>
@@ -104,7 +159,7 @@
 			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
 			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
 			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
-			<div class="relative z-20" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
+			<div class="relative z-20 px-3 pb-3" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
 				<PlayerBar
 					onToggleQueue={() => (np.open ? (np.tab = 'queue') : (queueOpen = !queueOpen))}
 					queueOpen={np.open ? np.tab === 'queue' : queueOpen}
@@ -113,6 +168,7 @@
 				/>
 			</div>
 		{/if}
+		</div>
 	</div>
 
 	<AddToPlaylist />

@@ -158,14 +158,16 @@ pub async fn set_volume(state: St<'_>, volume: i64) -> Result<(), String> {
     Ok(())
 }
 
-/// Tempo (0.25–2.0) and pitch (−12..=12 semitones), the "Advanced" dialog. Volatile by design:
-/// both reset to 1.0 / 0 on restart, so nobody wonders next week why everything sounds wrong.
+/// Tempo (0.25–2.0) and pitch (−12..=12 semitones). Speed is persisted (desk default 1.15).
 #[tauri::command]
 pub async fn set_playback_params(state: St<'_>, speed: f64, semitones: i32) -> Result<(), String> {
     // Pitch first: it's the one that can fail (no librubberband), and it rolls itself back, so a
     // failure leaves nothing applied and the UI can revert both steppers together.
     state.player.set_pitch(semitones).map_err(|e| e.to_string())?;
-    state.player.set_speed(speed).map_err(|e| e.to_string())
+    state.player.set_speed(speed).map_err(|e| e.to_string())?;
+    state.db.set_setting("playback_speed", &speed.to_string());
+    state.db.set_setting("playback_semitones", &semitones.to_string());
+    Ok(())
 }
 
 #[tauri::command]
@@ -178,7 +180,7 @@ pub async fn get_queue(state: St<'_>) -> Result<serde_json::Value, String> {
 /// `visitor_data`) and internal blobs (`queue_json`, `queue_position`) never cross into the webview
 /// — they'd otherwise ship the login credential to the renderer on every open — and the webview
 /// can't overwrite them either.
-const UI_SETTINGS: [&str; 13] = [
+const UI_SETTINGS: [&str; 18] = [
     "volume",
     "proxy",
     "quality",
@@ -192,6 +194,11 @@ const UI_SETTINGS: [&str; 13] = [
     "prevent_duplicates",
     "update_banner",
     "lyrics_boidu",
+    "playback_speed",
+    "playback_semitones",
+    "audio_profile",
+    "fade_secs",
+    "warn_before_queue_override",
 ];
 
 #[tauri::command]
@@ -230,6 +237,11 @@ pub async fn set_setting(
     // would keep its word timings (and one fetched while off would never gain them) forever.
     if key == "lyrics_boidu" {
         state.db.clear_lyrics_cache();
+    }
+    if key == "audio_profile" {
+        let profile = player::AudioProfile::parse(&value);
+        state.player.set_profile(profile).map_err(|e| e.to_string())?;
+        crate::state::write_desk_profile(profile);
     }
     // Registers/removes the login autostart entry on toggle; the OS persists it from there.
     // ponytail: no startup re-sync against the OS state — add reconciliation only if drift is
