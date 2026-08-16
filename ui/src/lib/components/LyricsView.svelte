@@ -2,19 +2,12 @@
 	import * as api from '$lib/api';
 	import { playback } from '$lib/player.svelte';
 	import { applyUserLyricsSave, getUserLyrics, lyricsFromUserText } from '$lib/userLyrics';
+	import { parseClock } from '$lib/clock';
 
 	// `expanded` only sizes the type and centres the column. The owner of the extra room (the side
 	// panel, or the now-playing view) decides how much there is. Toggling it must not remount this
 	// component, or the lyrics refetch and the scroll position is lost.
 	let { expanded = false }: { expanded?: boolean } = $props();
-
-	/** "3:21" / "1:02:03" → seconds. */
-	function durationSecs(d?: string): number | undefined {
-		if (!d) return undefined;
-		const parts = d.split(':').map(Number);
-		if (!parts.length || parts.some(Number.isNaN)) return undefined;
-		return parts.reduce((a, b) => a * 60 + b, 0);
-	}
 
 	let lyrics = $state<api.Lyrics | null>(null);
 	let loading = $state(true);
@@ -51,7 +44,7 @@
 			album: album ?? undefined,
 			// The track's own length — NOT playback.duration, which still holds the previous
 			// track's value for a moment after a track change.
-			duration: durationSecs(now.duration)
+			duration: parseClock(now.duration) || undefined
 		})
 			.then((l) => {
 				if (requested !== id) return;

@@ -6,6 +6,8 @@
 		Home01Icon,
 		Search01Icon,
 		LibraryIcon,
+		MusicNoteSquare02Icon,
+		UserSharingIcon,
 		Settings01Icon,
 		Sun01Icon,
 		Moon02Icon,
@@ -36,8 +38,8 @@
 
 	const nav = [
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
-		{ href: '/library?tab=albums', label: 'Albums', icon: LibraryIcon },
-		{ href: '/library?tab=artists', label: 'Artists', icon: LibraryIcon },
+		{ href: '/library?tab=albums', label: 'Albums', icon: MusicNoteSquare02Icon },
+		{ href: '/library?tab=artists', label: 'Artists', icon: UserSharingIcon },
 		{ href: '/', label: 'Explore', icon: Home01Icon }
 	];
 	const isActive = (href: string) => {

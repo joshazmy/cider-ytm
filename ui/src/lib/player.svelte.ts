@@ -17,6 +17,7 @@ import { clearCached } from './pagecache';
 import * as pl from './personal';
 import type { Personal } from './personal';
 import { nextPaused } from './transport';
+import { parseClock } from './clock';
 
 export const playback = $state({
 	now: null as NowPlaying | null,
@@ -736,7 +737,7 @@ export function initApp(mini = false): () => void {
 			playback.rating = s.now?.rating ?? 'indifferent';
 			playback.paused = s.paused;
 			playback.position = s.position;
-			playback.duration = s.duration;
+			playback.duration = s.duration || parseClock(s.now?.duration);
 		})
 		.catch(() => {});
 	api.getSettings()

@@ -35,6 +35,7 @@
 	} from '$lib/player.svelte';
 	import { transportGlyph } from '$lib/transport';
 	import { isLetterTile, thumb } from '$lib/thumb';
+	import { trackDurationSecs } from '$lib/clock';
 	import Marquee from './Marquee.svelte';
 
 	const now = $derived(playback.now);
@@ -78,6 +79,12 @@
 	// from under the pointer; only invoke the seek on release.
 	let seekDrag = $state<number | null>(null);
 	const shownPosition = $derived(seekDrag ?? playback.position);
+	const durationSecs = $derived(
+		trackDurationSecs({
+			playback: playback.duration,
+			catalog: playback.now?.duration
+		})
+	);
 
 	function onSeekInput(e: Event) {
 		seekDrag = Number((e.target as HTMLInputElement).value);
@@ -213,9 +220,9 @@
 			<input
 				type="range"
 				class="range on-art min-w-0 flex-1"
-				style="--pct:{playback.duration ? (shownPosition / playback.duration) * 100 : 0}%"
+				style="--pct:{durationSecs ? (shownPosition / durationSecs) * 100 : 0}%"
 				min="0"
-				max={playback.duration || 0}
+				max={durationSecs || 0}
 				value={shownPosition}
 				oninput={onSeekInput}
 				onchange={onSeekCommit}

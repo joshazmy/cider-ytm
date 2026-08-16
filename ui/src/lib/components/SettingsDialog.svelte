@@ -7,7 +7,6 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Switch } from '$lib/components/ui/switch';
 	import { Slider } from '$lib/components/ui/slider';
-	import { Alert, AlertDescription } from '$lib/components/ui/alert';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
@@ -36,7 +35,7 @@
 		type Custom,
 		type ThemeId
 	} from '$lib/theme.svelte';
-	import { updateState, checkForUpdatesInteractive, openUpdateInBrowser } from '$lib/updater.svelte';
+	import { openUpdateInBrowser } from '$lib/updater.svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 
 	type TabId = 'general' | 'themes' | 'playback' | 'data' | 'about';
@@ -104,8 +103,6 @@
 	let clearing = $state(false);
 	let version = $state('');
 	getVersion().then((v) => (version = v));
-	// Result of the last "Check for updates" click — shown inline (a toast renders behind the modal).
-	let updateResult = $state<{ message: string; error: boolean } | null>(null);
 
 	// (Re)load whenever the modal opens, so it reflects the current persisted values. Also clear the
 	// stale update-check result so re-opening the modal doesn't show it until pressed again.
@@ -115,7 +112,6 @@
 		if (!ui.settingsOpen) return;
 		untrack(() => {
 			load();
-			updateResult = null;
 			pickerOpen = false;
 			readBack();
 			// Catches a font deleted while the app was running, not just between launches.
@@ -126,10 +122,6 @@
 			}
 		});
 	});
-
-	async function checkUpdates() {
-		updateResult = await checkForUpdatesInteractive();
-	}
 
 	async function load() {
 		try {
@@ -152,7 +144,6 @@
 	const fadeOn = $derived(settings.fade_secs !== '0');
 	const warnQueueOn = $derived(settings.warn_before_queue_override !== 'false');
 	const preventDuplicatesOn = $derived(settings.prevent_duplicates === 'true');
-	const updateBannerOn = $derived(settings.update_banner !== 'false');
 	const discordOn = $derived(settings.discord_rpc === 'true');
 	let lastfm = $state<{ connected: boolean; username: string | null }>({
 		connected: false,
@@ -262,11 +253,6 @@
 	async function setPreventDuplicates(on: boolean) {
 		settings.prevent_duplicates = on ? 'true' : 'false';
 		await api.setSetting('prevent_duplicates', settings.prevent_duplicates);
-	}
-
-	async function setUpdateBanner(on: boolean) {
-		settings.update_banner = on ? 'true' : 'false';
-		await api.setSetting('update_banner', settings.update_banner);
 	}
 
 	async function setDiscord(on: boolean) {
@@ -840,42 +826,13 @@
 						<div class="min-w-0">
 							<div class="font-medium">Updates</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
-								{#if updateState.available}
-									Version {updateState.available.version} is available.
-								{:else}
-									Check GitHub for a newer release.
-								{/if}
+								Opens the Yapel releases page in your browser. This app never installs
+								upstream Limusic over itself.
 							</p>
 						</div>
-						{#if updateState.available}
-							<Button size="sm" onclick={openUpdateInBrowser}>
-								Open in browser
-							</Button>
-						{:else}
-							<Button
-								variant="outline"
-								size="sm"
-								onclick={checkUpdates}
-								disabled={updateState.checking}
-							>
-								{updateState.checking ? 'Checking…' : 'Check for updates'}
-							</Button>
-						{/if}
-					</div>
-					{#if updateResult && !updateState.available}
-						<Alert variant={updateResult.error ? 'destructive' : 'default'}>
-							<AlertDescription>{updateResult.message}</AlertDescription>
-						</Alert>
-					{/if}
-					<div class="flex items-start justify-between gap-4 py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Tell me about new versions</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Check on launch and show a banner when a newer version is out. Off means no check
-								and no banner, so use the button above to look.
-							</p>
-						</div>
-						<Switch checked={updateBannerOn} onCheckedChange={setUpdateBanner} />
+						<Button size="sm" onclick={openUpdateInBrowser}>
+							Open in browser
+						</Button>
 					</div>
 				{/if}
 			</div>

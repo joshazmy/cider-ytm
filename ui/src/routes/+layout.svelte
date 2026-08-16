@@ -33,7 +33,6 @@
 	import { isLetterTile, thumb } from '$lib/thumb';
 
 	let paletteOpen = $state(false);
-	import { Button } from '$lib/components/ui/button';
 	import {
 		auth,
 		initApp,
@@ -45,7 +44,7 @@
 	} from '$lib/player.svelte';
 	import * as playerApi from '$lib/api';
 	import { win, initWin } from '$lib/win.svelte';
-	import { updateState, openUpdateInBrowser, checkForUpdatesQuiet } from '$lib/updater.svelte';
+
 
 	let { children } = $props();
 	// Queue and lyrics toggle independently and both float over the page rather than docking into
@@ -136,7 +135,6 @@
 			sessionStorage.setItem('ytm-desk-landed', '1');
 			goto('/library', { replaceState: true });
 		}
-		checkForUpdatesQuiet();
 		const teardownApp = initApp();
 		const teardownWin = initWin();
 		window.addEventListener('keydown', onDeskKey);
@@ -208,27 +206,6 @@
 	<SettingsDialog />
 	<ChannelPicker />
 	<ListenTogether />
-
-	<!-- The two notification banners below run at z-[100]. Dialogs and menus sit at z-50 and portal to
-	     <body>, so a z-50 banner loses the tie on DOM order and hides behind an open modal. -->
-	{#if updateState.available}
-		<div
-			transition:fly={{ y: 16, duration: 220, easing: cubicOut }}
-			class="fixed top-11 right-4 z-[100] flex items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm shadow-lg"
-		>
-			<span>Update available — v{updateState.available.version}</span>
-			<Button size="sm" onclick={openUpdateInBrowser}>
-				Open in browser
-			</Button>
-			{#if !updateState.installing}
-				<button
-					class="text-muted-foreground hover:text-foreground"
-					aria-label="Dismiss"
-					onclick={() => (updateState.available = null)}>✕</button
-				>
-			{/if}
-		</div>
-	{/if}
 
 	{#if ui.toast}
 		{@const t = ui.toast}
