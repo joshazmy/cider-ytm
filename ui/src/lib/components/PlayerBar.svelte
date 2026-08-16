@@ -294,7 +294,9 @@
 			</span>
 			<div class="min-w-2 flex-1"></div>
 			<!-- Volume + the handlers that aren't in Cider's five-button transport -->
-			<div class="flex shrink-0 items-center">
+			<div
+				class="flex shrink-0 items-center [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+			>
 				<Button
 					variant="ghost"
 					size="icon-xs"

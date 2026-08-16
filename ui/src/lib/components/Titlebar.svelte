@@ -100,7 +100,7 @@
 		connecting = true;
 		try {
 			await api.lastfmConnect();
-			toast('Approve Limusic in your browser');
+			toast('Approve Yapel in your browser');
 		} catch (err) {
 			connecting = false;
 			toast.error(String(err));

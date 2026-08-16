@@ -829,7 +829,7 @@
 					</div>
 				{:else if tab === 'about'}
 					<div class="border-b py-3">
-						<div class="font-heading text-lg font-bold">Limusic</div>
+						<div class="font-heading text-lg font-bold">Yapel</div>
 						<p class="mt-1 text-sm text-muted-foreground">
 							A cross-platform desktop YouTube Music client — ad-free playback straight from
 							YouTube's private API, with your real library and OS media keys.

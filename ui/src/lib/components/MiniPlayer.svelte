@@ -58,7 +58,7 @@
 	const artBtn =
 		'flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-white/70 transition hover:bg-white/15 hover:text-white';
 	const panelBtn =
-		'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-muted';
+		'flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors outline-none hover:bg-muted focus-visible:ring-0';
 
 	// Volume: the slider is revealed by hovering the control, and stays out for as long as it is
 	// being dragged. Hover alone can't say the second part — the strip is 24px tall, so a pointer
@@ -126,8 +126,8 @@
 	<button
 		class="absolute left-2 top-2 z-10 flex size-6 cursor-pointer items-center justify-center rounded-md text-white/60 opacity-0 transition hover:bg-white/15 hover:text-white focus-visible:opacity-100 group-hover:opacity-100"
 		onclick={() => api.closeMini().catch(() => {})}
-		title="Back to Limusic"
-		aria-label="Back to Limusic"
+		title="Back to Yapel"
+		aria-label="Back to Yapel"
 	>
 		<HugeiconsIcon icon={MaximizeScreenIcon} class="h-3.5 w-3.5" />
 	</button>
@@ -273,7 +273,7 @@
 				<HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4" />
 			</button>
 			<button
-				class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/80"
+				class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors outline-none hover:bg-primary/80 focus-visible:ring-0"
 				onclick={() => togglePlayUi()}
 				aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 			>
