@@ -4,7 +4,10 @@
 import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { toast } from './player.svelte';
-import { getSettings } from './api';
+import { getSettings, openInBrowser } from './api';
+
+/** Yapel releases — never install upstream Limusic over this fork. */
+export const UPDATE_PAGE = 'https://github.com/joshazmy/cider-ytm/releases';
 
 export const updateState = $state({
 	available: null as { version: string } | null, // set when a newer version is waiting
@@ -62,5 +65,14 @@ export async function installUpdate() {
 	} catch (e) {
 		toast.error(`Update failed: ${e}`);
 		updateState.installing = false;
+	}
+}
+
+/** Open the release page in the default browser. Do not self-update from upstream Limusic. */
+export async function openUpdateInBrowser() {
+	try {
+		await openInBrowser(UPDATE_PAGE);
+	} catch (e) {
+		toast.error(String(e));
 	}
 }

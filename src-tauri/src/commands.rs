@@ -900,9 +900,30 @@ pub async fn lastfm_status(state: St<'_>) -> Result<serde_json::Value, String> {
     Ok(crate::lastfm::status(&state))
 }
 
+/// Open an https URL in the user's real browser (xdg-open). Never in the Tauri webview.
+#[tauri::command]
+pub fn open_in_browser(url: String) -> Result<(), String> {
+    if !is_browser_url(&url) {
+        return Err("only http(s) URLs can open in the browser".into());
+    }
+    crate::lastfm::open_browser(&url)
+}
+
+pub(crate) fn is_browser_url(url: &str) -> bool {
+    url.starts_with("https://") || url.starts_with("http://")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn browser_urls_must_be_http() {
+        assert!(is_browser_url("https://github.com/joshazmy/cider-ytm/releases"));
+        assert!(is_browser_url("http://127.0.0.1:1"));
+        assert!(!is_browser_url("file:///etc/passwd"));
+        assert!(!is_browser_url("javascript:alert(1)"));
+    }
 
     #[test]
     fn on_repeat_rows_shed_the_queue_slot_they_were_played_from() {

@@ -45,7 +45,7 @@
 	} from '$lib/player.svelte';
 	import * as playerApi from '$lib/api';
 	import { win, initWin } from '$lib/win.svelte';
-	import { updateState, installUpdate, checkForUpdatesQuiet } from '$lib/updater.svelte';
+	import { updateState, openUpdateInBrowser, checkForUpdatesQuiet } from '$lib/updater.svelte';
 
 	let { children } = $props();
 	// Queue and lyrics toggle independently and both float over the page rather than docking into
@@ -214,11 +214,11 @@
 	{#if updateState.available}
 		<div
 			transition:fly={{ y: 16, duration: 220, easing: cubicOut }}
-			class="fixed bottom-24 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm shadow-lg"
+			class="fixed top-11 right-4 z-[100] flex items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm shadow-lg"
 		>
 			<span>Update available — v{updateState.available.version}</span>
-			<Button size="sm" onclick={installUpdate} disabled={updateState.installing}>
-				{updateState.installing ? 'Updating…' : 'Update now'}
+			<Button size="sm" onclick={openUpdateInBrowser}>
+				Open in browser
 			</Button>
 			{#if !updateState.installing}
 				<button

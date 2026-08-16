@@ -36,7 +36,7 @@
 		type Custom,
 		type ThemeId
 	} from '$lib/theme.svelte';
-	import { updateState, checkForUpdatesInteractive, installUpdate } from '$lib/updater.svelte';
+	import { updateState, checkForUpdatesInteractive, openUpdateInBrowser } from '$lib/updater.svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 
 	type TabId = 'general' | 'themes' | 'playback' | 'data' | 'about';
@@ -848,8 +848,8 @@
 							</p>
 						</div>
 						{#if updateState.available}
-							<Button size="sm" onclick={installUpdate} disabled={updateState.installing}>
-								{updateState.installing ? 'Updating…' : 'Update now'}
+							<Button size="sm" onclick={openUpdateInBrowser}>
+								Open in browser
 							</Button>
 						{:else}
 							<Button

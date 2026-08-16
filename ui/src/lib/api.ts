@@ -484,6 +484,7 @@ export const lastfmStatus = () => invoke<LastfmState>('lastfm_status');
 export const lastfmConnect = () => invoke<void>('lastfm_connect');
 /** Also cancels an in-flight connect (the auth poll checks and bails). */
 export const lastfmDisconnect = () => invoke<void>('lastfm_disconnect');
+export const openInBrowser = (url: string) => invoke<void>('open_in_browser', { url });
 export const onLastfmState = (cb: (s: LastfmState) => void): Promise<UnlistenFn> =>
 	listen<LastfmState>('lastfm-state', (e) => cb(e.payload));
 

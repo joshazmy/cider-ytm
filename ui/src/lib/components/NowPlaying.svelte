@@ -72,7 +72,7 @@
      if those change. -->
 <div
 	transition:fly={{ y: '100%', duration: 320, easing: cubicOut }}
-	class="absolute inset-y-0 left-16 right-0 z-20 isolate flex justify-center overflow-hidden px-4 py-4 sm:px-6 sm:py-6 lg:px-10 {ui.sidebarCollapsed
+	class="absolute inset-y-0 left-16 right-0 z-20 isolate flex min-h-0 overflow-hidden {ui.sidebarCollapsed
 		? ''
 		: 'lg:left-56'}"
 	style="background-color: var(--background)"
@@ -91,24 +91,15 @@
 		></div>
 	{/if}
 
-	<!-- Capped and centred, so a wide window doesn't park the artwork in the middle of an empty half
-	     with the tabs glued to the right edge. --art is the artwork's side: whichever is smaller of
-	     the column's width and the height left over once the titlebar, the player bar and this
-	     padding have had theirs. 0.86 keeps the square huge without colliding with the bar.
-	     ponytail: 11rem is those three measured, not computed. -->
-	<div
-		class="relative flex w-full max-w-[80rem] gap-6 xl:gap-12"
-		style="--art:calc(min(100%,100vh - 11rem) * 0.86)"
-	>
+	<!-- Split studio: art owns the left half, lyrics own the rest. No max-width island. -->
+	<div class="relative flex min-h-0 w-full flex-1">
 		{#if !big}
-			<!-- Centred against the full height of the column on the right. Below md there isn't room
-			     for both columns, and the queue wins. -->
-			<div class="hidden min-w-0 flex-1 items-center justify-center md:flex">
+			<div class="hidden min-h-0 w-[46%] shrink-0 items-center justify-center p-8 md:flex lg:p-10">
 				<button
 					type="button"
 					onclick={toggle}
 					aria-label="Play/pause"
-					class="relative w-full max-w-[var(--art)] cursor-pointer"
+					class="relative aspect-square w-full max-h-full max-w-[min(100%,calc(100vh-11rem))] cursor-pointer"
 				>
 					{#if flash}
 						<!-- No backdrop-blur: re-blurring the plate on every frame of the scale is what made
@@ -147,7 +138,7 @@
 			</div>
 		{/if}
 
-		<div class="flex min-h-0 flex-col {big ? 'flex-1' : 'w-full md:w-[22rem] xl:w-[26rem]'}">
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col px-5 pt-4 pb-3 md:px-8">
 			<Tabs.Root
 				value={np.tab}
 				onValueChange={(v) => (np.tab = v as typeof np.tab)}
@@ -193,11 +184,11 @@
 				<!-- Only the open tab is mounted: bits-ui keeps inactive content in the DOM, which would
 				     leave LyricsView fetching lyrics for every track you never asked to see. -->
 				{#if np.tab === 'queue'}
-					<Tabs.Content value="queue" class="flex min-h-0 flex-col">
+					<Tabs.Content value="queue" class="flex min-h-0 flex-1 flex-col">
 						<QueueList />
 					</Tabs.Content>
 				{:else}
-					<Tabs.Content value="lyrics" class="flex min-h-0 flex-col">
+					<Tabs.Content value="lyrics" class="flex min-h-0 flex-1 flex-col">
 						<LyricsView expanded={big} />
 					</Tabs.Content>
 				{/if}
