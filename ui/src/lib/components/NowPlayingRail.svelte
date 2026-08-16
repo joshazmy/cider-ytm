@@ -2,7 +2,7 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { MusicNote01Icon } from '@hugeicons/core-free-icons';
 	import { np, playback, togglePlayUi } from '$lib/player.svelte';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
 
 	const upcoming = $derived(
@@ -30,7 +30,7 @@
 					togglePlayUi();
 				}}
 			>
-				{#if playback.now.thumbnail}
+				{#if playback.now.thumbnail && !isLetterTile(playback.now.thumbnail)}
 					<img
 						src={thumb(playback.now.thumbnail, 96)}
 						alt=""
