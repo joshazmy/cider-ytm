@@ -5,7 +5,7 @@
 	import SearchSuggest from '$lib/components/SearchSuggest.svelte';
 	import { auth, playback, ui } from '$lib/player.svelte';
 	import { lt } from '$lib/lt.svelte';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 
 	// Fixed at mount — a greeting that flips mid-session is uncanny.
 	const hour = new Date().getHours();
@@ -32,7 +32,7 @@
      but the search preview below has to hang out past the bottom edge. -->
 <div class="relative border-b">
 	<div class="pointer-events-none absolute inset-0 overflow-hidden">
-		{#if playback.now?.thumbnail && !artFailed}
+		{#if playback.now?.thumbnail && !artFailed && !isLetterTile(playback.now.thumbnail)}
 			<!-- 96px, not display size: blur-2xl is a 40px blur, so every detail above a handful of
 			     pixels is thrown away anyway. The old 1200px source decoded to 5.7 MiB for this, and
 			     re-decoded on every track change. -->
