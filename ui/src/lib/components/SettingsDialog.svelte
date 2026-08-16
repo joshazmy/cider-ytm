@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cancel01Icon } from '@hugeicons/core-free-icons';
@@ -154,6 +154,21 @@
 	const preventDuplicatesOn = $derived(settings.prevent_duplicates === 'true');
 	const updateBannerOn = $derived(settings.update_banner !== 'false');
 	const discordOn = $derived(settings.discord_rpc === 'true');
+	let lastfm = $state<{ connected: boolean; username: string | null }>({
+		connected: false,
+		username: null
+	});
+	onMount(() => {
+		api.lastfmStatus()
+			.then((s) => (lastfm = { connected: s.connected, username: s.username ?? null }))
+			.catch(() => {});
+		const un = api.onLastfmState((s) => {
+			lastfm = { connected: s.connected, username: s.username ?? null };
+		});
+		return () => {
+			un.then((f) => f());
+		};
+	});
 	const trayOn = $derived(settings.close_to_tray === 'true');
 	const autostartOn = $derived(settings.autostart === 'true');
 	const disabled = $derived(
@@ -349,6 +364,23 @@
 					</div>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
+							<div class="font-medium">Last.fm scrobbling</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								{lastfm.connected
+									? `Scrobbling as ${lastfm.username ?? 'connected'}`
+									: 'Send what you play to Last.fm. Opens their site to approve.'}
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={() => (lastfm.connected ? api.lastfmDisconnect() : api.lastfmConnect())}
+						>
+							{lastfm.connected ? 'Disconnect' : 'Connect'}
+						</Button>
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
 							<div class="font-medium">Close to tray</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
 								Closing the window keeps music playing in the background. Restore or quit from the
@@ -361,7 +393,7 @@
 						<div class="min-w-0">
 							<div class="font-medium">Start on login</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
-								Launch Limusic automatically when you log in.
+								Launch Yapel automatically when you log in.
 							</p>
 						</div>
 						<Switch checked={autostartOn} onCheckedChange={setAutostart} />

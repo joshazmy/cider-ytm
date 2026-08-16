@@ -503,6 +503,9 @@
 	html {
 		@apply font-sans;
 	}
+	img {
+		image-rendering: auto;
+	}
 }
 
 /* --- Motion & interaction polish --- */

@@ -14,7 +14,7 @@
 	} from '@hugeicons/core-free-icons';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as api from '$lib/api';
-	import { np, playback, ui } from '$lib/player.svelte';
+	import { np, playback, togglePlayUi, ui } from '$lib/player.svelte';
 	import { appearance } from '$lib/theme.svelte';
 	import { thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
@@ -43,7 +43,7 @@
 		attempt = 0;
 		bgFailed = false;
 	});
-	const srcs = $derived([720, 400, 120].map((px) => thumb(playback.now?.thumbnail, px)));
+	const srcs = $derived([1200, 720, 400].map((px) => thumb(playback.now?.thumbnail, px)));
 	const src = $derived(srcs[attempt]);
 	const imgFailed = () => attempt++;
 
@@ -56,7 +56,7 @@
 		flash = playback.paused ? 'play' : 'pause';
 		clearTimeout(flashTimer);
 		flashTimer = setTimeout(() => (flash = null), 220);
-		api.togglePause();
+		togglePlayUi();
 	}
 </script>
 
@@ -116,13 +116,11 @@
 							class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
 						>
 							<div class="rounded-full bg-black/55 p-3.5 text-white">
-								<!-- icon is frozen at mount, so swap via showAlt, not a ternary. -->
-								<HugeiconsIcon
-									icon={PauseIcon}
-									altIcon={PlayIcon}
-									showAlt={flash === 'play'}
-									class="h-7 w-7"
-								/>
+								{#if flash === 'play'}
+									<HugeiconsIcon icon={PlayIcon} class="h-7 w-7" />
+								{:else}
+									<HugeiconsIcon icon={PauseIcon} class="h-7 w-7" />
+								{/if}
 							</div>
 						</div>
 					{/if}

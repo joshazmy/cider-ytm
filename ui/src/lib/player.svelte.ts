@@ -16,6 +16,7 @@ import { applyLtState, lt } from './lt.svelte';
 import { clearCached } from './pagecache';
 import * as pl from './personal';
 import type { Personal } from './personal';
+import { nextPaused } from './transport';
 
 export const playback = $state({
 	now: null as NowPlaying | null,
@@ -42,6 +43,12 @@ export const playback = $state({
 export const np = $state({ open: false, tab: 'lyrics' as 'queue' | 'lyrics' });
 
 export const openPlayer = () => (np.open = true);
+
+/** Flip local pause immediately so the play/pause glyph cannot wait on mpv's event. */
+export function togglePlayUi() {
+	playback.paused = nextPaused(playback.paused);
+	return api.togglePause();
+}
 
 function remainingQueue(): number {
 	const items = playback.queue.items?.length ?? 0;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { np, playback, ui } from '$lib/player.svelte';
+	import { np, playback, togglePlayUi, ui } from '$lib/player.svelte';
 	import * as api from '$lib/api';
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
@@ -32,7 +32,7 @@
 				id: 'pause',
 				label: playback.paused ? 'Play' : 'Pause',
 				hint: 'Space',
-				run: () => api.togglePause()
+				run: () => togglePlayUi()
 			},
 			{
 				id: 'dry',

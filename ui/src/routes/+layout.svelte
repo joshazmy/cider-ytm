@@ -40,6 +40,7 @@
 		np,
 		openMiniPlayer,
 		playback,
+		togglePlayUi,
 		ui
 	} from '$lib/player.svelte';
 	import * as playerApi from '$lib/api';
@@ -76,7 +77,7 @@
 		if (typing) return;
 		if (e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
 			e.preventDefault();
-			playerApi.togglePause();
+			togglePlayUi();
 			return;
 		}
 		if (e.shiftKey && e.code === 'Space') {
@@ -116,6 +117,16 @@
 		} else if (e.code === 'Digit4') {
 			e.preventDefault();
 			goto('/library?tab=artists');
+		} else if (e.code === 'ArrowUp') {
+			e.preventDefault();
+			const v = Math.min(100, playback.volume + 5);
+			playback.volume = v;
+			playerApi.setVolume(v);
+		} else if (e.code === 'ArrowDown') {
+			e.preventDefault();
+			const v = Math.max(0, playback.volume - 5);
+			playback.volume = v;
+			playerApi.setVolume(v);
 		}
 	}
 

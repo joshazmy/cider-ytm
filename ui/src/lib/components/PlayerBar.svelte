@@ -33,8 +33,10 @@
 		openAddToPlaylist,
 		openMiniPlayer,
 		toggleMute,
-		toggleNowPlayingLike
+		toggleNowPlayingLike,
+		togglePlayUi
 	} from '$lib/player.svelte';
+	import { transportGlyph } from '$lib/transport';
 	import { thumb } from '$lib/thumb';
 	import ArtistLine from './ArtistLine.svelte';
 	import Marquee from './Marquee.svelte';
@@ -219,7 +221,9 @@
 				{/if}
 			</div>
 			<!-- Tiny transport: star, prev, play, next, queue -->
-			<div class="flex shrink-0 items-center">
+			<div
+				class="flex shrink-0 items-center [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+			>
 				{#if playback.now && !api.isLocalId(playback.now.videoId)}
 					<Button variant="ghost" size="icon-xs" onclick={toggleLike} aria-label="Like">
 						<span
@@ -248,18 +252,15 @@
 				<Button
 					variant="default"
 					size="icon-xs"
-					class="size-6 rounded-full bg-foreground text-background hover:bg-foreground/90"
-					onclick={() => api.togglePause()}
-					aria-label="Play/pause"
+					class="size-6 rounded-full bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-0"
+					onclick={() => togglePlayUi()}
+					aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 				>
-					<!-- HugeiconsIcon only re-renders `altIcon`/`showAlt`, not `icon` (frozen at mount) —
-					     so toggle via showAlt, not a ternary on `icon`. -->
-					<HugeiconsIcon
-						icon={PauseIcon}
-						altIcon={PlayIcon}
-						showAlt={playback.paused}
-						class="h-3.5 w-3.5"
-					/>
+					{#if transportGlyph(playback.paused) === 'play'}
+						<HugeiconsIcon icon={PlayIcon} class="h-3.5 w-3.5" />
+					{:else}
+						<HugeiconsIcon icon={PauseIcon} class="h-3.5 w-3.5" />
+					{/if}
 				</Button>
 				<Button
 					variant="ghost"

@@ -30,8 +30,10 @@
 		cycleRepeat,
 		dragVolume,
 		toggleMute,
-		toggleNowPlayingLike
+		toggleNowPlayingLike,
+		togglePlayUi
 	} from '$lib/player.svelte';
+	import { transportGlyph } from '$lib/transport';
 	import { thumb } from '$lib/thumb';
 	import Marquee from './Marquee.svelte';
 
@@ -272,12 +274,14 @@
 			</button>
 			<button
 				class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/80"
-				onclick={() => api.togglePause()}
-				aria-label="Play/pause"
+				onclick={() => togglePlayUi()}
+				aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 			>
-				<!-- HugeiconsIcon freezes `icon` at mount, so the swap has to go through
-				     altIcon/showAlt — a ternary on `icon` would never repaint. -->
-				<HugeiconsIcon icon={PauseIcon} altIcon={PlayIcon} showAlt={playback.paused} class="h-4 w-4" />
+				{#if transportGlyph(playback.paused) === 'play'}
+					<HugeiconsIcon icon={PlayIcon} class="h-4 w-4" />
+				{:else}
+					<HugeiconsIcon icon={PauseIcon} class="h-4 w-4" />
+				{/if}
 			</button>
 			<button
 				class="{panelBtn} {repeat !== 'off' ? 'text-primary' : 'text-muted-foreground'}"

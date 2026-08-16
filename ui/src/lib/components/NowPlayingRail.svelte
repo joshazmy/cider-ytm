@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { MusicNote01Icon } from '@hugeicons/core-free-icons';
-	import { np, playback } from '$lib/player.svelte';
-	import * as api from '$lib/api';
+	import { np, playback, togglePlayUi } from '$lib/player.svelte';
 	import { thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
 
@@ -28,7 +27,7 @@
 				onclick={() => {
 					np.open = true;
 					np.tab = 'lyrics';
-					api.togglePause();
+					togglePlayUi();
 				}}
 			>
 				{#if playback.now.thumbnail}

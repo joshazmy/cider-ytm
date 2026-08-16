@@ -161,57 +161,14 @@
 		<!-- Account, then hidden integrations, then window controls. Drag lives on <header> only. -->
 		<AccountMenu />
 
-		<!-- Opens the same modal as the home hero's button (one dialog, mounted in +layout). -->
+		<!-- Listen Together / Discord / Last.fm live in Settings so the title strip cannot paint a
+		     lone Discord "D" mark. -->
 		<button
-			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {lt.role !==
-			'none'
-				? 'text-primary'
-				: ''}"
-			onclick={() => (ui.ltOpen = true)}
-			title="Listen Together"
-			aria-label="Listen Together"
-		>
-			<span class="relative">
-				<HugeiconsIcon icon={UserGroup02Icon} class="h-4 w-4" />
-				{#if lt.role !== 'none'}
-					<!-- Discord's status dot with a ping behind it: two layers, because animate-ping
-					     scales and fades the element it's on, so a lone dot would blink out. -->
-					<span class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5">
-						<span class="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-75"
-						></span>
-						<span class="absolute inset-0 rounded-full bg-emerald-500 ring-[1.5px] ring-background"
-						></span>
-					</span>
-				{/if}
-			</span>
-		</button>
-
-		<button
-			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {discordOn
-				? 'text-foreground'
-				: ''}"
-			onclick={toggleDiscord}
-			title={discordOn ? 'Discord presence on — click to turn off' : 'Show what you play on Discord'}
-			aria-label="Discord Rich Presence"
-		>
-			<span class="relative">
-				<DiscordIcon class="h-4 w-4" />
-				<!-- Presence status dot, Discord-style: green = live, red = off. -->
-				<span
-					class="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full ring-[1.5px] ring-background {discordOn
-						? 'bg-emerald-500'
-						: 'bg-red-500'}"
-				></span>
-			</span>
-		</button>
-
-		<button
-			class="hidden h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground {connected
-				? 'text-foreground'
-				: ''}"
+			class="hidden"
 			onclick={onScrobblerClick}
 			title={scrobblerTitle}
 			aria-label={scrobblerTitle}
+			tabindex="-1"
 		>
 			<span class="relative">
 				<LastFmIcon class="h-4 w-4 {connecting ? 'animate-pulse opacity-60' : ''}" />
