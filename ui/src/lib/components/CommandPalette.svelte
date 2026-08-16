@@ -19,7 +19,7 @@
 			{ id: 'home', label: 'Explore', hint: 'Ctrl+L', run: () => goto('/') },
 			{
 				id: 'np',
-				label: playback.now ? 'Now playing / lyrics' : 'Nothing playing',
+				label: playback.now ? 'Immersive now playing' : 'Nothing playing',
 				hint: 'Ctrl+P',
 				run: () => {
 					if (playback.now) {

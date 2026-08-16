@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import { playback } from '$lib/player.svelte';
+	import { getUserLyrics, setUserLyrics } from '$lib/userLyrics';
 
 	// `expanded` only sizes the type and centres the column. The owner of the extra room (the side
 	// panel, or the now-playing view) decides how much there is. Toggling it must not remount this
@@ -34,6 +35,18 @@
 		const id = (requested = now.videoId);
 		loading = true;
 		lyrics = null;
+		const mine = getUserLyrics(id);
+		if (mine) {
+			lyrics = {
+				source: 'You',
+				synced: false,
+				instrumental: false,
+				lines: mine.split('\n').map((text) => ({ text }))
+			};
+			loading = false;
+			hasScrolled = false;
+			return;
+		}
 		// Album isn't in now-playing, but the queue item usually has it — better LRCLIB matching.
 		const album = playback.queue.items[playback.queue.currentIndex]?.album;
 		api.getLyrics({
@@ -131,6 +144,16 @@
 	});
 
 	const posMs = $derived(interpolatedPosSecs * 1000);
+
+	let draft = $state('');
+	let editing = $state(false);
+	function saveMine() {
+		const id = playback.now?.videoId;
+		if (!id) return;
+		setUserLyrics(id, draft);
+		requested = ''; // refetch effect will pick user copy
+		editing = false;
+	}
 
 	function getWordProgress(word: api.LyricWord, currentMs: number): number {
 		if (currentMs <= word.start_ms) return 0;
@@ -248,4 +271,28 @@
 		{lyrics.source.startsWith('Source:') ? lyrics.source : `Lyrics from ${lyrics.source}`}
 	</p>
 {/if}
+<div class="border-t px-4 py-2">
+	{#if editing}
+		<textarea
+			class="mb-2 h-28 w-full rounded-lg bg-white/5 p-2 text-sm outline-none"
+			placeholder="Paste lyrics…"
+			bind:value={draft}
+		></textarea>
+		<div class="flex gap-2">
+			<button type="button" class="text-xs font-medium text-primary" onclick={saveMine}>Save</button>
+			<button type="button" class="text-xs text-muted-foreground" onclick={() => (editing = false)}
+				>Cancel</button
+			>
+		</div>
+	{:else}
+		<button
+			type="button"
+			class="text-xs text-muted-foreground hover:text-foreground"
+			onclick={() => {
+				draft = lyrics?.source === 'You' ? lyrics.lines.map((l) => l.text).join('\n') : '';
+				editing = true;
+			}}>Add your lyrics</button
+		>
+	{/if}
+</div>
 

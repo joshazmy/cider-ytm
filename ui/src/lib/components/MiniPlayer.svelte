@@ -34,7 +34,7 @@
 		togglePlayUi
 	} from '$lib/player.svelte';
 	import { transportGlyph } from '$lib/transport';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 	import Marquee from './Marquee.svelte';
 
 	const now = $derived(playback.now);
@@ -103,7 +103,7 @@
 	<!-- Cover art under the left half, masked so it dissolves into the card instead of ending on a
 	     seam. Keyed so a track change cross-fades. -->
 	{#key now?.videoId}
-		{#if now?.thumbnail}
+		{#if now?.thumbnail && !isLetterTile(now.thumbnail)}
 			<img
 				src={thumb(now.thumbnail, 480)}
 				alt=""

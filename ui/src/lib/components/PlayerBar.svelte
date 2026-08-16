@@ -37,7 +37,7 @@
 		togglePlayUi
 	} from '$lib/player.svelte';
 	import { transportGlyph } from '$lib/transport';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 	import ArtistLine from './ArtistLine.svelte';
 	import Marquee from './Marquee.svelte';
 	import TrackMenu from './TrackMenu.svelte';
@@ -137,7 +137,7 @@
 
 	// YouTube letter tiles (and 404s from a rewritten size) must not sit in the bar as a lone "D".
 	let artFailed = $state(false);
-	const letterTile = $derived(/\/\/yt3\./.test(playback.now?.thumbnail ?? ''));
+	const letterTile = $derived(isLetterTile(playback.now?.thumbnail));
 	$effect(() => {
 		playback.now?.videoId;
 		artFailed = false;

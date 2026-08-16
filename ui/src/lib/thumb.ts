@@ -10,6 +10,12 @@ export function artworkDpr(raw: number): number {
  * Rewrite a resizable Googleusercontent thumb to `cssPx * dpr` (Cider hiresImages analog).
  * Non-rewritable URLs (i.ytimg.com, already-sized local, garbage) are returned unchanged.
  */
+/** YouTube channel letter tiles (`yt3.*`) paint a lone initial — never use them as album art. */
+export function isLetterTile(url: string | undefined | null): boolean {
+	if (!url) return false;
+	return /\/\/yt3\./i.test(url);
+}
+
 export function rewriteThumbSize(url: string, cssPx: number, dpr: number): string {
 	const size = Math.round(cssPx * artworkDpr(dpr));
 	if (/=w\d+-h\d+/.test(url)) return url.replace(/=w\d+-h\d+/, `=w${size}-h${size}`);

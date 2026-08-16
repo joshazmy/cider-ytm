@@ -16,7 +16,7 @@
 	import * as api from '$lib/api';
 	import { np, playback, togglePlayUi, ui } from '$lib/player.svelte';
 	import { appearance } from '$lib/theme.svelte';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
 	import LyricsView from './LyricsView.svelte';
 
@@ -43,7 +43,10 @@
 		attempt = 0;
 		bgFailed = false;
 	});
-	const srcs = $derived([1200, 720, 400].map((px) => thumb(playback.now?.thumbnail, px)));
+	const letterTile = $derived(isLetterTile(playback.now?.thumbnail));
+	const srcs = $derived(
+		letterTile ? [] : [1200, 720, 400].map((px) => thumb(playback.now?.thumbnail, px))
+	);
 	const src = $derived(srcs[attempt]);
 	const imgFailed = () => attempt++;
 

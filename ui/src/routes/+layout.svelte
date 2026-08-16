@@ -30,7 +30,7 @@
 	import NowPlaying from '$lib/components/NowPlaying.svelte';
 	import NowPlayingRail from '$lib/components/NowPlayingRail.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
-	import { thumb } from '$lib/thumb';
+	import { isLetterTile, thumb } from '$lib/thumb';
 
 	let paletteOpen = $state(false);
 	import { Button } from '$lib/components/ui/button';
@@ -163,7 +163,7 @@
 			? ''
 			: 'rounded-lg'}"
 	>
-		{#if playback.now?.thumbnail}
+		{#if playback.now?.thumbnail && !isLetterTile(playback.now.thumbnail)}
 			<img
 				src={thumb(playback.now.thumbnail, 120)}
 				alt=""

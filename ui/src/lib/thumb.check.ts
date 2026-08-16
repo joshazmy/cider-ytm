@@ -2,7 +2,7 @@
 //
 //     node --experimental-strip-types ui/src/lib/thumb.check.ts
 //
-import { artworkDpr, rewriteThumbSize } from './thumb.ts';
+import { artworkDpr, isLetterTile, rewriteThumbSize } from './thumb.ts';
 
 const eq = (a: unknown, b: unknown, msg: string) => {
 	if (a !== b) throw new Error(`${msg}: ${a} !== ${b}`);
@@ -35,5 +35,11 @@ eq(rewriteThumbSize(ytimg, 200, 2), ytimg, 'ytimg unchanged');
 
 const already = 'https://example.com/cover.png';
 eq(rewriteThumbSize(already, 200, 2), already, 'plain url unchanged');
+
+eq(isLetterTile('https://yt3.googleusercontent.com/abc=s88'), true, 'yt3 is a letter tile');
+eq(isLetterTile('https://yt3.ggpht.com/xyz'), true, 'yt3 ggpht is a letter tile');
+eq(isLetterTile('https://lh3.googleusercontent.com/cover=w544-h544'), false, 'lh3 album art');
+eq(isLetterTile('https://i.ytimg.com/vi/abc/hqdefault.jpg'), false, 'ytimg video thumb');
+eq(isLetterTile(undefined), false, 'empty');
 
 console.log('ok');
