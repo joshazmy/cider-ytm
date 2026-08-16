@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import { playback } from '$lib/player.svelte';
-	import { getUserLyrics, setUserLyrics } from '$lib/userLyrics';
+	import { applyUserLyricsSave, getUserLyrics, lyricsFromUserText } from '$lib/userLyrics';
 
 	// `expanded` only sizes the type and centres the column. The owner of the extra room (the side
 	// panel, or the now-playing view) decides how much there is. Toggling it must not remount this
@@ -37,12 +37,7 @@
 		lyrics = null;
 		const mine = getUserLyrics(id);
 		if (mine) {
-			lyrics = {
-				source: 'You',
-				synced: false,
-				instrumental: false,
-				lines: mine.split('\n').map((text) => ({ text }))
-			};
+			lyrics = lyricsFromUserText(mine);
 			loading = false;
 			hasScrolled = false;
 			return;
@@ -150,8 +145,9 @@
 	function saveMine() {
 		const id = playback.now?.videoId;
 		if (!id) return;
-		setUserLyrics(id, draft);
-		requested = ''; // refetch effect will pick user copy
+		const { lyrics: next } = applyUserLyricsSave(id, draft);
+		lyrics = next;
+		loading = false;
 		editing = false;
 	}
 
