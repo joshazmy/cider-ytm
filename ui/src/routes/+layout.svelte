@@ -188,7 +188,7 @@
 			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
 			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
 			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
-			<div class="relative z-20 px-2 pb-2" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
+			<div class="relative z-20">
 				<PlayerBar
 					onToggleQueue={() => (np.open ? (np.tab = 'queue') : (queueOpen = !queueOpen))}
 					queueOpen={np.open ? np.tab === 'queue' : queueOpen}

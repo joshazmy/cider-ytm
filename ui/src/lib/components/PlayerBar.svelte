@@ -4,10 +4,6 @@
 	import {
 		PreviousIcon,
 		NextIcon,
-		PlayIcon,
-		ShuffleIcon,
-		RepeatIcon,
-		RepeatOne01Icon,
 		Queue01Icon,
 		Mic01Icon,
 		VolumeHighIcon,
@@ -16,17 +12,14 @@
 		InfinityIcon,
 		MinimizeScreenIcon,
 		MusicNote01Icon,
-		ArrowUp01Icon,
-		ArrowDown01Icon
+		ArrowUp01Icon
 	} from '@hugeicons/core-free-icons';
-	import { fade } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import * as api from '$lib/api';
 	import {
 		np,
 		playback,
 		commitVolume,
-		cycleRepeat,
 		dragVolume,
 		openAddToPlaylist,
 		openMiniPlayer,
@@ -61,9 +54,6 @@
 		if (playback.rating !== 'like') justLiked = true;
 		toggleNowPlayingLike();
 	}
-
-	const shuffleOn = $derived(playback.queue.shuffle ?? false);
-	const repeat = $derived(playback.queue.repeat ?? 'off');
 
 	// The current track was appended by autoplay → show the subtle ∞ badge next to the title.
 	// Matched against the now-playing videoId so a transient queue/now-playing mismatch (mid
@@ -108,20 +98,9 @@
 	const onVolume = (e: Event) => dragVolume(Number((e.target as HTMLInputElement).value));
 	const onVolumeCommit = (e: Event) => commitVolume(Number((e.target as HTMLInputElement).value));
 
-	const isControl = (t: EventTarget | null) =>
-		!!(t as HTMLElement | null)?.closest?.('button, a, input, [role="button"]');
-
-	// Dragging a slider past its end and releasing outside it retargets the click at the bar (the
-	// click lands on the common ancestor of press and release), which used to toggle the view.
-	// So judge by where the press started, not where the release happened.
-	let pressedControl = false;
-
-	// Anywhere on the bar that isn't a control opens (or closes) the now-playing view: the bar is
-	// what's left of it once it's minimised, so it's the way back in. Deliberately no pointer
-	// cursor, because this is the whole bar, not a button, and every real button keeps its own click.
-	function onBarClick(e: MouseEvent) {
-		if (pressedControl || isControl(e.target)) return;
+	function openImmersive() {
 		np.open = !np.open;
+		if (np.open) np.tab = 'lyrics';
 	}
 
 	function openAlbum(e: MouseEvent) {
@@ -139,264 +118,184 @@
 	});
 </script>
 
-<!-- The chevron button below is the keyboard equivalent of clicking the bar, so the bar itself
-     stays a plain region rather than becoming a focusable control wrapping every other control. -->
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions, a11y_no_noninteractive_element_interactions -->
 <footer
-	onpointerdown={(e) => (pressedControl = isControl(e.target))}
-	onclick={onBarClick}
-	class="desk-glass flex flex-col rounded-xl px-2 pb-1.5 pt-0.5"
+	class="flex h-16 items-center gap-3 border-t border-white/8 bg-background/90 px-3"
 >
-	<input
-		type="range"
-		class="range mx-1 h-3 w-[calc(100%-0.5rem)]"
-		style="--pct:{durationSecs ? (shownPosition / durationSecs) * 100 : 0}%"
-		min="0"
-		max={durationSecs || 0}
-		value={shownPosition}
-		oninput={onSeekInput}
-		onchange={onSeekCommit}
-		aria-label="Seek"
-	/>
-	<div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-		<div class="flex min-w-0 items-center gap-2">
-			{#key playback.now?.videoId}
-				{#if playback.now?.thumbnail && !artFailed && !letterTile}
-					<button
-						type="button"
-						class="shrink-0"
-						onclick={() => {
-							np.open = true;
-							np.tab = 'lyrics';
-						}}
-						aria-label="Open immersive player"
-					>
-						<img
-							src={thumb(playback.now.thumbnail, 80)}
-							alt=""
-							style="max-width:none"
-							class="h-11 w-11 rounded-md object-cover ring-1 ring-white/10"
-							in:fade={{ duration: 250 }}
-							onerror={() => (artFailed = true)}
-						/>
-					</button>
-				{:else}
-					<div
-						class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
-					>
-						<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
-					</div>
-				{/if}
-			{/key}
-			<div class="min-w-0">
-				<div class="flex min-w-0 items-center gap-1">
-					<Marquee
-						text={playback.now?.title ?? 'Nothing playing'}
-						class="text-[13px] font-medium leading-tight"
-					/>
-					{#if playback.now?.bitrate}
-						<span
-							class="shrink-0 rounded bg-white/10 px-1 py-px text-[9px] font-semibold tracking-wide text-muted-foreground"
-							title="Stream bitrate (kbps)"
-						>
-							{playback.now.bitrate}
-						</span>
-					{/if}
-					{#if autoplayTrack}
-						<span
-							class="shrink-0 text-muted-foreground"
-							title="Playing similar music (Autoplay)"
-							in:fade={{ duration: 200 }}
-						>
-							<HugeiconsIcon icon={InfinityIcon} class="h-3 w-3" />
-						</span>
-					{/if}
-				</div>
-				<div class="flex min-w-0 items-center text-[11px] leading-tight text-muted-foreground">
-					<ArtistLine
-						runs={playback.now?.artistRuns}
-						text={playback.now?.artists ?? ''}
-						class="min-w-0 truncate"
-					/>
-					{#if albumName}
-						<span class="shrink-0"> – </span>
-						{#if albumId}
-							<button
-								class="min-w-0 truncate hover:text-foreground hover:underline"
-								onclick={openAlbum}
-							>
-								{albumName}
-							</button>
-						{:else}
-							<span class="min-w-0 truncate">{albumName}</span>
-						{/if}
-					{/if}
-				</div>
-			</div>
-		</div>
-
-		<div class="flex items-center gap-2">
-			<div
-				class="flex shrink-0 items-center [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
-			>
-				{#if playback.now && !api.isLocalId(playback.now.videoId)}
-					<Button variant="ghost" size="icon-xs" onclick={toggleLike} aria-label="Like">
-						<span
-							class="inline-flex"
-							class:animate-heart-pop={justLiked}
-							onanimationend={() => (justLiked = false)}
-						>
-							<HugeiconsIcon
-								icon={StarIcon}
-								class="h-3.5 w-3.5 {playback.rating === 'like'
-									? 'fill-current text-primary'
-									: 'text-muted-foreground'}"
-							/>
-						</span>
-					</Button>
-				{/if}
-				<Button
-					variant="ghost"
-					size="icon-xs"
-					class="text-muted-foreground"
-					onclick={() => api.toggleShuffle()}
-					aria-label="Shuffle"
-					aria-pressed={shuffleOn}
-				>
-					<HugeiconsIcon
-						icon={ShuffleIcon}
-						class="h-3.5 w-3.5 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}"
-					/>
-				</Button>
-				<Button
-					variant="ghost"
-					size="icon-xs"
-					class="text-muted-foreground"
-					onclick={() => api.prevTrack()}
-					aria-label="Previous"
-				>
-					<HugeiconsIcon icon={PreviousIcon} class="h-3.5 w-3.5" />
-				</Button>
-				<Button
-					variant="default"
-					size="icon-xs"
-					class="size-8 rounded-full bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-0"
-					onclick={() => togglePlayUi()}
-					aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
-				>
-					{#if transportGlyph(playback.paused) === 'play'}
-						<HugeiconsIcon icon={PlayIcon} class="h-4 w-4" />
-					{:else}
-						<span class="inline-flex items-center gap-[3px]" aria-hidden="true">
-							<span class="h-3 w-[3px] rounded-sm bg-current"></span>
-							<span class="h-3 w-[3px] rounded-sm bg-current"></span>
-						</span>
-					{/if}
-				</Button>
-				<Button
-					variant="ghost"
-					size="icon-xs"
-					class="text-muted-foreground"
-					onclick={() => api.nextTrack()}
-					aria-label="Next"
-				>
-					<HugeiconsIcon icon={NextIcon} class="h-3.5 w-3.5" />
-				</Button>
-				<Button
-					variant="ghost"
-					size="icon-xs"
-					class={lyricsOpen ? 'text-primary' : 'text-muted-foreground'}
-					onclick={onToggleLyrics}
-					aria-label="Toggle lyrics"
-				>
-					<HugeiconsIcon icon={Mic01Icon} class="h-3.5 w-3.5" />
-				</Button>
-			</div>
-			<span class="text-[11px] tabular-nums text-muted-foreground">
-				{fmtClock(shownPosition)} / {fmtClock(durationSecs)}
-			</span>
-		</div>
-
-		<div
-			class="flex items-center justify-end [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+	<div class="flex min-w-0 flex-1 items-center gap-2.5">
+		<button
+			type="button"
+			class="group relative size-12 shrink-0 overflow-hidden rounded-md bg-muted"
+			onclick={openImmersive}
+			aria-label={np.open ? 'Close immersive' : 'Immersive player'}
+			aria-expanded={np.open}
 		>
-			<Button
-				variant="ghost"
-				size="icon-xs"
-				class="text-muted-foreground"
-				onclick={toggleMute}
-				aria-label={playback.volume === 0 ? 'Unmute' : 'Mute'}
-			>
-				<HugeiconsIcon
-					icon={VolumeHighIcon}
-					altIcon={VolumeMute02Icon}
-					showAlt={playback.volume === 0}
-					class="h-3.5 w-3.5"
+			{#if playback.now?.thumbnail && !artFailed && !letterTile}
+				<img
+					src={thumb(playback.now.thumbnail, 48)}
+					alt=""
+					style="max-width:none"
+					class="size-12 object-cover"
+					onerror={() => (artFailed = true)}
 				/>
-			</Button>
+			{:else}
+				<span class="flex size-12 items-center justify-center text-muted-foreground/50">
+					<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
+				</span>
+			{/if}
+			<span
+				class="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100"
+			>
+				<HugeiconsIcon icon={ArrowUp01Icon} class="h-4 w-4 text-white" />
+			</span>
+		</button>
+		<div class="min-w-0 flex-1">
+			<div class="flex min-w-0 items-center gap-1">
+				<Marquee
+					text={playback.now?.title ?? 'Nothing playing'}
+					class="text-[13px] font-medium leading-tight"
+				/>
+				{#if playback.now?.bitrate}
+					<span
+						class="shrink-0 rounded bg-white/10 px-1 py-px text-[9px] font-semibold tracking-wide text-muted-foreground"
+						title="Stream bitrate (kbps)"
+					>
+						{playback.now.bitrate}
+					</span>
+				{/if}
+				{#if autoplayTrack}
+					<span class="shrink-0 text-muted-foreground" title="Playing similar music (Autoplay)">
+						<HugeiconsIcon icon={InfinityIcon} class="h-3 w-3" />
+					</span>
+				{/if}
+			</div>
+			<div class="flex min-w-0 items-center text-[11px] leading-tight text-muted-foreground">
+				<ArtistLine
+					runs={playback.now?.artistRuns}
+					text={playback.now?.artists ?? ''}
+					class="min-w-0 truncate"
+				/>
+				{#if albumName}
+					<span class="shrink-0"> – </span>
+					{#if albumId}
+						<button class="min-w-0 truncate hover:text-foreground hover:underline" onclick={openAlbum}>
+							{albumName}
+						</button>
+					{:else}
+						<span class="min-w-0 truncate">{albumName}</span>
+					{/if}
+				{/if}
+			</div>
 			<input
 				type="range"
-				class="range w-20"
-				style="--pct:{playback.volume}%"
+				class="range mt-1 h-3 w-full"
+				style="--pct:{durationSecs ? (shownPosition / durationSecs) * 100 : 0}%"
 				min="0"
-				max="100"
-				value={playback.volume}
-				oninput={onVolume}
-				onchange={onVolumeCommit}
-				aria-label="Volume"
+				max={durationSecs || 0}
+				value={shownPosition}
+				oninput={onSeekInput}
+				onchange={onSeekCommit}
+				aria-label="Seek"
 			/>
-			<Button
-				variant="ghost"
-				size="icon-xs"
-				onclick={cycleRepeat}
-				aria-label="Repeat: {repeat}"
-				aria-pressed={repeat !== 'off'}
-			>
-				<HugeiconsIcon
-					icon={RepeatIcon}
-					altIcon={RepeatOne01Icon}
-					showAlt={repeat === 'one'}
-					class="h-3.5 w-3.5 {repeat !== 'off' ? 'text-primary' : 'text-muted-foreground'}"
-				/>
-			</Button>
-			<Button variant="ghost" size="icon-xs" onclick={openMiniPlayer} aria-label="Mini player">
-				<HugeiconsIcon icon={MinimizeScreenIcon} class="h-3.5 w-3.5" />
-			</Button>
-			<Button
-				variant="ghost"
-				size="icon-xs"
-				class={queueOpen ? 'text-primary' : 'text-muted-foreground'}
-				onclick={onToggleQueue}
-				aria-label="Toggle queue"
-			>
-				<HugeiconsIcon icon={Queue01Icon} class="h-3.5 w-3.5" />
-			</Button>
-			{#if currentSong}
-				<TrackMenu
-					song={currentSong}
-					linksOnly
-					onAdd={() => openAddToPlaylist(currentSong!)}
-					triggerClass="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
-				/>
-			{/if}
-			<Button
-				variant={np.open ? 'secondary' : 'ghost'}
-				size="icon-xs"
-				class={np.open ? 'text-primary' : 'text-muted-foreground'}
-				onclick={() => {
-					np.open = !np.open;
-					if (np.open) np.tab = 'lyrics';
-				}}
-				aria-label={np.open ? 'Close immersive' : 'Immersive player'}
-				aria-expanded={np.open}
-			>
-				<HugeiconsIcon
-					icon={ArrowUp01Icon}
-					altIcon={ArrowDown01Icon}
-					showAlt={np.open}
-					class="h-3.5 w-3.5"
-				/>
-			</Button>
 		</div>
+	</div>
+
+	<div
+		class="flex shrink-0 items-center gap-0.5 [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+	>
+		{#if playback.now && !api.isLocalId(playback.now.videoId)}
+			<Button variant="ghost" size="icon-sm" onclick={toggleLike} aria-label="Like">
+				<span class="inline-flex" class:animate-heart-pop={justLiked} onanimationend={() => (justLiked = false)}>
+					<HugeiconsIcon
+						icon={StarIcon}
+						class="h-4 w-4 {playback.rating === 'like' ? 'fill-current text-primary' : 'text-muted-foreground'}"
+					/>
+				</span>
+			</Button>
+		{/if}
+		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.prevTrack()} aria-label="Previous">
+			<HugeiconsIcon icon={PreviousIcon} class="h-4 w-4" />
+		</Button>
+		<button
+			type="button"
+			class="flex size-9 items-center justify-center rounded-full bg-foreground text-background hover:bg-foreground/90"
+			onclick={() => togglePlayUi()}
+			aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
+		>
+			{#if transportGlyph(playback.paused) === 'play'}
+				<svg viewBox="0 0 16 16" class="ml-0.5 h-4 w-4 fill-current" aria-hidden="true">
+					<path d="M4 2.4v11.2L13.6 8z" />
+				</svg>
+			{:else}
+				<svg viewBox="0 0 16 16" class="h-4 w-4 fill-current" aria-hidden="true">
+					<rect x="3" y="2" width="3.5" height="12" rx="1" />
+					<rect x="9.5" y="2" width="3.5" height="12" rx="1" />
+				</svg>
+			{/if}
+		</button>
+		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.nextTrack()} aria-label="Next">
+			<HugeiconsIcon icon={NextIcon} class="h-4 w-4" />
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class={lyricsOpen ? 'text-primary' : 'text-muted-foreground'}
+			onclick={onToggleLyrics}
+			aria-label="Toggle lyrics"
+		>
+			<HugeiconsIcon icon={Mic01Icon} class="h-4 w-4" />
+		</Button>
+		<span class="ml-1 w-[4.5rem] text-[11px] tabular-nums text-muted-foreground">
+			{fmtClock(shownPosition)} / {fmtClock(durationSecs)}
+		</span>
+	</div>
+
+	<div
+		class="flex min-w-0 flex-1 items-center justify-end [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+	>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class="text-muted-foreground"
+			onclick={toggleMute}
+			aria-label={playback.volume === 0 ? 'Unmute' : 'Mute'}
+		>
+			<HugeiconsIcon
+				icon={VolumeHighIcon}
+				altIcon={VolumeMute02Icon}
+				showAlt={playback.volume === 0}
+				class="h-4 w-4"
+			/>
+		</Button>
+		<input
+			type="range"
+			class="range w-20"
+			style="--pct:{playback.volume}%"
+			min="0"
+			max="100"
+			value={playback.volume}
+			oninput={onVolume}
+			onchange={onVolumeCommit}
+			aria-label="Volume"
+		/>
+		<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
+			<HugeiconsIcon icon={MinimizeScreenIcon} class="h-4 w-4" />
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class={queueOpen ? 'text-primary' : 'text-muted-foreground'}
+			onclick={onToggleQueue}
+			aria-label="Toggle queue"
+		>
+			<HugeiconsIcon icon={Queue01Icon} class="h-4 w-4" />
+		</Button>
+		{#if currentSong}
+			<TrackMenu
+				song={currentSong}
+				linksOnly
+				onAdd={() => openAddToPlaylist(currentSong!)}
+				triggerClass="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+			/>
+		{/if}
 	</div>
 </footer>
