@@ -2,7 +2,7 @@
 //
 //     node --experimental-strip-types ui/src/lib/thumb.check.ts
 //
-import { artworkDpr, isLetterTile, rewriteThumbSize } from './thumb.ts';
+import { artworkDpr, hiresCandidates, isLetterTile, rewriteThumbSize, ytimgLadder } from './thumb.ts';
 
 const eq = (a: unknown, b: unknown, msg: string) => {
 	if (a !== b) throw new Error(`${msg}: ${a} !== ${b}`);
@@ -31,7 +31,16 @@ eq(rewriteThumbSize(sUrl, 48, 2), 'https://lh3.googleusercontent.com/xyz=s96', '
 eq(rewriteThumbSize(sUrl, 40, 2), 'https://lh3.googleusercontent.com/xyz=s80', 's 2× of 40');
 
 const ytimg = 'https://i.ytimg.com/vi/abc/hqdefault.jpg';
-eq(rewriteThumbSize(ytimg, 200, 2), ytimg, 'ytimg unchanged');
+eq(rewriteThumbSize(ytimg, 40, 2), ytimg, 'small ytimg unchanged');
+eq(
+	rewriteThumbSize(ytimg, 200, 2),
+	'https://i.ytimg.com/vi/abc/maxresdefault.jpg',
+	'large ytimg → maxres'
+);
+eq(ytimgLadder(ytimg)?.[0], 'https://i.ytimg.com/vi/abc/maxresdefault.jpg', 'ladder maxres first');
+eq(ytimgLadder(ytimg)?.[3], 'https://i.ytimg.com/vi/abc/hqdefault.jpg', 'ladder ends at hq');
+eq(hiresCandidates(ytimg, 1600)[0], 'https://i.ytimg.com/vi/abc/maxresdefault.jpg', 'hires ytimg');
+eq(hiresCandidates('https://yt3.googleusercontent.com/abc=s88', 800).length, 0, 'no letter-tile hires');
 
 const already = 'https://example.com/cover.png';
 eq(rewriteThumbSize(already, 200, 2), already, 'plain url unchanged');

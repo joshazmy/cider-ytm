@@ -165,7 +165,7 @@
 			{#key playback.now?.videoId}
 				{#if playback.now?.thumbnail && !artFailed && !letterTile}
 					<img
-						src={thumb(playback.now.thumbnail, 88)}
+						src={thumb(playback.now.thumbnail, 160)}
 						alt=""
 						style="max-width:none"
 						class="h-11 w-11 shrink-0 rounded-md object-cover ring-1 ring-white/10"

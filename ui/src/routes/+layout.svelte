@@ -161,7 +161,7 @@
 	>
 		{#if appearance.artworkBackground && playback.now?.thumbnail && !isLetterTile(playback.now.thumbnail)}
 			<img
-				src={thumb(playback.now.thumbnail, 320)}
+				src={thumb(playback.now.thumbnail, 900)}
 				alt=""
 				class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-55 blur-2xl saturate-[1.8]"
 			/>

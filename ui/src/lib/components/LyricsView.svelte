@@ -7,7 +7,7 @@
 	// `expanded` only sizes the type and centres the column. The owner of the extra room (the side
 	// panel, or the now-playing view) decides how much there is. Toggling it must not remount this
 	// component, or the lyrics refetch and the scroll position is lost.
-	let { expanded = false }: { expanded?: boolean } = $props();
+	let { expanded = false, onCover = false }: { expanded?: boolean; onCover?: boolean } = $props();
 
 	let lyrics = $state<api.Lyrics | null>(null);
 	let loading = $state(true);
@@ -178,13 +178,19 @@
 				<button
 					data-line={i}
 					onclick={() => seekTo(line)}
-					class="block w-full origin-left cursor-pointer text-left font-heading font-bold leading-snug transition-[color,transform] duration-300 ease-out hover:text-foreground
+					class="block w-full origin-left cursor-pointer text-left font-heading font-bold leading-snug transition-[color,transform] duration-300 ease-out
 						{expanded ? 'py-3 text-3xl' : 'py-2 text-xl'}
 						{isActive
-						? 'scale-[1.045] text-foreground [text-shadow:0_0_22px_color-mix(in_oklab,var(--foreground)_34%,transparent),0_0_40px_color-mix(in_oklab,var(--primary)_40%,transparent)]'
+						? onCover
+							? 'scale-[1.03] text-white [text-shadow:0_8px_28px_rgb(0_0_0_/_0.55)]'
+							: 'scale-[1.045] text-foreground [text-shadow:0_0_22px_color-mix(in_oklab,var(--foreground)_34%,transparent),0_0_40px_color-mix(in_oklab,var(--primary)_40%,transparent)]'
 						: isPast
-							? 'text-muted-foreground/28'
-							: 'text-muted-foreground/42'}"
+							? onCover
+								? 'text-white/35 hover:text-white/70'
+								: 'text-muted-foreground/28 hover:text-foreground'
+							: onCover
+								? 'text-white/55 hover:text-white/80'
+								: 'text-muted-foreground/42 hover:text-foreground'}"
 				>
 					{#if line.words && line.words.length > 0}
 						<!-- Word-by-Word Karaoke Sweep Animation (Better-Lyrics style, highly optimized) -->
@@ -204,12 +210,24 @@
 										class="inline-block bg-clip-text text-transparent [-webkit-text-fill-color:transparent] transition-transform duration-100 ease-out {isWordEnd ? 'mr-[0.26em]' : ''} {isCurrentWord
 											? 'scale-[1.03]'
 											: ''}"
-										style="background-image: linear-gradient(90deg, var(--foreground) {pct}%, var(--muted-foreground) {pct}%)"
+										style="background-image: linear-gradient(90deg, {onCover
+											? '#fff'
+											: 'var(--foreground)'} {pct}%, {onCover
+											? 'rgb(255 255 255 / 0.38)'
+											: 'var(--muted-foreground)'} {pct}%)"
 									>
 										{cleanText}
 									</span>
 								{:else}
-									<span class="inline-block {isWordEnd ? 'mr-[0.26em]' : ''} {isPast ? 'text-muted-foreground/28' : 'text-muted-foreground/42'}">
+									<span
+										class="inline-block {isWordEnd ? 'mr-[0.26em]' : ''} {onCover
+											? isPast
+												? 'text-white/35'
+												: 'text-white/55'
+											: isPast
+												? 'text-muted-foreground/28'
+												: 'text-muted-foreground/42'}"
+									>
 										{cleanText}
 									</span>
 								{/if}

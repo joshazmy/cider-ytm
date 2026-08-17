@@ -39,7 +39,7 @@ Live Cider on this machine is a **three-column catalog desk** (sidebar · number
 - **Playlist / Songs:** 58px pitch; 28px index; 40×40 art; title+album; persistent like + explicit; artist; duration; menu. Playing row: index → play glyph, stronger plate.
 - **Library empty:** no 24px Outfit title. Two lines + Sign in + Add local folder. Signed-in empty is the same panel, not a shorter sentence.
 - **Home / Explore:** keep HomeHero. Do not redirect first launch to an empty Library.
-- **Immersive (mode):** split studio stays for lyrics-first. Art column must show title/artist/like, not a mute poster. Do not cover the rail unless the user asked for immersive.
+- **Immersive (mode):** full-bleed cover (Cider player view). Title/artist/bitrate on the plate. Lyrics overlay on the right. Largest still first (`maxresdefault` / 1600px). Covers sidebar. Desk bar stays.
 - **Rail:** Now Playing card (art, title, artist, like) + “Playing Next · 2 of N · from {source}” + compact queue. Toolbar: shuffle/repeat/clear if those verbs already exist. No fake BPM.
 - **Bar:** hairline seek on top (4px, rose, unfilled 22% white). One row: like · prev · play(24px) · next · lyrics · `elapsed / total`. Right: volume · shuffle · repeat · queue · menu · expand. One mini, on the bar only. Bitrate chip opposite the title.
 - **Settings:** Themes stays a product tab. Playback: Speed 1.15, Dry/DimiSco, fade, EQ, sleep — hardware/stream-client dumps go under an Advanced disclosure.

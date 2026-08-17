@@ -6,21 +6,47 @@ export function artworkDpr(raw: number): number {
 	return Math.min(Math.max(raw, 2), 3);
 }
 
-/**
- * Rewrite a resizable Googleusercontent thumb to `cssPx * dpr` (Cider hiresImages analog).
- * Non-rewritable URLs (i.ytimg.com, already-sized local, garbage) are returned unchanged.
- */
 /** YouTube channel letter tiles (`yt3.*`) paint a lone initial — never use them as album art. */
 export function isLetterTile(url: string | undefined | null): boolean {
 	if (!url) return false;
 	return /\/\/yt3\./i.test(url);
 }
 
+const YTIMG = /^(https?:\/\/i\.ytimg\.com\/vi\/[^/]+)\/(maxresdefault|hq720|sddefault|hqdefault|mqdefault|default)(\.[a-zA-Z0-9]+)(.*)$/i;
+const YTIMG_STEPS = ['maxresdefault', 'hq720', 'sddefault', 'hqdefault'] as const;
+
+/** i.ytimg.com stills: try the largest file first (hqdefault is 480px and looks soft full-screen). */
+export function ytimgLadder(url: string): string[] | null {
+	const m = url.match(YTIMG);
+	if (!m) return null;
+	const [, base, , ext, rest] = m;
+	return YTIMG_STEPS.map((name) => `${base}/${name}${ext}${rest}`);
+}
+
 export function rewriteThumbSize(url: string, cssPx: number, dpr: number): string {
 	const size = Math.round(cssPx * artworkDpr(dpr));
 	if (/=w\d+-h\d+/.test(url)) return url.replace(/=w\d+-h\d+/, `=w${size}-h${size}`);
 	if (/=s\d+/.test(url)) return url.replace(/=s\d+/, `=s${size}`);
+	if (cssPx >= 200) {
+		const ladder = ytimgLadder(url);
+		if (ladder) return ladder[0];
+	}
 	return url;
+}
+
+/** Largest-first sources for a full-bleed plate. Caller steps down on error. */
+export function hiresCandidates(url: string | undefined | null, cssPx: number): string[] {
+	if (!url || isLetterTile(url)) return [];
+	const ytimg = ytimgLadder(url);
+	if (ytimg) return ytimg;
+	const dpr = typeof window !== 'undefined' ? artworkDpr(window.devicePixelRatio || 1) : 2;
+	const sizes = [cssPx, Math.round(cssPx * 0.66), Math.round(cssPx * 0.4)];
+	const out: string[] = [];
+	for (const s of sizes) {
+		const next = rewriteThumbSize(url, s, dpr);
+		if (!out.includes(next)) out.push(next);
+	}
+	return out;
 }
 
 // Rewrite a Google image URL to (about) the pixel size a slot actually renders, so WebKitGTK

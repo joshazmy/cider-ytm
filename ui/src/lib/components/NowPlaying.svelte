@@ -4,55 +4,32 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		Maximize01Icon,
-		Minimize01Icon,
+		ArrowDown01Icon,
 		Mic01Icon,
 		MusicNote01Icon,
 		PlayIcon,
 		PauseIcon,
 		Queue01Icon
 	} from '@hugeicons/core-free-icons';
-	import * as Tabs from '$lib/components/ui/tabs';
-	import * as api from '$lib/api';
-	import { np, playback, togglePlayUi, ui } from '$lib/player.svelte';
-	import { appearance } from '$lib/theme.svelte';
-	import { isLetterTile, thumb } from '$lib/thumb';
+	import { np, playback, togglePlayUi } from '$lib/player.svelte';
+	import { hiresCandidates } from '$lib/thumb';
+	import ArtistLine from './ArtistLine.svelte';
 	import QueueList from './QueueList.svelte';
 	import LyricsView from './LyricsView.svelte';
 
-	// Going somewhere means the user wants that page, not this one: minimise. The player bar brings
-	// it back. beforeNavigate (not a pathname effect) so clicking the tab you're already on counts.
 	beforeNavigate(() => (np.open = false));
 
-	// Enlarged lyrics take the whole view, artwork column and tab strip included. A class swap
-	// rather than unmounting the tabs: LyricsView must survive it or it refetches and loses its
-	// scroll position.
-	let big = $state(false);
-	$effect(() => {
-		if (np.tab !== 'lyrics') big = false; // nothing to enlarge on the queue tab
-	});
-
-	// Google's CDN doesn't serve every rewritten size for every image (see MediaCard), and at this
-	// size a broken-image glyph *is* the page. So step down until one loads: crisp, then the size
-	// proven everywhere else in the app, then the 120 the player bar is already showing for this
-	// very track, and only then a music note.
 	let attempt = $state(0);
-	let bgFailed = $state(false);
 	$effect(() => {
-		playback.now?.thumbnail; // re-arm on every track change
+		playback.now?.thumbnail;
 		attempt = 0;
-		bgFailed = false;
 	});
-	const letterTile = $derived(isLetterTile(playback.now?.thumbnail));
-	const srcs = $derived(
-		letterTile ? [] : [1200, 720, 400].map((px) => thumb(playback.now?.thumbnail, px))
-	);
+	const srcs = $derived(hiresCandidates(playback.now?.thumbnail, 1600));
 	const src = $derived(srcs[attempt]);
-	const imgFailed = () => attempt++;
+	const imgFailed = () => {
+		if (attempt < srcs.length - 1) attempt++;
+	};
 
-	// Clicking the artwork toggles playback, and flashes the action just taken over it so the click
-	// visibly did something. Read `paused` before the toggle: the backend event that flips it is a
-	// round trip away, and the icon has to be right on the frame the user clicked.
 	let flash: 'play' | 'pause' | null = $state(null);
 	let flashTimer: ReturnType<typeof setTimeout>;
 	function toggle() {
@@ -63,136 +40,107 @@
 	}
 </script>
 
-<!-- Fullscreen minus the sidebar only — the right now-playing rail is covered on purpose (Ctrl+P
-     is not a sibling of that rail). The player bar stays in charge of transport and paints above
-     this on the way in and out.
-     z-20 matches the highest a page uses for its own chrome (home's sticky mood chips) and wins the
-     tie on DOM order, since <main> is static and its z-indexes land in the same stacking context.
-     ponytail: left offsets mirror Sidebar's w-16 / w-60 (and its manual collapse) — keep in sync
-     if those change. -->
+<!-- Full-bleed plate over sidebar + rail (Cider immersive). The desk bar stays above this. -->
 <div
 	transition:fly={{ y: '100%', duration: 320, easing: cubicOut }}
-	class="absolute inset-y-0 left-16 right-0 z-20 isolate flex min-h-0 overflow-hidden {ui.sidebarCollapsed
-		? ''
-		: 'lg:left-60'}"
-	style="background-color: var(--background)"
+	class="absolute inset-0 z-20 isolate flex min-h-0 overflow-hidden bg-black"
 >
-	<!-- Solid plate. The wash tints this; it must never punch a hole through to the page. -->
-	<div class="pointer-events-none absolute inset-0" style="background-color: var(--background)"></div>
-	{#if appearance.artworkBackground && srcs[2] && !bgFailed}
+	{#if src && attempt < srcs.length}
 		<img
-			src={srcs[2]}
+			{src}
 			alt=""
-			onerror={() => (bgFailed = true)}
-			class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-40 blur-3xl saturate-150 dark:opacity-45"
+			onerror={imgFailed}
+			decoding="async"
+			class="pointer-events-none absolute inset-0 h-full w-full object-cover"
 		/>
-		<div
-			class="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/80 via-background/65 to-background/90"
-		></div>
+	{:else}
+		<div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-white/20">
+			<HugeiconsIcon icon={MusicNote01Icon} class="h-20 w-20" />
+		</div>
 	{/if}
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-black/72"></div>
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/35"></div>
 
-	<!-- Split studio: art owns the left half, lyrics own the rest. No max-width island. -->
+	<button
+		type="button"
+		onclick={() => (np.open = false)}
+		class="absolute top-3 left-3 z-20 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white/80 ring-1 ring-white/15 hover:bg-black/55 hover:text-white"
+		aria-label="Close player"
+	>
+		<HugeiconsIcon icon={ArrowDown01Icon} class="h-4 w-4" />
+	</button>
+
 	<div class="relative flex min-h-0 w-full flex-1">
-		{#if !big}
-			<div class="hidden min-h-0 w-[46%] shrink-0 items-center justify-center p-8 md:flex lg:p-10">
+		<button
+			type="button"
+			onclick={toggle}
+			aria-label={playback.paused ? 'Play' : 'Pause'}
+			class="relative hidden min-h-0 w-[48%] shrink-0 cursor-pointer md:block"
+		>
+			{#if flash}
+				<div
+					in:scale={{ start: 0.7, duration: 150, easing: cubicOut }}
+					out:scale={{ start: 1.3, duration: 320, easing: cubicOut }}
+					class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+				>
+					<div class="rounded-full bg-black/55 p-4 text-white">
+						{#if flash === 'play'}
+							<HugeiconsIcon icon={PlayIcon} class="h-8 w-8" />
+						{:else}
+							<HugeiconsIcon icon={PauseIcon} class="h-8 w-8" />
+						{/if}
+					</div>
+				</div>
+			{/if}
+			<div class="absolute right-6 bottom-8 left-8 text-left">
+				<div class="font-heading text-[2.15rem] leading-tight font-semibold text-white drop-shadow-md">
+					{playback.now?.title ?? ''}
+				</div>
+				<div class="mt-1.5 text-[1.05rem] text-white/75">
+					<ArtistLine
+						runs={playback.now?.artistRuns}
+						text={playback.now?.artists ?? ''}
+						class="text-white/75 hover:text-white"
+					/>
+				</div>
+				{#if playback.now?.bitrate}
+					<span
+						class="mt-3 inline-block rounded bg-white/15 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white/90"
+					>
+						{playback.now.bitrate}
+					</span>
+				{/if}
+			</div>
+		</button>
+
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col px-5 pt-3 pb-3 md:px-8">
+			<div class="mb-2 flex items-center justify-end gap-1">
 				<button
 					type="button"
-					onclick={toggle}
-					aria-label="Play/pause"
-					class="relative aspect-square w-full max-h-full max-w-[min(100%,calc(100vh-11rem))] cursor-pointer"
+					onclick={() => (np.tab = 'queue')}
+					class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] {np.tab === 'queue'
+						? 'bg-white/15 text-white'
+						: 'text-white/55 hover:text-white'}"
 				>
-					{#if flash}
-						<!-- No backdrop-blur: re-blurring the plate on every frame of the scale is what made
-						     this stutter on WebKitGTK. Transform and opacity only. -->
-						<div
-							in:scale={{ start: 0.7, duration: 150, easing: cubicOut }}
-							out:scale={{ start: 1.3, duration: 320, easing: cubicOut }}
-							class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
-						>
-							<div class="rounded-full bg-black/55 p-3.5 text-white">
-								{#if flash === 'play'}
-									<HugeiconsIcon icon={PlayIcon} class="h-7 w-7" />
-								{:else}
-									<HugeiconsIcon icon={PauseIcon} class="h-7 w-7" />
-								{/if}
-							</div>
-						</div>
-					{/if}
-					{#if src && attempt < srcs.length}
-						<img
-							{src}
-							alt=""
-							onerror={imgFailed}
-							class="aspect-square w-full rounded-[1.75rem] object-cover ring-1 ring-white/10"
-							style="box-shadow: 0 18px 36px -12px rgb(0 0 0 / 0.55), 0 40px 80px -18px rgb(0 0 0 / 0.65), 0 70px 140px -24px rgb(0 0 0 / 0.55)"
-						/>
-					{:else}
-						<div
-							class="flex aspect-square w-full items-center justify-center rounded-[1.75rem] bg-muted text-muted-foreground/40"
-							style="box-shadow: 0 18px 36px -12px rgb(0 0 0 / 0.55), 0 40px 80px -18px rgb(0 0 0 / 0.65)"
-						>
-							<HugeiconsIcon icon={MusicNote01Icon} class="h-16 w-16" />
-						</div>
-					{/if}
+					<HugeiconsIcon icon={Queue01Icon} class="h-4 w-4" /> Queue
+				</button>
+				<button
+					type="button"
+					onclick={() => (np.tab = 'lyrics')}
+					class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] {np.tab === 'lyrics'
+						? 'bg-white/15 text-white'
+						: 'text-white/55 hover:text-white'}"
+				>
+					<HugeiconsIcon icon={Mic01Icon} class="h-4 w-4" /> Lyrics
 				</button>
 			</div>
-		{/if}
-
-		<div class="flex min-h-0 min-w-0 flex-1 flex-col px-5 pt-4 pb-3 md:px-8">
-			<Tabs.Root
-				value={np.tab}
-				onValueChange={(v) => (np.tab = v as typeof np.tab)}
-				class="min-h-0 flex-1"
-			>
-				<div class="flex items-center gap-2 {big ? 'justify-end' : ''}">
-					<!-- Dark pills, not the default muted segment: each trigger is its own capsule
-					     inside a darker track. Same two glyphs the player bar uses. -->
-					<Tabs.List
-						class={big
-							? 'hidden'
-							: 'h-9 flex-1 gap-1 rounded-full bg-foreground/8 p-1 shadow-none'}
-					>
-						<Tabs.Trigger
-							value="queue"
-							class="h-full gap-2 rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-muted-foreground shadow-none data-active:bg-foreground/15 data-active:text-foreground dark:data-active:border-transparent dark:data-active:bg-foreground/15"
-						>
-							<HugeiconsIcon icon={Queue01Icon} class="h-4 w-4" /> Queue
-						</Tabs.Trigger>
-						<Tabs.Trigger
-							value="lyrics"
-							class="h-full gap-2 rounded-full border-0 bg-transparent px-3 text-[13px] font-medium text-muted-foreground shadow-none data-active:bg-foreground/15 data-active:text-foreground dark:data-active:border-transparent dark:data-active:bg-foreground/15"
-						>
-							<HugeiconsIcon icon={Mic01Icon} class="h-4 w-4" /> Lyrics
-						</Tabs.Trigger>
-					</Tabs.List>
-					{#if np.tab === 'lyrics'}
-						<button
-							onclick={() => (big = !big)}
-							class="cursor-pointer rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-							aria-label={big ? 'Shrink lyrics' : 'Enlarge lyrics'}
-						>
-							<!-- icon swap via altIcon/showAlt: `icon` is frozen at mount -->
-							<HugeiconsIcon
-								icon={Maximize01Icon}
-								altIcon={Minimize01Icon}
-								showAlt={big}
-								class="h-4 w-4"
-							/>
-						</button>
-					{/if}
+			{#if np.tab === 'queue'}
+				<div class="min-h-0 flex-1 overflow-hidden rounded-xl bg-black/25">
+					<QueueList />
 				</div>
-				<!-- Only the open tab is mounted: bits-ui keeps inactive content in the DOM, which would
-				     leave LyricsView fetching lyrics for every track you never asked to see. -->
-				{#if np.tab === 'queue'}
-					<Tabs.Content value="queue" class="flex min-h-0 flex-1 flex-col">
-						<QueueList />
-					</Tabs.Content>
-				{:else}
-					<Tabs.Content value="lyrics" class="flex min-h-0 flex-1 flex-col">
-						<LyricsView expanded={big} />
-					</Tabs.Content>
-				{/if}
-			</Tabs.Root>
+			{:else}
+				<LyricsView expanded onCover />
+			{/if}
 		</div>
 	</div>
 </div>
