@@ -5,7 +5,6 @@
 		PreviousIcon,
 		NextIcon,
 		PlayIcon,
-		PauseIcon,
 		ShuffleIcon,
 		RepeatIcon,
 		RepeatOne01Icon,
@@ -14,7 +13,6 @@
 		VolumeHighIcon,
 		VolumeMute02Icon,
 		StarIcon,
-		Add01Icon,
 		InfinityIcon,
 		MinimizeScreenIcon,
 		MusicNote01Icon,
@@ -164,14 +162,24 @@
 		<div class="flex min-w-0 items-center gap-2">
 			{#key playback.now?.videoId}
 				{#if playback.now?.thumbnail && !artFailed && !letterTile}
-					<img
-						src={thumb(playback.now.thumbnail, 160)}
-						alt=""
-						style="max-width:none"
-						class="h-11 w-11 shrink-0 rounded-md object-cover ring-1 ring-white/10"
-						in:fade={{ duration: 250 }}
-						onerror={() => (artFailed = true)}
-					/>
+					<button
+						type="button"
+						class="shrink-0"
+						onclick={() => {
+							np.open = true;
+							np.tab = 'lyrics';
+						}}
+						aria-label="Open immersive player"
+					>
+						<img
+							src={thumb(playback.now.thumbnail, 80)}
+							alt=""
+							style="max-width:none"
+							class="h-11 w-11 rounded-md object-cover ring-1 ring-white/10"
+							in:fade={{ duration: 250 }}
+							onerror={() => (artFailed = true)}
+						/>
+					</button>
 				{:else}
 					<div
 						class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
@@ -251,6 +259,19 @@
 					variant="ghost"
 					size="icon-xs"
 					class="text-muted-foreground"
+					onclick={() => api.toggleShuffle()}
+					aria-label="Shuffle"
+					aria-pressed={shuffleOn}
+				>
+					<HugeiconsIcon
+						icon={ShuffleIcon}
+						class="h-3.5 w-3.5 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}"
+					/>
+				</Button>
+				<Button
+					variant="ghost"
+					size="icon-xs"
+					class="text-muted-foreground"
 					onclick={() => api.prevTrack()}
 					aria-label="Previous"
 				>
@@ -259,14 +280,17 @@
 				<Button
 					variant="default"
 					size="icon-xs"
-					class="size-6 rounded-full bg-foreground/90 text-background hover:bg-foreground focus-visible:ring-0"
+					class="size-8 rounded-full bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-0"
 					onclick={() => togglePlayUi()}
 					aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 				>
 					{#if transportGlyph(playback.paused) === 'play'}
-						<HugeiconsIcon icon={PlayIcon} class="h-3.5 w-3.5" />
+						<HugeiconsIcon icon={PlayIcon} class="h-4 w-4" />
 					{:else}
-						<HugeiconsIcon icon={PauseIcon} class="h-3.5 w-3.5" />
+						<span class="inline-flex items-center gap-[3px]" aria-hidden="true">
+							<span class="h-3 w-[3px] rounded-sm bg-current"></span>
+							<span class="h-3 w-[3px] rounded-sm bg-current"></span>
+						</span>
 					{/if}
 				</Button>
 				<Button
@@ -321,38 +345,6 @@
 				onchange={onVolumeCommit}
 				aria-label="Volume"
 			/>
-			{#if playback.now && !api.isLocalId(playback.now.videoId)}
-				<Button
-					variant="ghost"
-					size="icon-xs"
-					onclick={() => {
-						const now = playback.now!;
-						openAddToPlaylist({
-							video_id: now.videoId,
-							title: now.title,
-							artists: now.artists,
-							artist_id: now.artistId,
-							thumbnail: now.thumbnail,
-							duration: now.duration
-						});
-					}}
-					aria-label="Add to playlist"
-				>
-					<HugeiconsIcon icon={Add01Icon} class="h-3.5 w-3.5 text-muted-foreground" />
-				</Button>
-			{/if}
-			<Button
-				variant="ghost"
-				size="icon-xs"
-				onclick={() => api.toggleShuffle()}
-				aria-label="Shuffle"
-				aria-pressed={shuffleOn}
-			>
-				<HugeiconsIcon
-					icon={ShuffleIcon}
-					class="h-3.5 w-3.5 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}"
-				/>
-			</Button>
 			<Button
 				variant="ghost"
 				size="icon-xs"
@@ -388,10 +380,14 @@
 				/>
 			{/if}
 			<Button
-				variant="ghost"
+				variant={np.open ? 'secondary' : 'ghost'}
 				size="icon-xs"
-				onclick={() => (np.open = !np.open)}
-				aria-label={np.open ? 'Minimise player' : 'Open player'}
+				class={np.open ? 'text-primary' : 'text-muted-foreground'}
+				onclick={() => {
+					np.open = !np.open;
+					if (np.open) np.tab = 'lyrics';
+				}}
+				aria-label={np.open ? 'Close immersive' : 'Immersive player'}
 				aria-expanded={np.open}
 			>
 				<HugeiconsIcon

@@ -104,6 +104,18 @@
 }
 
 /* Floating frosted player — independent of any other product's chrome. */
+/* Mood chips: no overlay scrollbar, fade the clipped tail so "Commuting" is not "Cor". */
+.chip-row {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	mask-image: linear-gradient(to right, #000 88%, transparent);
+	-webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+}
+.chip-row::-webkit-scrollbar {
+	display: none;
+	height: 0;
+}
+
 .desk-glass {
 	background: color-mix(in oklab, oklch(0.14 0.016 var(--hue)) 78%, transparent);
 	border: 1px solid oklch(1 0 0 / 8%);

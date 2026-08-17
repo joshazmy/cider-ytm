@@ -51,7 +51,7 @@
 	);
 
 	const chipClass = (active: boolean) =>
-		`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+		`shrink-0 cursor-pointer rounded-full px-3 py-1 text-[13px] font-medium transition-colors ${
 			active ? 'bg-foreground text-background' : 'bg-muted text-foreground hover:bg-muted/70'
 		}`;
 
@@ -270,7 +270,7 @@
 	     thing WebKitGTK reliably chokes on. -->
 	{#if chips.length}
 		<div class="sticky top-0 z-20 border-b bg-background px-6 pt-2.5">
-			<div class="flex gap-2 overflow-x-auto pb-2">
+			<div class="chip-row flex gap-2 overflow-x-auto pb-1">
 				<!-- An explicit "All" is the way out of a filter. Clicking the active chip again also
 				     clears it, but nobody discovers that, and nothing else on screen says you're filtered. -->
 				<button onclick={() => load(null)} class={chipClass(!selected)}>All</button>

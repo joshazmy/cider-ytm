@@ -709,6 +709,9 @@ export function initApp(mini = false): () => void {
 		api.onAccountSelectionRequired(() => openChannelPicker(true)),
 		api.onLoginError((msg) => toast.error(msg)),
 		api.onLoginDone(() => toast.success('Signed in')),
+		api.onLoginBrowserOpened(() =>
+			toast('Opened your browser. Finish Google sign-in there — Yapel will pick it up.')
+		),
 		// Listen Together (context/19): mirror the Rust session state; surface notices as toasts.
 		api.onLtState((s) => {
 			// A room is a shared clock, so tempo is off while one is on (the stepper hides itself).

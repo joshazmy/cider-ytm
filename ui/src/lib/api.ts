@@ -316,8 +316,9 @@ export const getAccountIdentities = () =>
 export const switchAccount = (selectionKey: string) =>
 	invoke<Account>('switch_account', { selectionKey });
 export const signOut = () => invoke<void>('sign_out');
-/** Open the in-app Google sign-in webview (context/15 Path A). Result arrives via onAuthChanged. */
+/** Open Google sign-in in the OS browser. Session is imported from Zen/Firefox cookies. */
 export const loginWebview = () => invoke<void>('login_webview');
+export const importBrowserCookies = () => invoke<string>('import_browser_cookies');
 
 // --- mini player (Rust mini.rs) ---------------------------------------------------------------
 /** Hide the app to the tray and open the floating widget (a second window running this same SPA). */
@@ -441,6 +442,8 @@ export const onLoginError = (cb: (msg: string) => void): Promise<UnlistenFn> =>
 	listen<string>('login-error', (e) => cb(e.payload));
 export const onLoginDone = (cb: () => void): Promise<UnlistenFn> =>
 	listen('login-done', () => cb());
+export const onLoginBrowserOpened = (cb: () => void): Promise<UnlistenFn> =>
+	listen('login-browser-opened', () => cb());
 
 // --- lyrics ---------------------------------------------------------------------------------
 export interface LyricWord {

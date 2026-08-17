@@ -133,6 +133,7 @@
 	onMount(() => {
 		if (isMini) return initApp(true);
 		sessionStorage.setItem('ytm-desk-landed', '1');
+		if (appearance.alwaysOnTop) getCurrentWindow().setAlwaysOnTop(true);
 		const teardownApp = initApp();
 		const teardownWin = initWin();
 		window.addEventListener('keydown', onDeskKey);

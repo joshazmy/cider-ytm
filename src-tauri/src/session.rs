@@ -30,6 +30,7 @@ const LOGIN_URL: &str =
 
 /// Open the login webview. Returns immediately; sign-in completes asynchronously (the UI learns via
 /// the `auth-changed` event, or `login-error` on failure).
+#[allow(dead_code)]
 pub fn open_login(app: AppHandle, state: Arc<AppState>) {
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<()>();
 
@@ -119,4 +120,129 @@ fn close_login(app: &AppHandle) {
             let _ = w.destroy();
         }
     });
+}
+
+/// Open Google sign-in in the user's real browser (xdg-open). Polls Firefox/Zen cookie DBs
+/// until SAPISID appears, then signs in. Never opens the in-app login webview.
+pub fn open_login_browser(app: AppHandle, state: Arc<AppState>) {
+    if let Err(e) = crate::lastfm::open_browser(LOGIN_URL) {
+        let _ = app.emit("login-error", e);
+        return;
+    }
+    let _ = app.emit("login-browser-opened", ());
+    tauri::async_runtime::spawn(async move {
+        for _ in 0..150 {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            let Some(cookie) = import_youtube_cookies() else { continue };
+            match state.sign_in(cookie).await {
+                Ok(SignInOutcome::Complete) => {
+                    let _ = app.emit("login-done", ());
+                    return;
+                }
+                Ok(SignInOutcome::SelectionRequired) => return,
+                Err(_) => {}
+            }
+        }
+        let _ = app.emit(
+            "login-error",
+            "Sign-in timed out. Finish Google in your browser, then use Settings → Import from browser.",
+        );
+    });
+}
+
+/// One-shot: read YouTube cookies from the newest Firefox/Zen profile and sign in.
+pub async fn import_login_from_browser(state: Arc<AppState>) -> Result<SignInOutcome, String> {
+    let cookie = import_youtube_cookies().ok_or_else(|| {
+        "No YouTube session in Zen/Firefox yet. Sign in at music.youtube.com in your browser first."
+            .to_string()
+    })?;
+    state.sign_in(cookie).await
+}
+
+fn firefox_cookie_dbs() -> Vec<std::path::PathBuf> {
+    let Some(home) = std::env::var_os("HOME") else { return Vec::new() };
+    let home = std::path::PathBuf::from(home);
+    let roots = [
+        home.join(".zen"),
+        home.join(".mozilla/firefox"),
+        home.join(".var/app/app.zen_browser.zen/.zen"),
+        home.join(".librewolf"),
+    ];
+    let mut out = Vec::new();
+    for root in roots {
+        let Ok(entries) = std::fs::read_dir(&root) else { continue };
+        for ent in entries.flatten() {
+            let db = ent.path().join("cookies.sqlite");
+            if db.is_file() {
+                out.push(db);
+            }
+        }
+    }
+    out.sort_by_key(|p| std::fs::metadata(p).and_then(|m| m.modified()).ok());
+    out.reverse();
+    out
+}
+
+fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
+    let tmp = std::env::temp_dir().join(format!(
+        "yapel-cookies-{}.sqlite",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    ));
+    std::fs::copy(path, &tmp).ok()?;
+    let conn = rusqlite::Connection::open(&tmp).ok()?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT name, value FROM moz_cookies WHERE host LIKE '%youtube.com' OR host LIKE '%google.com'",
+        )
+        .ok()?;
+    let rows = stmt
+        .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))
+        .ok()?;
+    let mut jar = std::collections::BTreeMap::new();
+    for row in rows.flatten() {
+        if !row.0.is_empty() && !row.1.is_empty() {
+            jar.insert(row.0, row.1);
+        }
+    }
+    let _ = std::fs::remove_file(&tmp);
+    if !jar.contains_key("SAPISID") && !jar.keys().any(|k| k.ends_with("SAPISID")) {
+        return None;
+    }
+    Some(jar.into_iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("; "))
+}
+
+pub(crate) fn import_youtube_cookies() -> Option<String> {
+    for db in firefox_cookie_dbs() {
+        if let Some(cookie) = cookies_from_firefox_db(&db) {
+            return Some(cookie);
+        }
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn firefox_db_yields_sapisid_header() {
+        let dir = std::env::temp_dir().join(format!("yapel-ff-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+        let db = dir.join("cookies.sqlite");
+        {
+            let conn = rusqlite::Connection::open(&db).unwrap();
+            conn.execute_batch(
+                "CREATE TABLE moz_cookies (name TEXT, value TEXT, host TEXT);
+                 INSERT INTO moz_cookies VALUES ('SAPISID', 'unit-test', '.youtube.com');
+                 INSERT INTO moz_cookies VALUES ('LOGIN_INFO', 'x', '.youtube.com');",
+            )
+            .unwrap();
+        }
+        let header = cookies_from_firefox_db(&db).expect("sapisid");
+        assert!(header.contains("SAPISID=unit-test"), "header must carry SAPISID");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

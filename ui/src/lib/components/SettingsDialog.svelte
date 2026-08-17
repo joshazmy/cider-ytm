@@ -37,6 +37,7 @@
 	} from '$lib/theme.svelte';
 	import { openUpdateInBrowser } from '$lib/updater.svelte';
 	import { getVersion } from '@tauri-apps/api/app';
+	import { getCurrentWindow } from '@tauri-apps/api/window';
 
 	type TabId = 'general' | 'themes' | 'playback' | 'data' | 'about';
 	const TABS: { id: TabId; label: string }[] = [
@@ -375,7 +376,7 @@
 						</div>
 						<Switch checked={trayOn} onCheckedChange={setTray} />
 					</div>
-					<div class="flex items-start justify-between gap-4 py-3">
+					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
 							<div class="font-medium">Start on login</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
@@ -383,6 +384,43 @@
 							</p>
 						</div>
 						<Switch checked={autostartOn} onCheckedChange={setAutostart} />
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Always on top</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								Keep Yapel above other windows (Cider-style pin).
+							</p>
+						</div>
+						<Switch
+							checked={appearance.alwaysOnTop}
+							onCheckedChange={async (on) => {
+								setAppearance({ alwaysOnTop: on });
+								await getCurrentWindow().setAlwaysOnTop(on);
+							}}
+						/>
+					</div>
+					<div class="flex items-start justify-between gap-4 py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Import session from browser</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								If you already signed into YouTube Music in Zen or Firefox, pull that session here.
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={async () => {
+								try {
+									await api.importBrowserCookies();
+									toast.success('Imported from your browser');
+								} catch (e) {
+									toast.error(String(e));
+								}
+							}}
+						>
+							Import
+						</Button>
 					</div>
 				{:else if tab === 'themes'}
 					<div class="flex items-center justify-between gap-8 border-b py-3">
@@ -833,6 +871,13 @@
 						<Button size="sm" onclick={openUpdateInBrowser}>
 							Open in browser
 						</Button>
+					</div>
+					<div class="py-3">
+						<div class="font-medium">Desk keys</div>
+						<p class="mt-1 text-sm text-muted-foreground">
+							Space play/pause · Ctrl+P immersive · Ctrl+L Home · Ctrl+H Library · Ctrl+F search
+							· Ctrl+K mini player · Shift+Space command palette · Ctrl+↑/↓ volume
+						</p>
 					</div>
 				{/if}
 			</div>

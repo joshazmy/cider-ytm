@@ -350,8 +350,17 @@ pub async fn sign_out(state: St<'_>) -> Result<(), String> {
 pub async fn login_webview(state: St<'_>) -> Result<(), String> {
     let state = state.inner().clone();
     let app = state.app.clone();
-    crate::session::open_login(app, state);
+    crate::session::open_login_browser(app, state);
     Ok(())
+}
+
+/// After the user signs into YouTube Music in Zen/Firefox, pull that session into Yapel.
+#[tauri::command]
+pub async fn import_browser_cookies(state: St<'_>) -> Result<String, String> {
+    match crate::session::import_login_from_browser(state.inner().clone()).await? {
+        crate::state::SignInOutcome::Complete => Ok("signed-in".into()),
+        crate::state::SignInOutcome::SelectionRequired => Ok("pick-channel".into()),
+    }
 }
 
 /// The current track, play state, position and duration in one shot. Events are the normal

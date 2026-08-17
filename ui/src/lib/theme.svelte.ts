@@ -86,7 +86,8 @@ export const custom = $state<Custom>({
  */
 export const appearance = $state({
 	/** Blur the playing track's artwork behind the now-playing view. */
-	artworkBackground: true
+	artworkBackground: true,
+	alwaysOnTop: false
 });
 
 export function setAppearance(patch: Partial<typeof appearance>): void {
@@ -320,6 +321,7 @@ export function initTheme(): void {
 		const saved = JSON.parse(localStorage.getItem(APPEARANCE_KEY) ?? '{}');
 		if (typeof saved?.artworkBackground === 'boolean')
 			appearance.artworkBackground = saved.artworkBackground;
+		if (typeof saved?.alwaysOnTop === 'boolean') appearance.alwaysOnTop = saved.alwaysOnTop;
 	} catch {
 		// unparseable — keep the defaults
 	}
