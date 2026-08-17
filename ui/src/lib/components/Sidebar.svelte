@@ -36,10 +36,10 @@
 	import AccountMenu from './AccountMenu.svelte';
 
 	const nav = [
+		{ href: '/', label: 'Home', icon: Home01Icon },
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
 		{ href: '/library?tab=albums', label: 'Albums', icon: MusicNoteSquare02Icon },
-		{ href: '/library?tab=artists', label: 'Artists', icon: UserSharingIcon },
-		{ href: '/', label: 'Explore', icon: Home01Icon }
+		{ href: '/library?tab=artists', label: 'Artists', icon: UserSharingIcon }
 	];
 	const isActive = (href: string) => {
 		if (href === '/') return page.url.pathname === '/';
@@ -202,7 +202,7 @@
 				href={n.href}
 				title={n.label}
 				class="{navRow} {wide('justify-start')} {isActive(n.href)
-					? 'bg-white/[0.08] text-foreground'
+					? 'bg-primary text-primary-foreground'
 					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
 				<HugeiconsIcon icon={n.icon} class="h-4 w-4 shrink-0" />

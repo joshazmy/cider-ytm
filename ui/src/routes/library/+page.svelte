@@ -247,7 +247,7 @@
 					{@render grid(
 						all,
 						signedOut
-							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Explore.'
+							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Home.'
 							: 'Your library is empty. Save a playlist or album to keep it here.'
 					)}
 				{/if}

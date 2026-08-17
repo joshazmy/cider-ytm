@@ -31,13 +31,13 @@
 		item.thumbnail; // re-arm when the card is reused for a different item
 		attempt = 0;
 	});
-	const sized = $derived(thumb(item.thumbnail, 400));
+	const sized = $derived(thumb(item.thumbnail, 640));
 	// The cover slot is 144px (`.card-grid` is 10rem columns), so 400px is roughly seven times the
 	// pixels a 1x display can show, and WebKit holds the decoded bitmap at the size it was given.
 	// srcset hands the choice to the engine instead of guessing: 200 where that is all the screen
 	// has, 400 where the pixels are real. Both sizes verified live against yt3 covers, and the
 	// retry chain below still catches a size the CDN turns out not to serve.
-	const small = $derived(thumb(item.thumbnail, 200));
+	const small = $derived(thumb(item.thumbnail, 320));
 	// Undefined when `thumb` left the URL alone (not a Google CDN URL, or a local file), where two
 	// candidates would be the same image twice, and on the retry, which is deliberately unsized.
 	const srcset = $derived(

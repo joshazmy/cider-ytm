@@ -16,7 +16,7 @@
 			{ id: 'albums', label: 'Albums', hint: 'Ctrl+3', run: () => goto('/library?tab=albums') },
 			{ id: 'artists', label: 'Artists', hint: 'Ctrl+4', run: () => goto('/library?tab=artists') },
 			{ id: 'search', label: 'Search', hint: 'Ctrl+F', run: () => goto('/search') },
-			{ id: 'home', label: 'Explore', hint: 'Ctrl+L', run: () => goto('/') },
+			{ id: 'home', label: 'Home', hint: 'Ctrl+L', run: () => goto('/') },
 			{
 				id: 'np',
 				label: playback.now ? 'Immersive now playing' : 'Nothing playing',

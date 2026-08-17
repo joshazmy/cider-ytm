@@ -10,7 +10,7 @@
 		items,
 		onMore,
 		community = false,
-		headingClass = 'font-heading text-lg font-semibold'
+		headingClass = 'text-[15px] font-semibold'
 	}: {
 		title?: string;
 		items: BrowseItem[];
@@ -45,7 +45,8 @@
 	}
 
 	$effect(() => {
-		items; // re-measure when content changes
+		items;
+		row;
 		update();
 	});
 </script>
@@ -57,9 +58,9 @@
      the images around it, so hovering gets slower the further you scroll. Skipping off-screen
      shelves caps that at a screenful. `auto 17.5rem` is a shelf's height (heading + w-40 row); the
      `auto` keyword swaps in the real size once measured, so the scrollbar stays put. -->
-<section class="[content-visibility:auto] [contain-intrinsic-size:auto_17.5rem]">
-	{#if title || onMore}
-		<div class="mb-3 flex items-baseline justify-between gap-3">
+<section class="[content-visibility:auto] [contain-intrinsic-size:auto_22rem]">
+	{#if title || onMore || canLeft || canRight}
+		<div class="mb-3 flex items-center justify-between gap-3">
 			<!-- The title is the same navigation as "See all": a shelf header is a big, obvious click
 			     target and every music app treats it as one. "See all" stays visible so the affordance
 			     doesn't depend on hovering to discover it. -->
@@ -74,15 +75,32 @@
 			{:else if title}
 				<h2 class="{headingClass} truncate">{title}</h2>
 			{/if}
-			{#if onMore}
+			<div class="flex shrink-0 items-center gap-1">
+				{#if onMore}
+					<button
+						class="flex cursor-pointer items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+						onclick={onMore}
+					>
+						See all
+					</button>
+				{/if}
 				<button
-					class="flex shrink-0 cursor-pointer items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-					onclick={onMore}
+					aria-label="Scroll left"
+					onclick={() => page(-1)}
+					disabled={!canLeft}
+					class="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-white/8 hover:text-foreground disabled:opacity-25"
 				>
-					See all
+					<HugeiconsIcon icon={ArrowLeft01Icon} class="h-3.5 w-3.5" />
+				</button>
+				<button
+					aria-label="Scroll right"
+					onclick={() => page(1)}
+					disabled={!canRight}
+					class="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-white/8 hover:text-foreground disabled:opacity-25"
+				>
 					<HugeiconsIcon icon={ArrowRight01Icon} class="h-3.5 w-3.5" />
 				</button>
-			{/if}
+			</div>
 		</div>
 	{/if}
 	<!-- Measure on pointer enter, because a shelf skipped by content-visibility has no layout at
@@ -102,7 +120,7 @@
 				<div
 					class="shrink-0 snap-start {rich
 						? 'basis-full sm:basis-[calc((100%-0.75rem)/2)] lg:basis-[calc((100%-1.5rem)/3)]'
-						: 'w-40'}"
+						: 'w-[min(18rem,calc((100%-1.5rem)/3))]'}"
 				>
 					{#if rich}
 						<CommunityCard {item} />
@@ -112,32 +130,5 @@
 				</div>
 			{/each}
 		</div>
-		<!-- Fades, not just arrows: a card sliced by the edge should read as "the row continues", which
-		     is also what makes the arrow legible sitting on top of artwork. Both are pointer-transparent
-		     so they never eat a click meant for the card underneath. -->
-		{#if canLeft}
-			<div
-				class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent"
-			></div>
-			<button
-				aria-label="Scroll left"
-				onclick={() => page(-1)}
-				class="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border bg-background text-foreground opacity-0 shadow-lg transition hover:scale-105 focus-visible:opacity-100 group-hover/shelf:opacity-100"
-			>
-				<HugeiconsIcon icon={ArrowLeft01Icon} class="h-4 w-4" />
-			</button>
-		{/if}
-		{#if canRight}
-			<div
-				class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent"
-			></div>
-			<button
-				aria-label="Scroll right"
-				onclick={() => page(1)}
-				class="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border bg-background text-foreground opacity-0 shadow-lg transition hover:scale-105 focus-visible:opacity-100 group-hover/shelf:opacity-100"
-			>
-				<HugeiconsIcon icon={ArrowRight01Icon} class="h-4 w-4" />
-			</button>
-		{/if}
 	</div>
 </section>
