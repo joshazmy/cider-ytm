@@ -5,7 +5,7 @@
   "identifier": "com.joshazmy.yapel",
   "build": {
     "frontendDist": "../ui/build",
-    "devUrl": "http://localhost:5183",
+    "devUrl": "http://127.0.0.1:5183",
     "beforeDevCommand": "pnpm --dir ../ui dev",
     "beforeBuildCommand": "pnpm --dir ../ui build"
   },
