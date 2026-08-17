@@ -9,8 +9,6 @@
 		MusicNoteSquare02Icon,
 		UserSharingIcon,
 		Settings01Icon,
-		Sun01Icon,
-		Moon02Icon,
 		Add01Icon,
 		Cancel01Icon,
 		MusicNote01Icon,
@@ -18,7 +16,6 @@
 		SquareArrowLeft01Icon,
 		SquareArrowRight01Icon
 	} from '@hugeicons/core-free-icons';
-	import { toggleMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -35,6 +32,8 @@
 		toast
 	} from '$lib/player.svelte';
 	import { mergeSaved, orderLibrary } from '$lib/personal';
+	import * as api from '$lib/api';
+	import AccountMenu from './AccountMenu.svelte';
 
 	const nav = [
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
@@ -84,7 +83,7 @@
 		}
 	}
 
-	// Account lives in the titlebar now — see AccountMenu.svelte.
+	// Account sits at the rail foot.
 
 	// Manual collapse is a large-screen preference: below lg the rail is already collapsed by the
 	// breakpoint, so the button is hidden there and `wide()` has nothing to drop. Every expanded
@@ -107,7 +106,7 @@
 <aside
 	class="flex h-full shrink-0 flex-col bg-transparent px-1.5 py-2 text-sidebar-foreground {collapsed
 		? 'w-16'
-		: 'w-56'}"
+		: 'w-60'}"
 >
 	<!-- Search sits first, like the live desktop rail. Icon-only on the 64px column. -->
 	<a
@@ -126,13 +125,17 @@
 			submitSearch();
 		}}
 	>
+		<HugeiconsIcon
+			icon={Search01Icon}
+			class="pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+		/>
 		<input
 			bind:value={searchQ}
 			type="text"
 			placeholder="Search"
 			autocomplete="off"
 			aria-label="Search"
-			class="h-7 w-full rounded-lg border-0 bg-black/15 pl-2.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground/70 focus:bg-black/25 dark:bg-black/30 dark:focus:bg-black/40 {searchQ
+			class="h-8 w-full rounded-lg border-0 bg-black/40 pl-7 text-[13px] text-foreground outline-none ring-1 ring-white/10 placeholder:text-muted-foreground/70 focus:bg-black/50 {searchQ
 				? 'pr-14'
 				: 'pr-8'}"
 		/>
@@ -164,7 +167,6 @@
 			onclick={toggleSidebar}
 			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
-			<!-- altIcon/showAlt, not a ternary: `icon` is read once at mount. -->
 			<HugeiconsIcon
 				icon={SquareArrowLeft01Icon}
 				altIcon={SquareArrowRight01Icon}
@@ -173,47 +175,25 @@
 				class="h-4 w-4"
 			/>
 		</Button>
-		<Button
-			variant="ghost"
-			size="icon-sm"
-			class="hover:text-primary"
-			onclick={toggleMode}
-			aria-label="Toggle theme"
-		>
-			<HugeiconsIcon icon={Sun01Icon} strokeWidth={2} class="h-4 w-4 dark:hidden" />
-			<HugeiconsIcon icon={Moon02Icon} strokeWidth={2} class="hidden h-4 w-4 dark:block" />
-		</Button>
 	</div>
 
 	<div class="mt-2 hidden items-center justify-between px-2 {wide('flex')}">
 		<span class="text-[11px] text-muted-foreground">Library</span>
-		<div class="flex items-center">
-			<Button
-				variant="ghost"
-				size="icon-sm"
-				class="hidden h-6 w-6 hover:text-primary lg:inline-flex"
-				onclick={toggleSidebar}
-				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-			>
-				<HugeiconsIcon
-					icon={SquareArrowLeft01Icon}
-					altIcon={SquareArrowRight01Icon}
-					showAlt={collapsed}
-					strokeWidth={2}
-					class="h-3.5 w-3.5"
-				/>
-			</Button>
-			<Button
-				variant="ghost"
-				size="icon-sm"
-				class="h-6 w-6 hover:text-primary"
-				onclick={toggleMode}
-				aria-label="Toggle theme"
-			>
-				<HugeiconsIcon icon={Sun01Icon} strokeWidth={2} class="h-3.5 w-3.5 dark:hidden" />
-				<HugeiconsIcon icon={Moon02Icon} strokeWidth={2} class="hidden h-3.5 w-3.5 dark:block" />
-			</Button>
-		</div>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class="hidden h-6 w-6 hover:text-primary lg:inline-flex"
+			onclick={toggleSidebar}
+			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+		>
+			<HugeiconsIcon
+				icon={SquareArrowLeft01Icon}
+				altIcon={SquareArrowRight01Icon}
+				showAlt={collapsed}
+				strokeWidth={2}
+				class="h-3.5 w-3.5"
+			/>
+		</Button>
 	</div>
 
 	<nav class="mt-0.5 flex flex-col">
@@ -222,31 +202,20 @@
 				href={n.href}
 				title={n.label}
 				class="{navRow} {wide('justify-start')} {isActive(n.href)
-					? 'text-foreground'
-					: 'text-sidebar-foreground/55 hover:bg-foreground/5 hover:text-sidebar-foreground'}"
+					? 'bg-white/[0.08] text-foreground'
+					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
 				<HugeiconsIcon icon={n.icon} class="h-4 w-4 shrink-0" />
 				<span class="hidden {wide('inline')}">{n.label}</span>
 			</a>
 		{/each}
-		<button
-			onclick={() => (ui.settingsOpen = true)}
-			title="Settings"
-			class="{navRow} text-sidebar-foreground/55 hover:bg-foreground/5 hover:text-sidebar-foreground {wide(
-				'justify-start'
-			)}"
-		>
-			<HugeiconsIcon icon={Settings01Icon} class="h-4 w-4 shrink-0" />
-			<span class="hidden {wide('inline')}">Settings</span>
-		</button>
 	</nav>
 
 	<!-- Playlists. Hidden on the icon rail (needs labels; matches YTM's collapsed rail). flex-1 lets
 	     the list fill the space and scroll. Signed out the section still appears once there is
 	     something in it: On Repeat, or a playlist saved on this machine. -->
-	{#if auth.account?.signedIn || playlists.length}
-		<div class="mt-2 hidden min-h-0 flex-1 flex-col {wide('flex')}">
-			<span class="px-2 pb-0.5 text-[11px] text-muted-foreground">Playlists</span>
+	<div class="mt-2 hidden min-h-0 flex-1 flex-col {wide('flex')}">
+		<span class="px-2 pb-0.5 text-[11px] text-muted-foreground">Playlists</span>
 			<!-- Creating one is a YouTube write action, so it needs an account. -->
 			{#if auth.account?.signedIn}
 				<button
@@ -319,6 +288,14 @@
 				{:else}
 					{#if library.loading}
 						<p class="px-3 py-1.5 text-xs text-muted-foreground">Loading…</p>
+					{:else if !auth.account?.signedIn}
+						<button
+							type="button"
+							class="mx-1 rounded-md px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
+							onclick={() => api.loginWebview()}
+						>
+							Sign in to see playlists
+						</button>
 					{/if}
 				{/each}
 			</div>
@@ -347,5 +324,22 @@
 				</form>
 			</Dialog.Content>
 		</Dialog.Root>
-	{/if}
+
+	<div class="mt-auto flex flex-col gap-0.5 pt-2 {collapsed ? 'items-center' : ''}">
+		<button
+			onclick={() => (ui.settingsOpen = true)}
+			title="Settings"
+			class="{navRow} text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground {wide(
+				'justify-start'
+			)}"
+		>
+			<HugeiconsIcon icon={Settings01Icon} class="h-4 w-4 shrink-0" />
+			<span class="hidden {wide('inline')}">Settings</span>
+		</button>
+		{#if !collapsed}
+			<AccountMenu foot />
+		{:else}
+			<AccountMenu />
+		{/if}
+	</div>
 </aside>

@@ -302,6 +302,10 @@ impl AppState {
         discord: Option<DiscordHandle>,
         lastfm: crate::lastfm::LastfmHandle,
     ) -> Self {
+        let last_itag = db
+            .get_setting("last_itag")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
         AppState {
             it,
             clients,
@@ -321,7 +325,7 @@ impl AppState {
             latest_position: AtomicU64::new(0),
             last_pos_persist: AtomicU64::new(0),
             last_media_push: AtomicU64::new(0),
-            last_itag: AtomicU64::new(0),
+            last_itag: AtomicU64::new(last_itag),
         }
     }
 
@@ -1390,7 +1394,11 @@ impl AppState {
                 }
             }
         }
-        self.last_itag.store(data.itag.max(0) as u64, Ordering::Relaxed);
+        let itag = data.itag.max(0) as u64;
+        self.last_itag.store(itag, Ordering::Relaxed);
+        if itag > 0 {
+            self.db.set_setting("last_itag", &itag.to_string());
+        }
         self.emit_now_playing(&item, &data.stream_client);
         // We just told mpv to play, but its `pause` flag was already `false`, so no property event
         // will announce it (see `Player::is_playing`). Say so ourselves — otherwise MPRIS and
@@ -1544,6 +1552,16 @@ impl AppState {
         let (duration, item) = {
             let q = self.queue.lock().await;
             (q.duration, q.items.get(q.current).cloned())
+        };
+        let duration = if duration > 0.0 {
+            duration
+        } else {
+            item.as_ref()
+                .and_then(|i| {
+                    let ms = parse_duration_ms(i.duration.as_deref());
+                    (ms > 0).then_some(ms as f64 / 1000.0)
+                })
+                .unwrap_or(0.0)
         };
         serde_json::json!({
             "now": item.as_ref().map(|i| self.now_playing_json(i, "current")),
@@ -1917,6 +1935,14 @@ impl AppState {
             self.media_set_playing(false);
             self.emit_now_playing(&item, "restored");
             let _ = self.app.emit("playback-state", "paused");
+            let ms = parse_duration_ms(item.duration.as_deref());
+            if ms > 0 {
+                let secs = ms as f64 / 1000.0;
+                self.queue.lock().await.duration = secs;
+                if let Some(m) = &self.media {
+                    m.set_duration(secs);
+                }
+            }
         }
         self.emit_queue().await;
     }

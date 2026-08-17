@@ -9,15 +9,21 @@
 	import { auth, openChannelPicker } from '$lib/player.svelte';
 	import { thumb } from '$lib/thumb';
 
+	let { foot = false }: { foot?: boolean } = $props();
+
 	let menuOpen = $state(false);
 	let mx = $state(0);
 	let my = $state(0);
 
-	// Right-anchored under the trigger, like the Last.fm menu next to it.
 	function openMenu(e: MouseEvent) {
 		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-		mx = window.innerWidth - r.right;
-		my = r.bottom + 6;
+		if (foot) {
+			mx = r.left;
+			my = window.innerHeight - r.top + 6;
+		} else {
+			mx = window.innerWidth - r.right;
+			my = r.bottom + 6;
+		}
 		menuOpen = !menuOpen;
 	}
 
@@ -43,7 +49,9 @@
 	onclick={openMenu}
 	title={auth.account?.signedIn ? (auth.account.name ?? 'Account') : 'Sign in'}
 	aria-expanded={menuOpen}
-	class="flex h-full cursor-pointer items-center gap-2 px-2.5 text-xs transition-colors hover:bg-muted aria-expanded:bg-muted"
+	class="flex cursor-pointer items-center gap-2 text-xs transition-colors hover:bg-white/[0.06] aria-expanded:bg-white/[0.06] {foot
+		? 'h-8 w-full justify-start rounded-md px-2'
+		: 'h-full px-2.5'}"
 >
 	{#if auth.account?.signedIn && auth.account.thumbnail}
 		<!-- max-width:none defeats Tailwind Preflight's `img{max-width:100%}`, which in a tight box
@@ -58,14 +66,14 @@
 	{:else}
 		<HugeiconsIcon icon={UserCircleIcon} class="h-5 w-5 shrink-0 text-muted-foreground" />
 	{/if}
-	<span class="hidden max-w-28 truncate font-medium lg:block">
+	<span class="max-w-28 truncate font-medium {foot ? '' : 'hidden lg:block'}">
 		{auth.account?.signedIn ? (auth.account.name ?? 'Account') : 'Sign in'}
 	</span>
 	<HugeiconsIcon
 		icon={ArrowDown01Icon}
-		class="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 lg:block {menuOpen
-			? 'rotate-180'
-			: ''}"
+		class="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 {foot
+			? ''
+			: 'hidden lg:block'} {menuOpen ? 'rotate-180' : ''}"
 	/>
 </button>
 
@@ -76,8 +84,10 @@
 		aria-label="Close menu"
 	></button>
 	<div
-		class="fixed z-50 w-72 origin-top-right animate-in rounded-xl border bg-popover p-4 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95"
-		style="right:{mx}px; top:{my}px;"
+		class="fixed z-50 w-72 animate-in rounded-xl border bg-popover p-4 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95 {foot
+			? 'origin-bottom-left'
+			: 'origin-top-right'}"
+		style={foot ? `left:${mx}px; bottom:${my}px` : `right:${mx}px; top:${my}px`}
 	>
 		{#if auth.account?.signedIn}
 			<div class="mb-3">

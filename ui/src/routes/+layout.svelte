@@ -31,6 +31,7 @@
 	import NowPlayingRail from '$lib/components/NowPlayingRail.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import { isLetterTile, thumb } from '$lib/thumb';
+	import { appearance } from '$lib/theme.svelte';
 
 	let paletteOpen = $state(false);
 	import {
@@ -131,10 +132,7 @@
 
 	onMount(() => {
 		if (isMini) return initApp(true);
-		if (window.location.pathname === '/' && !sessionStorage.getItem('ytm-desk-landed')) {
-			sessionStorage.setItem('ytm-desk-landed', '1');
-			goto('/library', { replaceState: true });
-		}
+		sessionStorage.setItem('ytm-desk-landed', '1');
 		const teardownApp = initApp();
 		const teardownWin = initWin();
 		window.addEventListener('keydown', onDeskKey);
@@ -161,13 +159,13 @@
 			? ''
 			: 'rounded-lg'}"
 	>
-		{#if playback.now?.thumbnail && !isLetterTile(playback.now.thumbnail)}
+		{#if appearance.artworkBackground && playback.now?.thumbnail && !isLetterTile(playback.now.thumbnail)}
 			<img
-				src={thumb(playback.now.thumbnail, 120)}
+				src={thumb(playback.now.thumbnail, 320)}
 				alt=""
-				class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-45 blur-3xl saturate-150"
+				class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-55 blur-2xl saturate-[1.8]"
 			/>
-			<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-background/70 to-background/90"></div>
+			<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-background/40 to-background/75"></div>
 		{/if}
 		<ResizeBorders />
 		<div class="relative z-10 flex min-h-0 flex-1 flex-col">
@@ -189,7 +187,7 @@
 			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
 			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
 			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
-			<div class="relative z-20 px-3 pb-3" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
+			<div class="relative z-20 px-2 pb-2" in:fly={{ y: 64, duration: 250, easing: cubicOut }}>
 				<PlayerBar
 					onToggleQueue={() => (np.open ? (np.tab = 'queue') : (queueOpen = !queueOpen))}
 					queueOpen={np.open ? np.tab === 'queue' : queueOpen}

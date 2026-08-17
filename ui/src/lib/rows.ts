@@ -23,7 +23,7 @@
  * The same 3.5rem `TrackRow` already pins as its `contain-intrinsic-size`, and for the same reason:
  * something has to know how tall a row is before one is rendered. Change one and change the other.
  */
-export const ROW_PX = 48;
+export const ROW_PX = 54;
 
 export interface RowWindow {
 	/** First row to render (inclusive). */

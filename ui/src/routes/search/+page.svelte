@@ -186,7 +186,7 @@
 						{:else if sec.list}
 							{#each sec.items.slice(0, sec.max) as item (item.id)}
 								{@const song = asSong(item)}
-								<TrackRow {song} hideRating onplay={() => playSong(song)} onAdd={() => openAddToPlaylist(song)} />
+								<TrackRow {song} onplay={() => playSong(song)} onAdd={() => openAddToPlaylist(song)} />
 							{/each}
 						{:else}
 							<Shelf items={sec.items.slice(0, sec.max)} />

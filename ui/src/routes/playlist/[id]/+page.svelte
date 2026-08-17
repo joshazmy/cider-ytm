@@ -877,7 +877,6 @@
 										song={item}
 										index={n}
 										active={item.video_id === nowId}
-										hideRating
 										onplay={() => playAll(n)}
 										onAdd={() => openAddToPlaylist(item)}
 										onRemove={isLiked || (editable && item.set_video_id)

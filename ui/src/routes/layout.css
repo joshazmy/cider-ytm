@@ -105,10 +105,10 @@
 
 /* Floating frosted player — independent of any other product's chrome. */
 .desk-glass {
-	background: color-mix(in oklab, oklch(0.14 0.016 var(--hue)) 72%, transparent);
+	background: color-mix(in oklab, oklch(0.14 0.016 var(--hue)) 78%, transparent);
 	border: 1px solid oklch(1 0 0 / 8%);
 	box-shadow:
-		0 18px 50px -18px oklch(0 0 0 / 0.65),
+		0 8px 24px -12px oklch(0 0 0 / 0.45),
 		inset 0 1px 0 oklch(1 0 0 / 8%);
 	backdrop-filter: blur(28px) saturate(1.35);
 	-webkit-backdrop-filter: blur(28px) saturate(1.35);
@@ -573,12 +573,12 @@ input[type='range'].range {
 	cursor: pointer;
 }
 input[type='range'].range::-webkit-slider-runnable-track {
-	height: 3px;
+	height: 4px;
 	border-radius: 999px;
 	background: linear-gradient(
 		to right,
 		var(--primary) var(--pct, 0%),
-		oklch(1 0 0 / 14%) var(--pct, 0%)
+		oklch(1 0 0 / 22%) var(--pct, 0%)
 	);
 }
 input[type='range'].range::-webkit-slider-thumb {

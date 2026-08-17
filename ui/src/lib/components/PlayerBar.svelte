@@ -147,7 +147,7 @@
 <footer
 	onpointerdown={(e) => (pressedControl = isControl(e.target))}
 	onclick={onBarClick}
-	class="desk-glass flex flex-col rounded-[1.1rem] px-2 pb-1.5 pt-0.5"
+	class="desk-glass flex flex-col rounded-xl px-2 pb-1.5 pt-0.5"
 >
 	<input
 		type="range"
@@ -227,7 +227,7 @@
 			</div>
 		</div>
 
-		<div class="flex flex-col items-center">
+		<div class="flex items-center gap-2">
 			<div
 				class="flex shrink-0 items-center [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
 			>
@@ -259,7 +259,7 @@
 				<Button
 					variant="default"
 					size="icon-xs"
-					class="size-7 rounded-full bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-0"
+					class="size-6 rounded-full bg-foreground/90 text-background hover:bg-foreground focus-visible:ring-0"
 					onclick={() => togglePlayUi()}
 					aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 				>
@@ -279,8 +279,9 @@
 					<HugeiconsIcon icon={NextIcon} class="h-3.5 w-3.5" />
 				</Button>
 				<Button
-					variant={lyricsOpen ? 'secondary' : 'ghost'}
+					variant="ghost"
 					size="icon-xs"
+					class={lyricsOpen ? 'text-primary' : 'text-muted-foreground'}
 					onclick={onToggleLyrics}
 					aria-label="Toggle lyrics"
 				>
@@ -311,7 +312,7 @@
 			</Button>
 			<input
 				type="range"
-				class="range w-16"
+				class="range w-20"
 				style="--pct:{playback.volume}%"
 				min="0"
 				max="100"
@@ -370,8 +371,9 @@
 				<HugeiconsIcon icon={MinimizeScreenIcon} class="h-3.5 w-3.5" />
 			</Button>
 			<Button
-				variant={queueOpen ? 'secondary' : 'ghost'}
+				variant="ghost"
 				size="icon-xs"
+				class={queueOpen ? 'text-primary' : 'text-muted-foreground'}
 				onclick={onToggleQueue}
 				aria-label="Toggle queue"
 			>

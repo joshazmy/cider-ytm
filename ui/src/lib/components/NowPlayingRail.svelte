@@ -5,20 +5,22 @@
 	import { isLetterTile, thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
 
-	const upcoming = $derived(
-		Math.max(0, (playback.queue.items?.length ?? 0) - (playback.queue.currentIndex ?? 0) - 1)
-	);
+	const total = $derived(playback.queue.items?.length ?? 0);
+	const at = $derived(Math.min(total, (playback.queue.currentIndex ?? 0) + 1));
+	const from = $derived(playback.queue.sourceName?.trim() || '');
 </script>
 
 <aside
-	class="hidden h-full w-[272px] shrink-0 flex-col border-l border-white/5 bg-black/25 xl:flex"
+	class="hidden h-full w-[272px] shrink-0 flex-col border-l border-white/5 bg-black/25 min-[1100px]:flex"
 >
 	<div class="px-3 pt-3 pb-2">
 		<div class="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
 			<span>Now Playing</span>
-			<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] normal-case tracking-normal"
-				>{upcoming + 1}</span
-			>
+			{#if total}
+				<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
+					>{at} of {total}</span
+				>
+			{/if}
 		</div>
 		{#if playback.now}
 			<button
@@ -50,6 +52,11 @@
 	<div class="min-h-0 flex-1 overflow-hidden">
 		<div class="px-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
 			Playing Next
+			{#if from}
+				<span class="mt-0.5 block text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80"
+					>from {from}</span
+				>
+			{/if}
 		</div>
 		<QueueList />
 	</div>

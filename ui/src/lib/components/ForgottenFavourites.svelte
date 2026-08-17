@@ -6,7 +6,7 @@
 	import TrackRow from './TrackRow.svelte';
 	import * as api from '$lib/api';
 	import type { HomeSection, SongItem } from '$lib/api';
-	import { openAddToPlaylist, openPlayer, playback } from '$lib/player.svelte';
+	import { openAddToPlaylist, playback } from '$lib/player.svelte';
 	import { asSong } from '$lib/browse';
 
 	let { section, onMore }: { section: HomeSection; onMore?: () => void } = $props();
@@ -22,7 +22,6 @@
 
 	// Clicking a row starts there and queues the rest of the shelf, so the section plays as a set.
 	const play = (start: number) => {
-		openPlayer();
 		return api.playPlaylist(songs, start, undefined, section.title);
 	};
 </script>

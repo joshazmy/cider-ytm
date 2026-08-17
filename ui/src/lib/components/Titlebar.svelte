@@ -13,17 +13,13 @@
 		MinusSignIcon,
 		SquareIcon,
 		Cancel01Icon,
-		MinimizeScreenIcon,
 		CheckmarkCircle01Icon,
 		Loading03Icon,
-		HotspotOfflineIcon,
-		UserGroup02Icon
+		HotspotOfflineIcon
 	} from '@hugeicons/core-free-icons';
 	import LastFmIcon from './LastFmIcon.svelte';
-	import AccountMenu from './AccountMenu.svelte';
 	import * as api from '$lib/api';
-	import { openMiniPlayer, toast, ui } from '$lib/player.svelte';
-	import { lt } from '$lib/lt.svelte';
+	import { toast } from '$lib/player.svelte';
 
 	const win = getCurrentWindow();
 
@@ -135,31 +131,29 @@
 	class="relative z-50 flex h-9 shrink-0 select-none items-center justify-between bg-transparent"
 >
 	<div class="flex h-full items-center pl-1.5">
-		<!-- Heavier stroke than the window icons: at default weight these read as decoration. -->
-		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
-			onclick={() => history.back()}
-			disabled={depth === 0}
-			title="Back"
-			aria-label="Back"
-		>
-			<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} class="h-4 w-4" />
-		</button>
-		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
-			onclick={() => history.forward()}
-			disabled={depth === deepest}
-			title="Forward"
-			aria-label="Forward"
-		>
-			<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} class="h-4 w-4" />
-		</button>
+		<div class="ml-0.5 flex h-7 overflow-hidden rounded-full bg-black/25">
+			<button
+				class="flex h-full w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+				onclick={() => history.back()}
+				disabled={depth === 0}
+				title="Back"
+				aria-label="Back"
+			>
+				<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} class="h-4 w-4" />
+			</button>
+			<button
+				class="flex h-full w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+				onclick={() => history.forward()}
+				disabled={depth === deepest}
+				title="Forward"
+				aria-label="Forward"
+			>
+				<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} class="h-4 w-4" />
+			</button>
+		</div>
 	</div>
 
 	<div class="flex h-full items-center">
-		<!-- Account, then hidden integrations, then window controls. Drag lives on <header> only. -->
-		<AccountMenu />
-
 		<!-- Listen Together / Discord / Last.fm live in Settings so the title strip cannot paint a
 		     lone Discord "D" mark. -->
 		<button
@@ -186,18 +180,6 @@
 					/>
 				{/if}
 			</span>
-		</button>
-
-		<!-- Mini player: hides the app to the tray and hands over to the floating widget (mini.rs).
-		     It sits with the integrations rather than the window controls because it swaps what
-		     you're using, not the size of this window. -->
-		<button
-			class="flex h-full w-8 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-			onclick={openMiniPlayer}
-			title="Mini player"
-			aria-label="Mini player"
-		>
-			<HugeiconsIcon icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</button>
 
 		<div class="mx-1 h-3.5 w-px bg-white/10"></div>

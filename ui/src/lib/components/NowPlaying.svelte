@@ -68,13 +68,13 @@
      this on the way in and out.
      z-20 matches the highest a page uses for its own chrome (home's sticky mood chips) and wins the
      tie on DOM order, since <main> is static and its z-indexes land in the same stacking context.
-     ponytail: left offsets mirror Sidebar's w-16/lg:w-56 (and its manual collapse) — keep in sync
+     ponytail: left offsets mirror Sidebar's w-16 / w-60 (and its manual collapse) — keep in sync
      if those change. -->
 <div
 	transition:fly={{ y: '100%', duration: 320, easing: cubicOut }}
 	class="absolute inset-y-0 left-16 right-0 z-20 isolate flex min-h-0 overflow-hidden {ui.sidebarCollapsed
 		? ''
-		: 'lg:left-56'}"
+		: 'lg:left-60'}"
 	style="background-color: var(--background)"
 >
 	<!-- Solid plate. The wash tints this; it must never punch a hole through to the page. -->

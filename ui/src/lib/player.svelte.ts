@@ -68,7 +68,6 @@ function confirmReplaceQueue(): boolean {
 /** Play one track (a search row, a song card, a shelf), and show it. */
 export function playSong(song: SongItem) {
 	if (!confirmReplaceQueue()) return Promise.resolve();
-	openPlayer();
 	return api.play(song);
 }
 
@@ -536,7 +535,6 @@ export function playFrom(
 	pl.noteRecent(personal, source);
 	pl.touchPick(personal, source.id);
 	savePersonal();
-	openPlayer();
 	return api.playPlaylist(items, start, sourceId, source.title, shuffle, continuation);
 }
 
@@ -578,7 +576,6 @@ export async function startRadio(
 ) {
 	if (!confirmReplaceQueue()) return;
 	toast('Starting radio…');
-	openPlayer();
 	try {
 		await api.startRadio(kind, id, name);
 	} catch (e) {

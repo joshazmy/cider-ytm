@@ -26,6 +26,7 @@
 	import MediaCard from '$lib/components/MediaCard.svelte';
 	import MediaCardSkeleton from '$lib/components/MediaCardSkeleton.svelte';
 	import ErrorState from '$lib/components/ErrorState.svelte';
+	import * as api from '$lib/api';
 	import type { BrowseItem } from '$lib/api';
 	import {
 		auth,
@@ -113,13 +114,18 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="text-sm text-muted-foreground">{empty}</p>
+		<div class="flex max-w-md flex-col items-start gap-3 pt-2">
+			<p class="text-[13px] text-muted-foreground">{empty}</p>
+			{#if signedOut}
+				<Button size="sm" onclick={() => api.loginWebview()}>Sign in</Button>
+			{/if}
+		</div>
 	{/if}
 {/snippet}
 
-<div class="p-6">
-	<div class="mb-6 flex items-center justify-between">
-		<h1 class="font-heading text-2xl font-bold">Library</h1>
+<div class="px-4 pt-3 pb-3">
+	<div class="mb-3 flex items-center justify-between">
+		<h1 class="text-[17px] font-semibold">Library</h1>
 		{#if auth.account?.signedIn}
 			<div class="flex items-center gap-2">
 				<!-- Only with something to push: saves made before signing in, which live on this
@@ -241,8 +247,8 @@
 					{@render grid(
 						all,
 						signedOut
-							? 'Nothing saved yet. Open a playlist or album and hit Save to library, or sign in for the one on your account.'
-							: 'Your library is empty.'
+							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Explore.'
+							: 'Your library is empty. Save a playlist or album to keep it here.'
 					)}
 				{/if}
 			</Tabs.Content>

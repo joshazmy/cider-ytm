@@ -23,7 +23,7 @@ type Theme =
 	| { id: ThemeId; label: string; kind: 'palette'; color: string };
 
 export const THEMES: Theme[] = [
-	{ id: 'rose', label: 'Rose', kind: 'accent', color: 'oklch(0.455 0.188 13.697)', fg: 'oklch(0.985 0 0)' },
+	{ id: 'rose', label: 'Rose', kind: 'accent', color: 'oklch(0.68 0.195 8)', fg: 'oklch(0.98 0.01 8)' },
 	{ id: 'blue', label: 'Blue', kind: 'accent', color: 'oklch(0.49 0.22 264)', fg: 'oklch(0.985 0 0)' },
 	{ id: 'lime', label: 'Lime', kind: 'accent', color: 'oklch(0.77 0.2 131)', fg: 'oklch(0.205 0 0)' },
 	{ id: 'purple', label: 'Purple', kind: 'accent', color: 'oklch(0.56 0.25 302)', fg: 'oklch(0.985 0 0)' },
@@ -57,6 +57,8 @@ export type Custom = {
 };
 
 const KEY = 'primary-theme';
+/** One-shot: the old factory wrote `blue` into KEY. Do not keep resetting users who pick blue later. */
+const FACTORY_KEY = 'desk-theme-v2';
 const CUSTOM_KEY = 'custom-theme';
 const APPEARANCE_KEY = 'appearance';
 const PALETTE_CLASSES = THEMES.filter((t) => t.kind === 'palette').map((t) => `theme-${t.id}`);
@@ -290,7 +292,13 @@ export function fontAvailable(name: string): boolean {
 /** Apply the stored theme + customization on startup (defaults to rose, no overrides). */
 export function initTheme(): void {
 	const stored = localStorage.getItem(KEY) as ThemeId | null;
-	theme.id = stored && THEMES.some((t) => t.id === stored) ? stored : 'blue';
+	if (!localStorage.getItem(FACTORY_KEY)) {
+		theme.id = !stored || stored === 'blue' ? 'rose' : THEMES.some((t) => t.id === stored) ? stored : 'rose';
+		localStorage.setItem(FACTORY_KEY, '1');
+		localStorage.setItem(KEY, theme.id);
+	} else {
+		theme.id = stored && THEMES.some((t) => t.id === stored) ? stored : 'rose';
+	}
 	if (custom.hue === null && !localStorage.getItem(CUSTOM_KEY)) custom.hue = 250;
 	try {
 		const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY) ?? '{}');

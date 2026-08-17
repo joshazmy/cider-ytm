@@ -5,6 +5,7 @@
 		MusicNote01Icon,
 		PlayIcon,
 		PlayListAddIcon,
+		StarIcon,
 		ThumbsDownIcon,
 		ThumbsUpIcon
 	} from '@hugeicons/core-free-icons';
@@ -123,16 +124,20 @@
 	onclick={onplay}
 	onkeydown={onKey}
 	aria-label={guestAdd ? `Add ${song.title} to the session queue` : `Play ${song.title}`}
-	class="@container group flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-white/[0.08] {active
-		? 'bg-white/[0.07]'
-		: ''} {compact ? '' : '[content-visibility:auto] [contain-intrinsic-size:auto_3rem]'}"
+	class="@container group flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-white/[0.08] {compact
+		? 'h-12'
+		: 'h-[54px] [content-visibility:auto] [contain-intrinsic-size:auto_3.375rem]'} {active
+		? 'bg-white/[0.10]'
+		: ''}"
 >
 	{#if index !== undefined}
-		<span class="relative w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-			<span class="group-hover:opacity-0">{index + 1}</span>
+		<span class="relative w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+			<span class={active ? 'opacity-0' : 'group-hover:opacity-0'}>{index + 1}</span>
 			<HugeiconsIcon
 				icon={guestAdd ? PlayListAddIcon : PlayIcon}
-				class="absolute inset-0 m-auto h-3.5 w-3.5 text-foreground opacity-0 group-hover:opacity-100"
+				class="absolute inset-0 m-auto h-3.5 w-3.5 text-foreground {active
+					? 'opacity-100'
+					: 'opacity-0 group-hover:opacity-100'}"
 			/>
 		</span>
 	{/if}
@@ -141,14 +146,14 @@
 			<img
 				src={thumb(song.thumbnail, 96)}
 				alt=""
-				class="h-8 w-8 shrink-0 rounded-md object-cover"
+				class="h-10 w-10 shrink-0 rounded-md object-cover"
 				loading="lazy"
 			/>
 		{:else}
 			<!-- An untagged file has no artwork of its own. A music note keeps the row aligned
 			     with its neighbours and says so plainly. -->
 			<div
-				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/50"
 			>
 				<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
 			</div>
@@ -213,6 +218,22 @@
 		     so hiding it until the pointer arrives would be hiding half of what it's for. -->
 		{#if song.explicit && !hideRating}
 			<ExplicitIcon class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+		{/if}
+		{#if !compact && !hideRating && !api.isLocalId(song.video_id)}
+			<button
+				class="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
+				aria-label={isLiked(song) ? 'Remove like' : 'Like'}
+				aria-pressed={isLiked(song)}
+				onclick={(e) => {
+					e.stopPropagation();
+					toggleRating(song, 'like');
+				}}
+			>
+				<HugeiconsIcon
+					icon={StarIcon}
+					class="h-4 w-4 {isLiked(song) ? 'fill-current text-primary' : ''}"
+				/>
+			</button>
 		{/if}
 		{#if showRating}
 			<div class="flex items-center gap-0.5">
