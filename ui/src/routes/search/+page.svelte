@@ -20,7 +20,7 @@
 	import * as api from '$lib/api';
 	import type { SearchResults } from '$lib/api';
 	import { getCached, putCached } from '$lib/pagecache';
-	import { openAddToPlaylist, playSong } from '$lib/player.svelte';
+	import { openAddToPlaylist, openYtmUrl, playSong } from '$lib/player.svelte';
 	import { asSong } from '$lib/browse';
 
 	let query = $state(lastQuery);
@@ -34,6 +34,7 @@
 
 	async function runSearch() {
 		if (!query.trim()) return;
+		if (await openYtmUrl(query)) return;
 		const q = query;
 		latest = q;
 		lastQuery = q;

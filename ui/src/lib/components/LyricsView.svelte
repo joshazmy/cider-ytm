@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { playback } from '$lib/player.svelte';
+	import { desk, playback, setLyricsOffset } from '$lib/player.svelte';
 	import { applyUserLyricsSave, getUserLyrics, lyricsFromUserText } from '$lib/userLyrics';
 	import { parseClock } from '$lib/clock';
 
@@ -131,7 +131,7 @@
 		return () => cancelAnimationFrame(frameId);
 	});
 
-	const posMs = $derived(interpolatedPosSecs * 1000);
+	const posMs = $derived((interpolatedPosSecs - desk.lyricsOffset) * 1000);
 
 	let draft = $state('');
 	let editing = $state(false);
@@ -274,8 +274,13 @@
 	{/if}
 </div>
 {#if lyrics && !loading}
-	<p class="border-t px-4 py-2 text-xs text-muted-foreground">
-		{lyrics.source.startsWith('Source:') ? lyrics.source : `Lyrics from ${lyrics.source}`}
+	<p class="flex items-center justify-between gap-2 border-t px-4 py-2 text-xs text-muted-foreground">
+		<span>{lyrics.source.startsWith('Source:') ? lyrics.source : `Lyrics from ${lyrics.source}`}</span>
+		<span class="flex items-center gap-1">
+			<button type="button" class="px-1 hover:text-foreground" onclick={() => setLyricsOffset(desk.lyricsOffset - 0.5)}>−</button>
+			<span class="tabular-nums">{desk.lyricsOffset === 0 ? '0.0s' : `${desk.lyricsOffset > 0 ? '+' : ''}${desk.lyricsOffset.toFixed(1)}s`}</span>
+			<button type="button" class="px-1 hover:text-foreground" onclick={() => setLyricsOffset(desk.lyricsOffset + 0.5)}>+</button>
+		</span>
 	</p>
 {/if}
 <div class="border-t px-4 py-2">

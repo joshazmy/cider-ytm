@@ -2,6 +2,7 @@
 // `playback`/`auth` and read them reactively; the Rust side drives them via Tauri events.
 // context/11 UI contract — this module only calls commands / subscribes to events.
 import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
 import * as api from './api';
 import type {
 	Account,
@@ -18,6 +19,7 @@ import * as pl from './personal';
 import type { Personal } from './personal';
 import { nextPaused } from './transport';
 import { parseClock } from './clock';
+import { parseYtmUrl } from './yturl';
 
 export const playback = $state({
 	now: null as NowPlaying | null,
@@ -44,6 +46,26 @@ export const playback = $state({
 export const np = $state({ open: false, tab: 'lyrics' as 'queue' | 'lyrics' });
 
 export const openPlayer = () => (np.open = true);
+
+/** If `raw` is a YouTube / YTM URL, open or play it. Returns true when it handled the string. */
+export async function openYtmUrl(raw: string): Promise<boolean> {
+	const link = parseYtmUrl(raw);
+	if (!link) return false;
+	if (link.kind === 'video') {
+		await api.play({
+			video_id: link.id,
+			title: 'Link',
+			artists: ''
+		});
+		return true;
+	}
+	if (link.kind === 'playlist') {
+		await goto(`/playlist/${encodeURIComponent(link.id)}`);
+		return true;
+	}
+	await goto(`/artist/${encodeURIComponent(link.id)}`);
+	return true;
+}
 
 /** Open Google in the default OS browser (never an in-app webview). Then poll Zen/Firefox cookies. */
 export async function startGoogleSignIn() {
@@ -81,8 +103,14 @@ function remainingQueue(): number {
 export const desk = $state({
 	warnQueue: true,
 	sleepUntil: 0,
-	audioProfile: 'dry' as 'dry' | 'dimisco'
+	audioProfile: 'dry' as 'dry' | 'dimisco',
+	lyricsOffset: Number(localStorage.getItem('desk-lyrics-offset') || 0) || 0
 });
+
+export function setLyricsOffset(secs: number) {
+	desk.lyricsOffset = Math.round(secs * 10) / 10;
+	localStorage.setItem('desk-lyrics-offset', String(desk.lyricsOffset));
+}
 
 export async function toggleAudioProfile() {
 	const next = desk.audioProfile === 'dimisco' ? 'dry' : 'dimisco';

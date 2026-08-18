@@ -32,7 +32,8 @@
 		createLibraryPlaylist,
 		toggleSidebar,
 		toast,
-		startGoogleSignIn
+		startGoogleSignIn,
+		openYtmUrl
 	} from '$lib/player.svelte';
 	import { mergeSaved, orderLibrary } from '$lib/personal';
 	import * as api from '$lib/api';
@@ -104,8 +105,9 @@
 
 	// Compact field at the top of the rail. Empty submit still opens /search; the page reads `q`.
 	let searchQ = $state(page.url.searchParams.get('q') ?? '');
-	function submitSearch() {
+	async function submitSearch() {
 		const q = searchQ.trim();
+		if (q && (await openYtmUrl(q))) return;
 		goto(q ? `/search?${new URLSearchParams({ q })}` : '/search');
 	}
 
