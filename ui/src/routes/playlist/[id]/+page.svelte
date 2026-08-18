@@ -684,19 +684,17 @@
 
 <div class="flex h-full flex-col">
 	{#if loading}
-		<div class="flex min-h-[46vh] flex-col items-center px-6 pb-8 pt-12">
-			<Skeleton style="width:220px;height:220px" class="shrink-0 rounded-[28px]" />
-			<Skeleton class="mt-5 h-10 w-56 rounded-lg" />
-			<div class="mt-3 flex gap-1.5">
-				<Skeleton class="h-5 w-24 rounded-full" />
-				<Skeleton class="h-5 w-24 rounded-full" />
-			</div>
-			<div class="mt-5 flex gap-2">
-				<Skeleton class="h-11 w-28 rounded-full" />
-				<Skeleton class="h-11 w-28 rounded-full" />
+		<div class="flex items-center gap-4 px-6 py-4">
+			<Skeleton class="h-16 w-16 shrink-0 rounded-xl" />
+			<div class="min-w-0 flex-1">
+				<Skeleton class="h-5 w-48 rounded-md" />
+				<div class="mt-2 flex gap-2">
+					<Skeleton class="h-8 w-20 rounded-full" />
+					<Skeleton class="h-8 w-20 rounded-full" />
+				</div>
 			</div>
 		</div>
-		<div class="p-4">
+		<div class="px-3">
 			{#each Array(8) as _, i (i)}
 				<TrackRowSkeleton />
 			{/each}
@@ -716,22 +714,22 @@
 				class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/80"
 			></div>
 			<div
-				class="content-in relative flex shrink-0 items-end gap-4 px-6 pb-4 pt-5"
+				class="content-in relative flex h-20 shrink-0 items-center gap-3 px-6 py-2"
 			>
 				{#if isOnRepeat}
 					<div
-						class="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10"
+						class="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10"
 					>
-						<HugeiconsIcon icon={ListRestartIcon} class="h-8 w-8" />
+						<HugeiconsIcon icon={ListRestartIcon} class="h-7 w-7" />
 					</div>
 				{:else if pl.thumbnail}
 					<img
 						src={hiRes(pl.thumbnail)}
 						alt=""
-						class="relative h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+						class="relative h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
 					/>
 				{:else}
-					<div class="relative h-20 w-20 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"></div>
+					<div class="relative h-16 w-16 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"></div>
 				{/if}
 				<div class="relative min-w-0 flex-1">
 					{#if editingName}
@@ -779,9 +777,9 @@
 							{/each}
 						</div>
 					{/if}
-					<div class="mt-3 flex flex-wrap items-center gap-2">
+					<div class="mt-1.5 flex flex-wrap items-center gap-2">
 						<Button
-							class="h-11 min-w-[7.5rem] gap-2 rounded-full px-8 text-[13px] font-semibold"
+							class="h-8 min-w-[5.5rem] gap-1.5 rounded-full px-4 text-[13px] font-semibold"
 							onclick={() => playAll(null)}
 							disabled={!pl.items.length || preparing || resorting}
 						>
@@ -789,7 +787,7 @@
 							{preparing || resorting ? 'Sorting…' : 'Play'}
 						</Button>
 						<Button
-							class="h-11 min-w-[7.5rem] gap-2 rounded-full px-8 text-[13px] font-semibold"
+							class="h-8 min-w-[5.5rem] gap-1.5 rounded-full px-4 text-[13px] font-semibold"
 							onclick={() => run(shufflePlay)}
 							disabled={!pl.items.length || preparing || resorting}
 						>
