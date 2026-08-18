@@ -70,7 +70,11 @@ export async function openYtmUrl(raw: string): Promise<boolean> {
 /** Open Google in the default OS browser (never an in-app webview). Then poll Zen/Firefox cookies. */
 export async function startGoogleSignIn() {
 	if (desk.signingIn) {
-		desk.signingIn = false;
+		try {
+			await api.openInBrowser(api.GOOGLE_LOGIN);
+		} catch (e) {
+			toast.error(String(e));
+		}
 		return;
 	}
 	desk.signingIn = true;

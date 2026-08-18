@@ -401,11 +401,40 @@ fn linux_open_https(url: &str) -> Result<(), String> {
         .filter(|s| !s.is_empty());
 
     if let Some(ref desk) = desktop {
-        if spawn("gtk-launch", &[desk.as_str(), url]) {
+        // gtk-launch can exit 0 without opening Flatpak Zen. Drive the desktop Exec instead.
+        if let Some(exec) = desktop_exec(desk) {
+            if spawn_exec(&exec, url) {
+                return Ok(());
+            }
+        }
+        if Command::new("gtk-launch")
+            .args([desk.as_str(), url])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+        {
             return Ok(());
         }
         let app_id = desk.trim_end_matches(".desktop");
-        if app_id.starts_with("app.") && spawn("flatpak", &["run", app_id, url]) {
+        if app_id.starts_with("app.")
+            && spawn(
+                "flatpak",
+                &[
+                    "run",
+                    "--branch=stable",
+                    "--arch=x86_64",
+                    "--command=launch-script.sh",
+                    "--file-forwarding",
+                    app_id,
+                    "@@u",
+                    url,
+                    "@@",
+                ],
+            )
+        {
             return Ok(());
         }
     }
@@ -416,7 +445,6 @@ fn linux_open_https(url: &str) -> Result<(), String> {
     if spawn("setsid", &["-f", "xdg-open", url]) {
         return Ok(());
     }
-    // Never Chromium/Chrome for Google login: cookie import only reads Zen/Firefox.
     let google = url.contains("accounts.google.com") || url.contains("music.youtube.com");
     let bins: &[&str] = if google {
         &["zen-browser", "firefox"]
@@ -428,7 +456,75 @@ fn linux_open_https(url: &str) -> Result<(), String> {
             return Ok(());
         }
     }
-    Err("Couldn't open the default browser (tried gtk-launch, flatpak, gio, xdg-open)".into())
+    Err("Couldn't open the default browser (tried desktop Exec, gtk-launch, flatpak, gio, xdg-open)".into())
+}
+
+/// Read `Exec=` from the default `.desktop` (user then system applications).
+#[cfg(target_os = "linux")]
+fn desktop_exec(desktop: &str) -> Option<String> {
+    let name = if desktop.ends_with(".desktop") {
+        desktop.to_string()
+    } else {
+        format!("{desktop}.desktop")
+    };
+    let home = std::env::var_os("HOME")?;
+    let paths = [
+        std::path::PathBuf::from(&home).join(".local/share/applications").join(&name),
+        std::path::PathBuf::from("/usr/share/applications").join(&name),
+    ];
+    for p in paths {
+        let Ok(text) = std::fs::read_to_string(&p) else { continue };
+        for line in text.lines() {
+            if let Some(rest) = line.strip_prefix("Exec=") {
+                return Some(rest.to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Run a desktop Exec= line with `%u` / `@@u %u @@` filled in.
+#[cfg(target_os = "linux")]
+fn spawn_exec(exec: &str, url: &str) -> bool {
+    use std::process::{Command, Stdio};
+    let filled = exec
+        .replace("@@u %u @@", &format!("@@u {url} @@"))
+        .replace("%u", url)
+        .replace("%U", url);
+    let parts = shell_words(filled.trim());
+    if parts.is_empty() {
+        return false;
+    }
+    Command::new(&parts[0])
+        .args(&parts[1..])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .is_ok()
+}
+
+#[cfg(target_os = "linux")]
+fn shell_words(s: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut quote: Option<char> = None;
+    for c in s.chars() {
+        match (quote, c) {
+            (None, '\'') | (None, '"') => quote = Some(c),
+            (Some(q), ch) if ch == q => quote = None,
+            (None, ch) if ch.is_whitespace() => {
+                if !cur.is_empty() {
+                    out.push(std::mem::take(&mut cur));
+                }
+            }
+            (_, ch) => cur.push(ch),
+        }
+    }
+    if !cur.is_empty() {
+        out.push(cur);
+    }
+    out
 }
 
 fn now_secs() -> u64 {
@@ -441,6 +537,16 @@ mod tests {
 
     /// The signature is the auth-critical path: params sorted by name, `namevalue` concat, secret
     /// appended, md5 hex. Verified against a hand-computed digest (secret is "" in test builds).
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn desktop_exec_line_splits_flatpak_zen() {
+        let exec = "/usr/bin/flatpak run --command=launch-script.sh --file-forwarding app.zen_browser.zen @@u %u @@";
+        let words = shell_words(&exec.replace("@@u %u @@", "@@u https://example.com @@"));
+        assert_eq!(words[0], "/usr/bin/flatpak");
+        assert!(words.contains(&"@@u".into()));
+        assert!(words.contains(&"https://example.com".into()));
+    }
+
     #[test]
     fn api_sig_is_sorted_concat_md5() {
         let params = vec![
