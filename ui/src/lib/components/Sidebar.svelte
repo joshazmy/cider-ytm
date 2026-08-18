@@ -137,6 +137,7 @@
 	>
 		<HugeiconsIcon
 			icon={Search01Icon}
+			strokeWidth={2}
 			class="pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
 		/>
 		<input
@@ -277,6 +278,7 @@
 											icon={MusicNote01Icon}
 											altIcon={ListRestartIcon}
 											showAlt={pl.id === ON_REPEAT_ID}
+											strokeWidth={2}
 											class={pl.id === ON_REPEAT_ID ? 'h-3.5 w-3.5' : 'h-3 w-3'}
 										/>
 									</div>
