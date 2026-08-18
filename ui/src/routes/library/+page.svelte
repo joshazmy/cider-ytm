@@ -6,6 +6,7 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -48,8 +49,20 @@
 	// on the tab you came from instead of a sign-in prompt.
 	let tab = $state(page.url.searchParams.get('tab') ?? lastTab);
 	$effect(() => {
+		const fromUrl = page.url.searchParams.get('tab') ?? 'all';
+		if (fromUrl !== tab) tab = fromUrl;
 		lastTab = tab;
 	});
+
+	function setTab(next: string) {
+		tab = next;
+		lastTab = next;
+		const q = new URLSearchParams(page.url.searchParams);
+		if (!next || next === 'all') q.delete('tab');
+		else q.set('tab', next);
+		const s = q.toString();
+		void goto(`/library${s ? `?${s}` : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
+	}
 
 	// Everything here lives in the shared `library` store, so a revisit renders the cached grid
 	// immediately and the forced refresh below swaps in fresh data behind it. What was saved on this
@@ -207,7 +220,7 @@
 	</Dialog.Root>
 
 	<!-- The tabs always render: Local music needs neither an account nor a connection. -->
-	<Tabs.Root bind:value={tab}>
+	<Tabs.Root value={tab} onValueChange={setTab}>
 		<Tabs.List class="mb-4">
 			<Tabs.Trigger value="all">
 				<HugeiconsIcon icon={SquareStackIcon} class="h-4 w-4" /> All

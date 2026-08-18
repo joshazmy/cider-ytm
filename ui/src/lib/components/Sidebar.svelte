@@ -48,8 +48,11 @@
 	const isActive = (href: string) => {
 		if (href === '/') return page.url.pathname === '/';
 		if (href.startsWith('/playlist/')) return page.url.pathname === href;
-		if (href.includes('tab=')) return page.url.searchParams.get('tab') === href.split('tab=')[1];
-		return page.url.pathname.startsWith('/library') && !page.url.searchParams.get('tab');
+		if (href.includes('tab=')) {
+			if (page.url.pathname !== '/library') return false;
+			return page.url.searchParams.get('tab') === href.split('tab=')[1];
+		}
+		return page.url.pathname === '/library' && !page.url.searchParams.get('tab');
 	};
 
 	// Pinned first (in pin order), then everything else by last played. Derived here rather than in
