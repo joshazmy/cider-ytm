@@ -93,7 +93,7 @@
 
 		<div class="flex justify-end gap-2">
 			<!-- Reset does not close: you're usually resetting to hear the difference. -->
-			<Button variant="outline" size="sm" onclick={() => apply(1, 0)}>Reset</Button>
+			<Button variant="outline" size="sm" onclick={() => apply(1.15, 0)}>Reset</Button>
 			<Button size="sm" onclick={() => (open = false)}>Done</Button>
 		</div>
 	</Dialog.Content>

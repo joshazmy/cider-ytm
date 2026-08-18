@@ -110,7 +110,7 @@
 			goto('/library');
 		} else if (e.code === 'Digit2') {
 			e.preventDefault();
-			goto('/library?tab=all');
+			goto('/library?tab=songs');
 		} else if (e.code === 'Digit3') {
 			e.preventDefault();
 			goto('/library?tab=albums');

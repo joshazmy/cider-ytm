@@ -12,7 +12,8 @@
 	const actions = $derived.by(() => {
 		const all: Act[] = [
 			{ id: 'lib', label: 'Library', hint: 'Ctrl+H', run: () => goto('/library') },
-			{ id: 'songs', label: 'Songs', hint: 'Ctrl+2', run: () => goto('/library?tab=all') },
+			{ id: 'songs', label: 'Songs', hint: 'Ctrl+2', run: () => goto('/library?tab=songs') },
+			{ id: 'recent', label: 'Recently Played', run: () => goto('/library?tab=recent') },
 			{ id: 'albums', label: 'Albums', hint: 'Ctrl+3', run: () => goto('/library?tab=albums') },
 			{ id: 'artists', label: 'Artists', hint: 'Ctrl+4', run: () => goto('/library?tab=artists') },
 			{ id: 'search', label: 'Search', hint: 'Ctrl+F', run: () => goto('/search') },
