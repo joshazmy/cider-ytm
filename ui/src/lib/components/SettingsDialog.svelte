@@ -418,7 +418,7 @@
 						<div class="min-w-0">
 							<div class="font-medium">Always on top</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
-								Keep Yapel above other windows (Cider-style pin).
+								Keep Yapel above other windows.
 							</p>
 						</div>
 						<Switch
