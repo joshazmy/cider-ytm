@@ -92,11 +92,12 @@
 	</button>
 
 	<div class="relative flex min-h-0 w-full flex-1">
+		<div class="relative hidden min-h-0 w-[48%] shrink-0 md:block">
 		<button
 			type="button"
 			onclick={toggle}
 			aria-label={playback.paused ? 'Play' : 'Pause'}
-			class="relative hidden min-h-0 w-[48%] shrink-0 cursor-pointer md:block"
+			class="absolute inset-0 cursor-pointer"
 		>
 			{#if flash}
 				<div
@@ -113,11 +114,11 @@
 					</div>
 				</div>
 			{/if}
-			<div class="absolute right-6 bottom-8 left-8 text-left">
-				<div class="font-heading text-[2.15rem] leading-tight font-semibold text-white drop-shadow-md">
+			<div class="pointer-events-none absolute right-6 bottom-8 left-8 text-left">
+				<div class="font-heading truncate text-[2.15rem] leading-tight font-semibold text-white drop-shadow-md">
 					{playback.now?.title ?? ''}
 				</div>
-				<div class="mt-1.5 text-[1.05rem] text-white/75">
+				<div class="pointer-events-auto mt-1.5 text-[1.05rem] text-white/75">
 					<ArtistLine
 						runs={playback.now?.artistRuns}
 						text={playback.now?.artists ?? ''}
@@ -133,6 +134,7 @@
 				{/if}
 			</div>
 		</button>
+		</div>
 
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col px-5 pt-3 pb-3 md:px-8">
 			<div class="mb-2 flex items-center justify-end gap-1">
@@ -156,7 +158,7 @@
 				</button>
 			</div>
 			{#if np.tab === 'queue'}
-				<div class="min-h-0 flex-1 overflow-hidden rounded-xl bg-black/20 text-white">
+				<div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-black/20 text-white">
 					<QueueList upcomingOnly />
 				</div>
 			{:else}

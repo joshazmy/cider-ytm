@@ -192,18 +192,22 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
             .as_nanos()
     ));
     std::fs::copy(path, &tmp).ok()?;
-    let _ = std::fs::copy(
-        format!("{}-wal", path.display()),
-        format!("{}-wal", tmp.display()),
-    );
-    let _ = std::fs::copy(
-        format!("{}-shm", path.display()),
-        format!("{}-shm", tmp.display()),
-    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600));
+    }
+    let wal = format!("{}-wal", path.display());
+    let shm = format!("{}-shm", path.display());
+    let tmp_wal = format!("{}-wal", tmp.display());
+    let tmp_shm = format!("{}-shm", tmp.display());
+    let _ = std::fs::copy(&wal, &tmp_wal);
+    let _ = std::fs::copy(&shm, &tmp_shm);
+    let result = (|| {
     let conn = rusqlite::Connection::open(&tmp).ok()?;
     let mut stmt = conn
         .prepare(
-            "SELECT name, value FROM moz_cookies WHERE host LIKE '%youtube.com' OR host LIKE '%google.com'",
+            "SELECT name, value FROM moz_cookies WHERE host LIKE '%youtube.com' OR host LIKE '%.google.com' OR host = '.google.com'",
         )
         .ok()?;
     let rows = stmt
@@ -215,11 +219,15 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
             jar.insert(row.0, row.1);
         }
     }
-    let _ = std::fs::remove_file(&tmp);
     if !jar.contains_key("SAPISID") && !jar.keys().any(|k| k.ends_with("SAPISID")) {
         return None;
     }
     Some(jar.into_iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("; "))
+    })();
+    let _ = std::fs::remove_file(&tmp);
+    let _ = std::fs::remove_file(&tmp_wal);
+    let _ = std::fs::remove_file(&tmp_shm);
+    result
 }
 
 pub(crate) fn import_youtube_cookies() -> Option<String> {

@@ -78,20 +78,22 @@
 	const all = $derived([...playlists, ...albums, ...artists]);
 	const recents = $derived(recentItems(personal, 60));
 	let songs = $state<api.SongItem[]>([]);
+	let songsCont = $state<string | undefined>();
 	let songsLoading = $state(false);
 	let songsError = $state<string | null>(null);
 
 	async function loadSongs() {
 		if (!auth.account?.signedIn) {
 			songs = [];
+			songsCont = undefined;
 			return;
 		}
 		songsLoading = true;
 		songsError = null;
 		try {
 			const page = await api.getLibrarySongs();
-			const items = page.items ?? [];
-			songs = items[0]?.video_id ? items : items.slice(1);
+			songs = (page.items ?? []).filter((s) => s.video_id);
+			songsCont = page.continuation ?? undefined;
 		} catch (e) {
 			songsError = String(e);
 		} finally {
@@ -312,7 +314,10 @@
 											title: 'Songs'
 										},
 										songs,
-										n
+										n,
+										undefined,
+										undefined,
+										songsCont
 									)}
 								onAdd={() => openAddToPlaylist(song)}
 							/>

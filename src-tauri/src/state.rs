@@ -1588,11 +1588,17 @@ impl AppState {
                     t.clone()
                 }
             });
-            m.set_metadata(&item.title, &item.artists, item.album.as_deref(), cover.as_deref());
-            let ms = parse_duration_ms(item.duration.as_deref());
-            if ms > 0 {
-                m.set_duration(ms as f64 / 1000.0);
-            }
+            let secs = {
+                let ms = parse_duration_ms(item.duration.as_deref());
+                (ms > 0).then_some(ms as f64 / 1000.0)
+            };
+            m.set_metadata(
+                &item.title,
+                &item.artists,
+                item.album.as_deref(),
+                cover.as_deref(),
+                secs,
+            );
         }
         if let Some(d) = &self.discord {
             d.set_track(item);
@@ -1601,9 +1607,24 @@ impl AppState {
         if stream_client != "restored"
             && self.db.get_setting("notifications").as_deref() != Some("false")
         {
-            let _ = std::process::Command::new("notify-send")
-                .args(["-a", "Yapel", "--", &item.title, &item.artists])
-                .spawn();
+            static LAST_NOTIFY: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+            let vid = item.video_id.clone();
+            let skip = LAST_NOTIFY
+                .lock()
+                .map(|mut last| {
+                    if *last == vid {
+                        true
+                    } else {
+                        *last = vid;
+                        false
+                    }
+                })
+                .unwrap_or(false);
+            if !skip {
+                let _ = std::process::Command::new("notify-send")
+                    .args(["-a", "Yapel", "--", &item.title, &item.artists])
+                    .spawn();
+            }
         }
         // New track ⇒ let the next position tick through immediately instead of waiting out the
         // ~1s throttle, so a restored seek position (and the play-state self-heal) lands at once.

@@ -483,20 +483,40 @@ fn desktop_exec(desktop: &str) -> Option<String> {
     None
 }
 
-/// Run a desktop Exec= line with `%u` / `@@u %u @@` filled in.
+/// Tokenize Exec= first, then insert the URL as one argv (desktop spec). Never interpolate
+/// the URL into a string that is later split.
 #[cfg(target_os = "linux")]
 fn spawn_exec(exec: &str, url: &str) -> bool {
     use std::process::{Command, Stdio};
-    let filled = exec
-        .replace("@@u %u @@", &format!("@@u {url} @@"))
-        .replace("%u", url)
-        .replace("%U", url);
-    let parts = shell_words(filled.trim());
+    let mut parts = shell_words(exec.trim());
     if parts.is_empty() {
         return false;
     }
-    Command::new(&parts[0])
-        .args(&parts[1..])
+    let mut out: Vec<String> = Vec::new();
+    let mut inserted = false;
+    for p in parts.drain(..) {
+        if p == "%u" || p == "%U" {
+            out.push(url.to_string());
+            inserted = true;
+        } else if p == "@@u" {
+            out.push("@@u".into());
+        } else if p == "@@" {
+            if !inserted {
+                out.push(url.to_string());
+                inserted = true;
+            }
+            out.push("@@".into());
+        } else if p.starts_with('%') && p.len() == 2 {
+            // drop unused desktop field codes
+        } else {
+            out.push(p);
+        }
+    }
+    if !inserted {
+        out.push(url.to_string());
+    }
+    Command::new(&out[0])
+        .args(&out[1..])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -545,6 +565,26 @@ mod tests {
         assert_eq!(words[0], "/usr/bin/flatpak");
         assert!(words.contains(&"@@u".into()));
         assert!(words.contains(&"https://example.com".into()));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn exec_inserts_url_as_one_arg() {
+        let exec = "/usr/bin/flatpak run --file-forwarding app.zen_browser.zen @@u %u @@";
+        let parts = {
+            let mut p = shell_words(exec);
+            let mut out = Vec::new();
+            for x in p.drain(..) {
+                if x == "%u" {
+                    out.push("https://ex.com/a b".into());
+                } else {
+                    out.push(x);
+                }
+            }
+            out
+        };
+        assert!(parts.iter().any(|p| p == "https://ex.com/a b"));
+        assert!(!parts.iter().any(|p| p == "b"));
     }
 
     #[test]

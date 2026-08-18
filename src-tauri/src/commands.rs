@@ -498,6 +498,9 @@ pub async fn get_playlist(
     if id == "FEmusic_liked_videos" {
         return get_library_songs(state).await;
     }
+    if id.starts_with("FEmusic_") {
+        return Err("that browse is not a playlist".into());
+    }
     if id == ON_REPEAT_ID {
         let items = on_repeat_songs(&state);
         return Ok(PlaylistPage {
@@ -940,7 +943,15 @@ pub fn open_in_browser(url: String) -> Result<(), String> {
 }
 
 pub(crate) fn is_browser_url(url: &str) -> bool {
-    url.starts_with("https://") || url.starts_with("http://")
+    if url.contains([' ', '\n', '\t', ';', '`', '$', '"', '\'']) {
+        return false;
+    }
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"));
+    let Some(rest) = rest else { return false };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    host.contains('.') || host.starts_with("127.0.0.1") || host.starts_with('[')
 }
 
 #[cfg(test)]

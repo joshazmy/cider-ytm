@@ -714,7 +714,7 @@
 				class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/80"
 			></div>
 			<div
-				class="content-in relative flex h-20 shrink-0 items-center gap-3 px-6 py-2"
+				class="content-in relative flex shrink-0 items-center gap-3 px-6 py-3"
 			>
 				{#if isOnRepeat}
 					<div

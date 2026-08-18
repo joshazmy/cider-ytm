@@ -78,6 +78,12 @@
 		let frame = requestAnimationFrame(() => (frame = requestAnimationFrame(land)));
 		return () => cancelAnimationFrame(frame);
 	});
+	$effect(() => {
+		if (!upcomingOnly) return;
+		playback.queue.currentIndex;
+		playback.queue.items?.length;
+		if (el) el.scrollTop = 0;
+	});
 
 	// Playing a playlist queues the whole playlist, so this panel can be handed five figures of
 	// rows the moment it opens, at roughly 165 KB of web-process memory each (`rows.ts`). Past a

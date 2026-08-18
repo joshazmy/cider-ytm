@@ -19,7 +19,13 @@ use crate::state::AppState;
 
 /// Update messages: app → media-controls owner thread.
 enum MediaUpdate {
-    Metadata { title: String, artist: String, album: Option<String>, cover: Option<String> },
+    Metadata {
+        title: String,
+        artist: String,
+        album: Option<String>,
+        cover: Option<String>,
+        duration: Option<f64>,
+    },
     Duration(f64),
     Playback { playing: bool, pos: f64 },
 }
@@ -37,12 +43,14 @@ impl MediaHandle {
         artist: &str,
         album: Option<&str>,
         cover: Option<&str>,
+        duration: Option<f64>,
     ) {
         let _ = self.tx.send(MediaUpdate::Metadata {
             title: title.to_owned(),
             artist: artist.to_owned(),
             album: album.map(str::to_owned),
             cover: cover.map(str::to_owned),
+            duration,
         });
     }
 
@@ -107,12 +115,14 @@ fn run(app: AppHandle, rx: std::sync::mpsc::Receiver<MediaUpdate>) {
     // `recv` blocks until the sender drops (app shutdown), keeping `controls` alive.
     while let Ok(update) = rx.recv() {
         match update {
-            MediaUpdate::Metadata { title: t, artist: a, album: al, cover: c } => {
+            MediaUpdate::Metadata { title: t, artist: a, album: al, cover: c, duration: d } => {
                 title = t;
                 artist = a;
                 album = al;
                 cover = c;
-                duration = None; // new track — length not known until mpv reports it
+                if d.is_some() {
+                    duration = d;
+                }
                 apply_metadata(&mut controls, &title, &artist, &album, &cover, duration);
             }
             MediaUpdate::Duration(secs) => {

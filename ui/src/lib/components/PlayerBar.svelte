@@ -82,7 +82,10 @@
 	);
 	let sleepOpen = $state(false);
 	function onSleepKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') sleepOpen = false;
+		if (e.key !== 'Escape' || !sleepOpen) return;
+		e.preventDefault();
+		e.stopPropagation();
+		sleepOpen = false;
 	}
 	function onSleepDoc(e: PointerEvent) {
 		if (!(e.target as HTMLElement).closest('[data-sleep]')) sleepOpen = false;

@@ -229,7 +229,7 @@
 {:else if album}
     <!-- Playlist-matching hero: cover wash, large rounded art, Play + Shuffle pills. -->
     <div
-        class="content-in relative flex h-20 shrink-0 items-center overflow-hidden px-6 py-2"
+        class="content-in relative flex shrink-0 items-center px-6 py-3"
     >
         {#if album.thumbnail}
             <!-- Blur-2xl destroys detail, so the smallest source that still holds the cover colours. -->

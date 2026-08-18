@@ -77,8 +77,8 @@
 			</button>
 		{/if}
 	</div>
-	<div class="min-h-0 flex-1 overflow-hidden">
-		<div class="px-3 pb-1 text-[12px] font-semibold text-muted-foreground">
+	<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+		<div class="shrink-0 px-3 pb-1 text-[12px] font-semibold text-muted-foreground">
 			Next
 			{#if from}
 				<span class="mt-0.5 block text-[10px] font-medium text-muted-foreground/80">from {from}</span>
