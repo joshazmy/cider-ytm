@@ -194,7 +194,7 @@
 					text={playback.now?.title ?? 'Nothing playing'}
 					class="text-[13px] font-medium leading-tight"
 				/>
-				{#if playback.now?.explicit}
+				{#if playback.now?.explicit || currentSong?.explicit}
 					<ExplicitIcon class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
 				{/if}
 				{#if playback.now?.bitrate}
