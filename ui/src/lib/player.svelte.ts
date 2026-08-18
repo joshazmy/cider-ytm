@@ -75,7 +75,7 @@ export async function startGoogleSignIn() {
 		toast.error(String(e));
 		return;
 	}
-	toast('Finish Google sign-in in your browser. Yapel will import the session.');
+	toast('Opened your default browser. Finish Google there — then Yapel imports the session.');
 	for (let i = 0; i < 90; i++) {
 		await new Promise((r) => setTimeout(r, 2000));
 		try {

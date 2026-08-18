@@ -361,38 +361,67 @@ pub fn status(state: &AppState) -> serde_json::Value {
     serde_json::json!({ "connected": key.is_some(), "username": username })
 }
 
-/// Open a URL in the user's default browser. No opener plugin in the app; three lines cover the
-/// three platforms.
+/// Open a URL in the user's default browser. Linux: Flatpak Zen (this desk) ignores
+/// in-process `xdg-open` from WebKit — launch the default `.desktop` / `flatpak run`.
 pub(crate) fn open_browser(url: &str) -> Result<(), String> {
     #[cfg(target_os = "linux")]
-    let cmd = {
-        let mut c = std::process::Command::new("xdg-open");
-        c.arg(url)
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null());
-        match c.spawn() {
-            Ok(child) => Ok(child),
-            Err(_) => std::process::Command::new("gio")
-                .args(["open", url])
-                .stdin(std::process::Stdio::null())
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn(),
-        }
-    };
+    {
+        return linux_open_https(url);
+    }
     #[cfg(target_os = "macos")]
     let cmd = std::process::Command::new("open").arg(url).spawn();
-    // cmd.exe re-parses its own command line, and `Command::arg` only quotes args containing
-    // spaces — so an unquoted `&` in the URL split it into a second command and the browser got
-    // `…/auth?api_key=X` with the token chopped off ("Invalid API key" once the user clicks Allow).
-    // raw_arg passes the quoted URL through verbatim.
     #[cfg(target_os = "windows")]
     let cmd = {
         use std::os::windows::process::CommandExt;
         std::process::Command::new("cmd").raw_arg(format!("/C start \"\" \"{url}\"")).spawn()
     };
+    #[cfg(not(target_os = "linux"))]
     cmd.map(|_| ()).map_err(|e| format!("Couldn't open the browser: {e}"))
+}
+
+#[cfg(target_os = "linux")]
+fn linux_open_https(url: &str) -> Result<(), String> {
+    use std::process::{Command, Stdio};
+    fn spawn(bin: &str, args: &[&str]) -> bool {
+        Command::new(bin)
+            .args(args)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .is_ok()
+    }
+
+    let desktop = Command::new("xdg-settings")
+        .args(["get", "default-web-browser"])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    if let Some(ref desk) = desktop {
+        if spawn("gtk-launch", &[desk.as_str(), url]) {
+            return Ok(());
+        }
+        let app_id = desk.trim_end_matches(".desktop");
+        if app_id.starts_with("app.") && spawn("flatpak", &["run", app_id, url]) {
+            return Ok(());
+        }
+    }
+
+    if spawn("gio", &["open", url]) {
+        return Ok(());
+    }
+    if spawn("setsid", &["-f", "xdg-open", url]) {
+        return Ok(());
+    }
+    for bin in ["zen-browser", "firefox", "chromium", "google-chrome-stable"] {
+        if spawn(bin, &["--new-tab", url]) {
+            return Ok(());
+        }
+    }
+    Err("Couldn't open the default browser (tried gtk-launch, flatpak, gio, xdg-open)".into())
 }
 
 fn now_secs() -> u64 {
