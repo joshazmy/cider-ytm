@@ -10,7 +10,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
-	import { desk, ui, toast, playback, setTempoPitch, setSleepMins } from '$lib/player.svelte';
+	import { desk, ui, toast, playback, setTempoPitch, setSleepMins, setDeskAutoplay } from '$lib/player.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import {
 		THEMES,
@@ -193,7 +193,7 @@
 
 	async function setAutoplay(on: boolean) {
 		settings.autoplay = on ? 'true' : 'false';
-		await api.setSetting('autoplay', settings.autoplay);
+		await setDeskAutoplay(on);
 	}
 
 	async function setAudioProfile(profile: 'dry' | 'dimisco') {

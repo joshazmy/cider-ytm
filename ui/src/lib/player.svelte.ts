@@ -109,8 +109,14 @@ export const desk = $state({
 	sleepUntil: 0,
 	audioProfile: 'dry' as 'dry' | 'dimisco',
 	lyricsOffset: Number(localStorage.getItem('desk-lyrics-offset') || 0) || 0,
-	signingIn: false
+	signingIn: false,
+	autoplay: false
 });
+
+export async function setDeskAutoplay(on: boolean) {
+	desk.autoplay = on;
+	await api.setSetting('autoplay', on ? 'true' : 'false');
+}
 
 export function setLyricsOffset(secs: number) {
 	desk.lyricsOffset = Math.round(secs * 10) / 10;
@@ -847,6 +853,7 @@ export function initApp(mini = false): () => void {
 		.then((s) => {
 			desk.warnQueue = s.warn_before_queue_override !== 'false';
 			desk.audioProfile = s.audio_profile === 'dimisco' ? 'dimisco' : 'dry';
+			desk.autoplay = s.autoplay === 'true';
 			const speed = Number.parseFloat(s.playback_speed ?? '1.15');
 			const semitones = Number.parseInt(s.playback_semitones ?? '0', 10);
 			playback.speed = Number.isFinite(speed) ? speed : 1.15;

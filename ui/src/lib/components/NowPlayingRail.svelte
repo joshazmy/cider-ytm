@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { MusicNote01Icon } from '@hugeicons/core-free-icons';
-	import { np, playback } from '$lib/player.svelte';
+	import { InfinityIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
+	import { desk, np, playback, setDeskAutoplay } from '$lib/player.svelte';
 	import * as api from '$lib/api';
 	import { isLetterTile, thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
@@ -28,6 +28,17 @@
 						>{at} of {total}</span
 					>
 				{/if}
+				<button
+					type="button"
+					class="rounded-full px-2 py-0.5 text-[10px] font-medium {desk.autoplay
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => setDeskAutoplay(!desk.autoplay)}
+					aria-pressed={desk.autoplay}
+					aria-label="Autoplay similar"
+				>
+					<HugeiconsIcon icon={InfinityIcon} class="inline h-3.5 w-3.5" />
+				</button>
 				{#if canClear}
 					<button
 						type="button"
