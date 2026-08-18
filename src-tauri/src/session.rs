@@ -192,6 +192,14 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
             .as_nanos()
     ));
     std::fs::copy(path, &tmp).ok()?;
+    let _ = std::fs::copy(
+        format!("{}-wal", path.display()),
+        format!("{}-wal", tmp.display()),
+    );
+    let _ = std::fs::copy(
+        format!("{}-shm", path.display()),
+        format!("{}-shm", tmp.display()),
+    );
     let conn = rusqlite::Connection::open(&tmp).ok()?;
     let mut stmt = conn
         .prepare(

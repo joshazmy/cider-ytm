@@ -416,7 +416,14 @@ fn linux_open_https(url: &str) -> Result<(), String> {
     if spawn("setsid", &["-f", "xdg-open", url]) {
         return Ok(());
     }
-    for bin in ["zen-browser", "firefox", "chromium", "google-chrome-stable"] {
+    // Never Chromium/Chrome for Google login: cookie import only reads Zen/Firefox.
+    let google = url.contains("accounts.google.com") || url.contains("music.youtube.com");
+    let bins: &[&str] = if google {
+        &["zen-browser", "firefox"]
+    } else {
+        &["zen-browser", "firefox", "chromium", "google-chrome-stable"]
+    };
+    for bin in bins {
         if spawn(bin, &["--new-tab", url]) {
             return Ok(());
         }

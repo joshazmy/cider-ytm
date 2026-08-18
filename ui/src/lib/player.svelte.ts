@@ -69,13 +69,17 @@ export async function openYtmUrl(raw: string): Promise<boolean> {
 
 /** Open Google in the default OS browser (never an in-app webview). Then poll Zen/Firefox cookies. */
 export async function startGoogleSignIn() {
-	if (desk.signingIn) return;
+	if (desk.signingIn) {
+		desk.signingIn = false;
+		return;
+	}
 	desk.signingIn = true;
 	try {
 		await api.openInBrowser(api.GOOGLE_LOGIN);
-		toast('Opened your default browser. Finish Google there — then Yapel imports the session.');
+		toast('Opened Zen. Finish Google there — click Sign in again to cancel.');
 		for (let i = 0; i < 90; i++) {
 			if (!desk.signingIn) return;
+			if (auth.account?.signedIn) return;
 			await new Promise((r) => setTimeout(r, 2000));
 			try {
 				await api.importBrowserCookies();
