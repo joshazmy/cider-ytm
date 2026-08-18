@@ -26,7 +26,7 @@
 		recentItems,
 		topArtists
 	} from '$lib/personal';
-	import { getCached, putCached } from '$lib/pagecache';
+	import { getCached, putCached, invalidateCached } from '$lib/pagecache';
 
 	const FORGOTTEN_KEY = 'home:forgotten';
 
@@ -137,11 +137,13 @@
 		goto(`/list?${q.toString()}`);
 	}
 
-	async function load(params: string | null = selected) {
+	async function load(params: string | null = selected, opts?: { force?: boolean }) {
 		selected = params;
 		const key = params ? `home:${params}` : 'home';
-		const hit = getCached<HomePage>(key);
+		if (opts?.force) invalidateCached(key);
+		const hit = opts?.force ? null : getCached<HomePage>(key);
 		forgotten = params ? null : getCached<HomeSection>(FORGOTTEN_KEY);
+		moreError = false;
 		if (hit) {
 			home = hit;
 			loading = false;
@@ -263,7 +265,7 @@
 </script>
 
 <div {@attach watchScroll}>
-	<HomeHero onRefresh={() => load(selected)} />
+	<HomeHero onRefresh={() => load(selected, { force: true })} />
 	<!-- Mood chips filter the whole feed, so they're page-level controls: sticky, they stay reachable
 	     while the feed scrolls under them instead of leaving with the header they were pinned to.
 	     Opaque rather than blurred — a backdrop-filter repainting on every scroll frame is the one

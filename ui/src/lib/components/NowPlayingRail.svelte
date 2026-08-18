@@ -9,6 +9,11 @@
 	const total = $derived(playback.queue.items?.length ?? 0);
 	const at = $derived(Math.min(total, (playback.queue.currentIndex ?? 0) + 1));
 	const from = $derived(playback.queue.sourceName?.trim() || '');
+	const canClear = $derived(
+		(playback.queue.items ?? [])
+			.slice(playback.queue.currentIndex + 1)
+			.some((i) => i.queued || i.queued_end)
+	);
 </script>
 
 <aside
@@ -20,10 +25,10 @@
 			<div class="flex items-center gap-1">
 				{#if total}
 					<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
-						>{total} items</span
+						>{at} of {total}</span
 					>
 				{/if}
-				{#if total > 1}
+				{#if canClear}
 					<button
 						type="button"
 						class="rounded-full px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal text-muted-foreground hover:bg-white/8 hover:text-foreground"
