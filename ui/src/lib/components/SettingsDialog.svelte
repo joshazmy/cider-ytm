@@ -214,7 +214,13 @@
 
 	const eqPreset = $derived(settings.eq_preset ?? 'flat');
 	const notifyOn = $derived(settings.notifications !== 'false');
-	let sleepMins = $state(0);
+	const sleepMins = $derived.by(() => {
+		if (!desk.sleepUntil || desk.sleepUntil <= Date.now()) return 0;
+		const mins = Math.round((desk.sleepUntil - Date.now()) / 60_000);
+		return [15, 30, 45, 60].reduce((best, n) =>
+			Math.abs(n - mins) < Math.abs(best - mins) ? n : best
+		);
+	});
 
 	async function setEq(preset: string) {
 		settings.eq_preset = preset;
@@ -227,7 +233,6 @@
 	}
 
 	async function setSleep(mins: number) {
-		sleepMins = mins;
 		await setSleepMins(mins);
 	}
 

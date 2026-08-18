@@ -28,6 +28,7 @@
 		dragVolume,
 		openAddToPlaylist,
 		openMiniPlayer,
+		setSleepMins,
 		toggleMute,
 		toggleNowPlayingLike,
 		togglePlayUi
@@ -65,11 +66,17 @@
 		desk.sleepUntil > nowTick ? Math.max(0, desk.sleepUntil - nowTick) : 0
 	);
 	const sleepLabel = $derived.by(() => {
-		if (!sleepLeft) return '';
+		if (!sleepLeft || !desk.sleepUntil) return '';
 		const mins = Math.ceil(sleepLeft / 60_000);
-		if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-		return `${mins}m`;
+		const left =
+			mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
+		const end = new Date(desk.sleepUntil).toLocaleTimeString([], {
+			hour: 'numeric',
+			minute: '2-digit'
+		});
+		return `${left} → ${end}`;
 	});
+	let sleepOpen = $state(false);
 
 	let justLiked = $state(false);
 
@@ -323,11 +330,35 @@
 			onchange={onVolumeCommit}
 			aria-label="Volume"
 		/>
-		{#if sleepLabel}
-			<span class="mr-1 text-[11px] tabular-nums text-muted-foreground" title="Sleep timer">
-				{sleepLabel}
-			</span>
-		{/if}
+		<div class="relative mr-1">
+			<button
+				type="button"
+				class="px-1 text-[11px] tabular-nums {sleepLabel
+					? 'text-muted-foreground'
+					: 'text-muted-foreground/60'} hover:text-foreground"
+				onclick={() => (sleepOpen = !sleepOpen)}
+				aria-expanded={sleepOpen}
+				aria-label="Sleep timer"
+			>
+				{sleepLabel || 'Sleep'}
+			</button>
+			{#if sleepOpen}
+				<div
+					class="absolute right-0 bottom-8 z-30 flex gap-1 rounded-lg border bg-popover p-1 shadow-lg"
+				>
+					{#each [0, 15, 30, 45, 60] as m (m)}
+						<button
+							type="button"
+							class="rounded-md px-2 py-1 text-[11px] hover:bg-muted"
+							onclick={() => {
+								void setSleepMins(m);
+								sleepOpen = false;
+							}}>{m === 0 ? 'Off' : `${m}m`}</button
+						>
+					{/each}
+				</div>
+			{/if}
+		</div>
 		<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
 			<HugeiconsIcon strokeWidth={2} icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</Button>

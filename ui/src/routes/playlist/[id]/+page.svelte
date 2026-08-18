@@ -87,18 +87,19 @@
 	const nowId = $derived(playback.now?.videoId);
 	// The liked-music auto-playlist isn't a user playlist — no rename/delete, but shuffle is fine.
 	const isLiked = $derived(id === 'VLLM');
+	const isLibrarySongs = $derived(id === 'FEmusic_liked_videos');
 	// On Repeat is built locally from play counts: no artwork, and no radio to seed autoplay from.
 	const isOnRepeat = $derived(id === ON_REPEAT_ID);
 	// Only offer rename/delete on playlists the signed-in user actually owns (backend `owned` flag).
 	// Liked Music reports owned but can't be renamed/deleted, so exclude it explicitly.
-	const editable = $derived((pl?.owned ?? false) && !isLiked);
+	const editable = $derived((pl?.owned ?? false) && !isLiked && !isLibrarySongs);
 	// Saving someone else's playlist keeps it on this machine, signed in or not: YouTube has no
 	// "save" for a playlist that doesn't cost an account, and the local one works offline. Your own
 	// playlists, Liked Music and On Repeat are in the library already by definition.
 	// Once the sync button has put it on the account, the account owns the save: removing only the
 	// local copy would leave it in the library grid, so the entry hides until the user signs out.
 	const savable = $derived(
-		!isOnRepeat && !isLiked && !editable && !(auth.account?.signedIn && isSynced(id))
+		!isOnRepeat && !isLiked && !isLibrarySongs && !editable && !(auth.account?.signedIn && isSynced(id))
 	);
 	const savedHere = $derived(isSaved(id));
 	// YouTube's header count includes rows that never make it into the list (unavailable or
