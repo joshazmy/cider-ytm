@@ -274,8 +274,51 @@
 		     for a panel you cannot see. -->
 		<!-- Local stands alone: no account, no connection, and none of the states below apply. -->
 		<Tabs.Content value="local">{#if tab === 'local'}<LocalMusic />{/if}</Tabs.Content>
-		{#if tab === 'local'}
-			<!-- nothing else: the YouTube states below have no bearing on files on this disk -->
+		<Tabs.Content value="songs">
+			{#if tab === 'songs'}
+				{#if songsLoading && !songs.length}
+					<p class="text-sm text-muted-foreground">Loading songs…</p>
+				{:else if songsError && !songs.length}
+					<ErrorState message={songsError} onRetry={loadSongs} />
+				{:else if !songs.length}
+					<p class="max-w-md text-[13px] text-muted-foreground">
+						{signedOut
+							? 'Sign in to see every song in your YouTube Music library.'
+							: 'No library songs yet.'}
+					</p>
+				{:else}
+					<div class="flex flex-col">
+						{#each songs as song, n (song.video_id + n)}
+							<TrackRow
+								{song}
+								index={n}
+								onplay={() =>
+									playFrom(
+										{
+											kind: 'playlist',
+											id: 'FEmusic_liked_videos',
+											title: 'Songs'
+										},
+										songs,
+										n
+									)}
+								onAdd={() => openAddToPlaylist(song)}
+							/>
+						{/each}
+					</div>
+				{/if}
+			{/if}
+		</Tabs.Content>
+		<Tabs.Content value="recent">
+			{#if tab === 'recent'}
+				{@render grid(
+					recents,
+					'Nothing played yet. Open a playlist, album, or artist and it will show up here.'
+				)}
+			{/if}
+		</Tabs.Content>
+		{#if tab === 'local' || tab === 'songs' || tab === 'recent'}
+			<!-- own loaders above; do not wait on the playlist/album card-grid -->
 		{:else if loading}
 			<div class="card-grid">
 				{#each Array(12) as _, i (i)}
@@ -294,49 +337,6 @@
 						signedOut
 							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Home.'
 							: 'Your library is empty. Save a playlist or album to keep it here.'
-					)}
-				{/if}
-			</Tabs.Content>
-			<Tabs.Content value="songs">
-				{#if tab === 'songs'}
-					{#if songsLoading && !songs.length}
-						<p class="text-sm text-muted-foreground">Loading songs…</p>
-					{:else if songsError && !songs.length}
-						<ErrorState message={songsError} onRetry={loadSongs} />
-					{:else if !songs.length}
-						<p class="max-w-md text-[13px] text-muted-foreground">
-							{signedOut
-								? 'Sign in to see every song in your YouTube Music library.'
-								: 'No library songs yet.'}
-						</p>
-					{:else}
-						<div class="flex flex-col">
-							{#each songs as song, n (song.video_id + n)}
-								<TrackRow
-									{song}
-									index={n}
-									onplay={() =>
-										playFrom(
-											{
-												kind: 'playlist',
-												id: 'FEmusic_liked_videos',
-												title: 'Songs'
-											},
-											songs,
-											n
-										)}
-									onAdd={() => openAddToPlaylist(song)}
-								/>
-							{/each}
-						</div>
-					{/if}
-				{/if}
-			</Tabs.Content>
-			<Tabs.Content value="recent">
-				{#if tab === 'recent'}
-					{@render grid(
-						recents,
-						'Nothing played yet. Open a playlist, album, or artist and it will show up here.'
 					)}
 				{/if}
 			</Tabs.Content>
