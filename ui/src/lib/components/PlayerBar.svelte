@@ -14,6 +14,7 @@
 		StarIcon,
 		InfinityIcon,
 		MinimizeScreenIcon,
+		Moon02Icon,
 		MusicNote01Icon,
 		ArrowUp01Icon,
 		ArrowDown01Icon,
@@ -356,13 +357,14 @@
 		<div class="relative mr-1">
 			<button
 				type="button"
-				class="px-1 text-[11px] tabular-nums {sleepLabel
-					? 'text-muted-foreground'
-					: 'text-muted-foreground/60'} hover:text-foreground"
+				class="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] tabular-nums {sleepLabel
+					? 'bg-white/10 text-foreground'
+					: 'text-muted-foreground hover:bg-white/8 hover:text-foreground'}"
 				onclick={() => (sleepOpen = !sleepOpen)}
 				aria-expanded={sleepOpen}
 				aria-label="Sleep timer"
 			>
+				<HugeiconsIcon strokeWidth={2} icon={Moon02Icon} class="h-3.5 w-3.5" />
 				{sleepLabel || 'Sleep'}
 			</button>
 			{#if sleepOpen}

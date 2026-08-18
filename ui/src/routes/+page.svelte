@@ -272,7 +272,7 @@
 	     thing WebKitGTK reliably chokes on. -->
 	{#if chips.length}
 		<div class="sticky top-0 z-20 border-b bg-background px-6 pt-2.5">
-			<div class="chip-row flex gap-2 overflow-x-auto pb-1">
+			<div class="flex flex-wrap gap-2 pb-2.5">
 				<!-- An explicit "All" is the way out of a filter. Clicking the active chip again also
 				     clears it, but nobody discovers that, and nothing else on screen says you're filtered. -->
 				<button onclick={() => load(null)} class={chipClass(!selected)}>All</button>
@@ -399,9 +399,9 @@
 		transition:fade={{ duration: 150 }}
 		onclick={() => scroller?.scrollTo({ top: 0, behavior: 'smooth' })}
 		aria-label="Back to top"
-		class="fixed right-6 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 {playback.now
+		class="fixed z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 {playback.now
 			? 'bottom-24'
-			: 'bottom-6'}"
+			: 'bottom-6'} right-6 min-[1100px]:right-[18.5rem]"
 	>
 		<HugeiconsIcon icon={ArrowUpBigIcon} class="h-5 w-5" />
 	</button>
