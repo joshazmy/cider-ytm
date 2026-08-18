@@ -105,9 +105,12 @@
 		} else if (e.code === 'KeyN') {
 			e.preventDefault();
 			goto('/library');
+		} else if (e.code === 'Comma' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			ui.settingsOpen = true;
 		} else if (e.code === 'Digit1') {
 			e.preventDefault();
-			goto('/library');
+			goto('/library?tab=recent');
 		} else if (e.code === 'Digit2') {
 			e.preventDefault();
 			goto('/library?tab=songs');

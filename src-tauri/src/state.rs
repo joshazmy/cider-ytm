@@ -1589,12 +1589,18 @@ impl AppState {
                 }
             });
             m.set_metadata(&item.title, &item.artists, item.album.as_deref(), cover.as_deref());
+            let ms = parse_duration_ms(item.duration.as_deref());
+            if ms > 0 {
+                m.set_duration(ms as f64 / 1000.0);
+            }
         }
         if let Some(d) = &self.discord {
             d.set_track(item);
         }
         self.lastfm.set_track(item);
-        if self.db.get_setting("notifications").as_deref() != Some("false") {
+        if stream_client != "restored"
+            && self.db.get_setting("notifications").as_deref() != Some("false")
+        {
             let _ = std::process::Command::new("notify-send")
                 .args(["-a", "Yapel", "--", &item.title, &item.artists])
                 .spawn();
