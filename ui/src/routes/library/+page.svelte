@@ -254,7 +254,7 @@
 				<HugeiconsIcon icon={SquareStackIcon} class="h-4 w-4" /> All
 			</Tabs.Trigger>
 			<Tabs.Trigger value="songs">Songs</Tabs.Trigger>
-			<Tabs.Trigger value="recent">Recently Added</Tabs.Trigger>
+			<Tabs.Trigger value="recent">Recently Played</Tabs.Trigger>
 			<Tabs.Trigger value="playlists">
 				<HugeiconsIcon icon={Playlist02Icon} class="h-4 w-4" /> Playlists
 			</Tabs.Trigger>
@@ -336,7 +336,7 @@
 				{#if tab === 'recent'}
 					{@render grid(
 						recents,
-						'Nothing recent yet. Play a playlist, album, or artist and it will show up here.'
+						'Nothing played yet. Open a playlist, album, or artist and it will show up here.'
 					)}
 				{/if}
 			</Tabs.Content>

@@ -41,7 +41,7 @@
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home01Icon },
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
-		{ href: '/library?tab=recent', label: 'Recently Added', icon: Clock01Icon },
+		{ href: '/library?tab=recent', label: 'Recently Played', icon: Clock01Icon },
 		{ href: '/library?tab=songs', label: 'Songs', icon: MusicNote01Icon },
 		{ href: '/playlist/VLLM', label: 'Liked Music', icon: StarIcon },
 		{ href: '/library?tab=albums', label: 'Albums', icon: MusicNoteSquare02Icon },
