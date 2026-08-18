@@ -45,6 +45,27 @@ export const np = $state({ open: false, tab: 'lyrics' as 'queue' | 'lyrics' });
 
 export const openPlayer = () => (np.open = true);
 
+/** Open Google in the default OS browser (never an in-app webview). Then poll Zen/Firefox cookies. */
+export async function startGoogleSignIn() {
+	try {
+		await api.openInBrowser(api.GOOGLE_LOGIN);
+	} catch (e) {
+		toast.error(String(e));
+		return;
+	}
+	toast('Finish Google sign-in in your browser. Yapel will import the session.');
+	for (let i = 0; i < 90; i++) {
+		await new Promise((r) => setTimeout(r, 2000));
+		try {
+			await api.importBrowserCookies();
+			return;
+		} catch {
+			// not signed in yet
+		}
+	}
+	toast.error('Still no YouTube session. Sign in at music.youtube.com, then Settings → Import.');
+}
+
 /** Flip local pause immediately so the play/pause glyph cannot wait on mpv's event. */
 export function togglePlayUi() {
 	playback.paused = nextPaused(playback.paused);

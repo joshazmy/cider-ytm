@@ -10,7 +10,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
-	import { desk, ui, toast } from '$lib/player.svelte';
+	import { desk, ui, toast, playback, setTempoPitch } from '$lib/player.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import {
 		THEMES,
@@ -387,6 +387,39 @@
 					</div>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
+							<div class="font-medium">Start page</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">Where Yapel opens.</p>
+						</div>
+						<div class="flex gap-2">
+							<Button
+								size="sm"
+								variant={appearance.startPage === 'home' ? 'default' : 'outline'}
+								onclick={() => setAppearance({ startPage: 'home' })}>Home</Button
+							>
+							<Button
+								size="sm"
+								variant={appearance.startPage === 'library' ? 'default' : 'outline'}
+								onclick={() => setAppearance({ startPage: 'library' })}>Library</Button
+							>
+						</div>
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Reduce motion</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								Cut fly-ins and other animation in this app.
+							</p>
+						</div>
+						<Switch
+							checked={appearance.reduceMotion}
+							onCheckedChange={(on) => {
+								setAppearance({ reduceMotion: on });
+								document.documentElement.classList.toggle('reduce-motion', on);
+							}}
+						/>
+					</div>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
 							<div class="font-medium">Always on top</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
 								Keep Yapel above other windows (Cider-style pin).
@@ -740,14 +773,38 @@
 							{/each}
 						</div>
 					</div>
-					<div class="flex items-start justify-between gap-4 border-b py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Simple 5s fade</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								Fades out the last five seconds and in the first five. Not overlapping automix.
-							</p>
+					<div class="border-b py-3">
+						<div class="font-medium">Crossfade</div>
+						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">
+							Seconds to fade out/in at a track change. Not overlapping automix.
+						</p>
+						<div class="flex gap-2">
+							{#each [0, 3, 5, 8, 10] as s (s)}
+								<Button
+									variant={(settings.fade_secs ?? '0') === String(s) ? 'default' : 'outline'}
+									size="sm"
+									onclick={async () => {
+										settings.fade_secs = String(s);
+										await api.setSetting('fade_secs', String(s));
+									}}>{s === 0 ? 'Off' : `${s}s`}</Button
+								>
+							{/each}
 						</div>
-						<Switch checked={fadeOn} onCheckedChange={setFade} />
+					</div>
+					<div class="border-b py-3">
+						<div class="font-medium">Playback speed</div>
+						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">
+							Desk default is 1.15× with pitch preserve off.
+						</p>
+						<div class="flex gap-2">
+							{#each [1, 1.15, 1.25, 1.5] as s (s)}
+								<Button
+									variant={playback.speed === s ? 'default' : 'outline'}
+									size="sm"
+									onclick={() => setTempoPitch(s, playback.semitones)}>{s}×</Button
+								>
+							{/each}
+						</div>
 					</div>
 					<div class="border-b py-3">
 						<div class="font-medium">Audio quality</div>

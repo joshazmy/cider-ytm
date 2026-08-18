@@ -132,7 +132,12 @@
 
 	onMount(() => {
 		if (isMini) return initApp(true);
-		sessionStorage.setItem('ytm-desk-landed', '1');
+		if (!sessionStorage.getItem('ytm-desk-landed')) {
+			sessionStorage.setItem('ytm-desk-landed', '1');
+			if (appearance.startPage === 'library' && window.location.pathname === '/') {
+				goto('/library', { replaceState: true });
+			}
+		}
 		if (appearance.alwaysOnTop) getCurrentWindow().setAlwaysOnTop(true);
 		const teardownApp = initApp();
 		const teardownWin = initWin();

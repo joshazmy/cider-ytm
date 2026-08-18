@@ -640,7 +640,15 @@ input[type='range'].range:active::-webkit-slider-thumb {
 	background: transparent;
 }
 
-/* Respect users who ask the OS to minimise motion. */
+/* Respect users who ask the OS (or Settings) to minimise motion. */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
+}
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
 		animation-duration: 0.01ms !important;

@@ -18,7 +18,7 @@
 	import TrackRowSkeleton from '$lib/components/TrackRowSkeleton.svelte';
 	import * as api from '$lib/api';
 	import type { BrowseItem, HomeChip, HomePage, HomeSection } from '$lib/api';
-	import { auth, personal, playback, seedOnRepeatPick, toast } from '$lib/player.svelte';
+	import { auth, personal, playback, seedOnRepeatPick, toast, startGoogleSignIn } from '$lib/player.svelte';
 	import {
 		arrangeSections,
 		hiddenSections,
@@ -368,7 +368,7 @@
 					{#if auth.account?.signedIn}
 						<Button variant="outline" size="sm" onclick={() => load(selected)}>Try again</Button>
 					{:else}
-						<Button size="sm" onclick={() => api.loginWebview()}>Sign in with Google</Button>
+						<Button size="sm" onclick={() => startGoogleSignIn()}>Sign in with Google</Button>
 					{/if}
 				</div>
 			{:else if home.continuation}

@@ -36,7 +36,8 @@
 		loadLibrary,
 		loadLibraryExtras,
 		createLibraryPlaylist,
-		syncSavedToYouTube
+		syncSavedToYouTube,
+		startGoogleSignIn
 	} from '$lib/player.svelte';
 	import { mergeSaved, unsynced } from '$lib/personal';
 
@@ -117,7 +118,7 @@
 		<div class="flex max-w-md flex-col items-start gap-3 pt-2">
 			<p class="text-[13px] text-muted-foreground">{empty}</p>
 			{#if signedOut}
-				<Button size="sm" onclick={() => api.loginWebview()}>Sign in</Button>
+				<Button size="sm" onclick={() => startGoogleSignIn()}>Sign in</Button>
 			{/if}
 		</div>
 	{/if}

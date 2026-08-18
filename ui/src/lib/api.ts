@@ -319,6 +319,8 @@ export const signOut = () => invoke<void>('sign_out');
 /** Open Google sign-in in the OS browser. Session is imported from Zen/Firefox cookies. */
 export const loginWebview = () => invoke<void>('login_webview');
 export const importBrowserCookies = () => invoke<string>('import_browser_cookies');
+export const GOOGLE_LOGIN =
+	'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://music.youtube.com/';
 
 // --- mini player (Rust mini.rs) ---------------------------------------------------------------
 /** Hide the app to the tray and open the floating widget (a second window running this same SPA). */

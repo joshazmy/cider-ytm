@@ -29,7 +29,8 @@
 		ui,
 		createLibraryPlaylist,
 		toggleSidebar,
-		toast
+		toast,
+		startGoogleSignIn
 	} from '$lib/player.svelte';
 	import { mergeSaved, orderLibrary } from '$lib/personal';
 	import * as api from '$lib/api';
@@ -205,7 +206,7 @@
 					? 'bg-primary text-primary-foreground'
 					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
-				<HugeiconsIcon icon={n.icon} class="h-4 w-4 shrink-0" />
+				<HugeiconsIcon icon={n.icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
 				<span class="hidden {wide('inline')}">{n.label}</span>
 			</a>
 		{/each}
@@ -292,7 +293,7 @@
 						<button
 							type="button"
 							class="mx-1 rounded-md px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
-							onclick={() => api.loginWebview()}
+							onclick={() => startGoogleSignIn()}
 						>
 							Sign in to see playlists
 						</button>
@@ -333,7 +334,7 @@
 				'justify-start'
 			)}"
 		>
-			<HugeiconsIcon icon={Settings01Icon} class="h-4 w-4 shrink-0" />
+			<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
 			<span class="hidden {wide('inline')}">Settings</span>
 		</button>
 		{#if !collapsed}

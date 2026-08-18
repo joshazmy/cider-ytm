@@ -365,7 +365,22 @@ pub fn status(state: &AppState) -> serde_json::Value {
 /// three platforms.
 pub(crate) fn open_browser(url: &str) -> Result<(), String> {
     #[cfg(target_os = "linux")]
-    let cmd = std::process::Command::new("xdg-open").arg(url).spawn();
+    let cmd = {
+        let mut c = std::process::Command::new("xdg-open");
+        c.arg(url)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null());
+        match c.spawn() {
+            Ok(child) => Ok(child),
+            Err(_) => std::process::Command::new("gio")
+                .args(["open", url])
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn(),
+        }
+    };
     #[cfg(target_os = "macos")]
     let cmd = std::process::Command::new("open").arg(url).spawn();
     // cmd.exe re-parses its own command line, and `Command::arg` only quotes args containing

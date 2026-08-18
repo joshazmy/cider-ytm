@@ -87,7 +87,9 @@ export const custom = $state<Custom>({
 export const appearance = $state({
 	/** Blur the playing track's artwork behind the now-playing view. */
 	artworkBackground: true,
-	alwaysOnTop: false
+	alwaysOnTop: false,
+	startPage: 'home' as 'home' | 'library',
+	reduceMotion: false
 });
 
 export function setAppearance(patch: Partial<typeof appearance>): void {
@@ -322,10 +324,14 @@ export function initTheme(): void {
 		if (typeof saved?.artworkBackground === 'boolean')
 			appearance.artworkBackground = saved.artworkBackground;
 		if (typeof saved?.alwaysOnTop === 'boolean') appearance.alwaysOnTop = saved.alwaysOnTop;
+		if (saved?.startPage === 'home' || saved?.startPage === 'library')
+			appearance.startPage = saved.startPage;
+		if (typeof saved?.reduceMotion === 'boolean') appearance.reduceMotion = saved.reduceMotion;
 	} catch {
 		// unparseable — keep the defaults
 	}
 	document.documentElement.classList.add('dark');
+	document.documentElement.classList.toggle('reduce-motion', appearance.reduceMotion);
 	apply();
 	// Async (each file needs its URL granted first), so the app paints in the fallback font for a
 	// frame or two before a loaded font swaps in.

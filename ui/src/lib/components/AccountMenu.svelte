@@ -6,7 +6,7 @@
 	import { UserCircleIcon, Logout01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as api from '$lib/api';
-	import { auth, openChannelPicker } from '$lib/player.svelte';
+	import { auth, openChannelPicker, startGoogleSignIn, toast } from '$lib/player.svelte';
 	import { thumb } from '$lib/thumb';
 
 	let { foot = false }: { foot?: boolean } = $props();
@@ -35,8 +35,8 @@
 	}
 
 	function signInGoogle() {
-		api.loginWebview(); // native sign-in window takes over; result arrives via auth-changed
 		menuOpen = false;
+		void startGoogleSignIn();
 	}
 
 	function switchChannel() {
@@ -114,6 +114,19 @@
 				Sign in with your Google account to reach your YouTube Music library and playlists.
 			</p>
 			<Button class="mt-3 w-full" onclick={signInGoogle}>Sign in with Google</Button>
+			<Button
+				variant="outline"
+				class="mt-2 w-full"
+				onclick={async () => {
+					menuOpen = false;
+					try {
+						await api.importBrowserCookies();
+						toast.success('Imported from your browser');
+					} catch (e) {
+						toast.error(String(e));
+					}
+				}}>I've signed in</Button>
+			>
 		{/if}
 	</div>
 {/if}
