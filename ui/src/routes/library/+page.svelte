@@ -42,7 +42,8 @@
 		startGoogleSignIn,
 		playFrom,
 		openAddToPlaylist,
-		playback
+		playback,
+		desk
 	} from '$lib/player.svelte';
 	import { mergeSaved, unsynced, recentItems } from '$lib/personal';
 
@@ -161,7 +162,9 @@
 		<div class="flex max-w-md flex-col items-start gap-3 pt-2">
 			<p class="text-[13px] text-muted-foreground">{empty}</p>
 			{#if signedOut}
-				<Button size="sm" onclick={() => startGoogleSignIn()}>Sign in</Button>
+				<Button size="sm" onclick={() => startGoogleSignIn()} disabled={desk.signingIn}>
+					{desk.signingIn ? 'Waiting…' : 'Sign in'}
+				</Button>
 			{/if}
 		</div>
 	{/if}
@@ -289,7 +292,9 @@
 								: 'No library songs yet.'}
 						</p>
 						{#if signedOut}
-							<Button size="sm" onclick={() => startGoogleSignIn()}>Sign in</Button>
+							<Button size="sm" onclick={() => startGoogleSignIn()} disabled={desk.signingIn}>
+								{desk.signingIn ? 'Waiting…' : 'Sign in'}
+							</Button>
 						{/if}
 					</div>
 				{:else}

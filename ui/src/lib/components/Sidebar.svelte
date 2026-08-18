@@ -33,7 +33,8 @@
 		toggleSidebar,
 		toast,
 		startGoogleSignIn,
-		openYtmUrl
+		openYtmUrl,
+		desk
 	} from '$lib/player.svelte';
 	import { mergeSaved, orderLibrary } from '$lib/personal';
 	import * as api from '$lib/api';
@@ -293,8 +294,9 @@
 							type="button"
 							class="mx-1 rounded-md px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
 							onclick={() => startGoogleSignIn()}
+							disabled={desk.signingIn}
 						>
-							Sign in to see playlists
+							{desk.signingIn ? 'Waiting…' : 'Sign in to see playlists'}
 						</button>
 					{/if}
 				{/each}

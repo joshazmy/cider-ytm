@@ -35,7 +35,6 @@
 	}
 
 	function signInGoogle() {
-		menuOpen = false;
 		void startGoogleSignIn();
 	}
 
@@ -67,7 +66,11 @@
 		<HugeiconsIcon icon={UserCircleIcon} class="h-5 w-5 shrink-0 text-muted-foreground" />
 	{/if}
 	<span class="max-w-28 truncate font-medium {foot ? '' : 'hidden lg:block'}">
-		{auth.account?.signedIn ? (auth.account.name ?? 'Account') : 'Sign in'}
+		{auth.account?.signedIn
+			? (auth.account.name ?? 'Account')
+			: desk.signingIn
+				? 'Waiting…'
+				: 'Sign in'}
 	</span>
 	<HugeiconsIcon
 		icon={ArrowDown01Icon}
