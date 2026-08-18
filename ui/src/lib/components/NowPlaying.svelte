@@ -58,8 +58,8 @@
 			<HugeiconsIcon icon={MusicNote01Icon} class="h-20 w-20" />
 		</div>
 	{/if}
-	<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-black/72"></div>
-	<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/35"></div>
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-black/50"></div>
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20"></div>
 
 	<button
 		type="button"

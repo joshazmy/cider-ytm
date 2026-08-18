@@ -169,9 +169,9 @@
 			<img
 				src={thumb(playback.now.thumbnail, 900)}
 				alt=""
-				class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-55 blur-2xl saturate-[1.8]"
+				class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-3xl saturate-[1.35]"
 			/>
-			<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-background/40 to-background/75"></div>
+			<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/20 via-background/55 to-background/85"></div>
 		{/if}
 		<ResizeBorders />
 		<div class="relative z-10 flex min-h-0 flex-1 flex-col">

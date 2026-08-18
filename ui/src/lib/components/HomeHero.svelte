@@ -39,7 +39,7 @@
 			></div>
 		{/if}
 		<div
-			class="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/40"
+			class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/25"
 		></div>
 		<div
 			class="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent"
@@ -47,7 +47,7 @@
 	</div>
 	<div class="relative px-6 pt-5 pb-3">
 		<div class="flex items-center justify-between gap-4">
-			<h1 class="text-[1.65rem] font-semibold tracking-tight">Home</h1>
+			<h1 class="text-[1.15rem] font-semibold tracking-tight">Home</h1>
 			<div class="flex items-center gap-1">
 			{#if onRefresh}
 				<button

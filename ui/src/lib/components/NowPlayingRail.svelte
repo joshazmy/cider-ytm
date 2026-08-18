@@ -17,7 +17,7 @@
 </script>
 
 <aside
-	class="hidden h-full w-[272px] shrink-0 flex-col border-l border-white/5 bg-black/25 min-[1100px]:flex"
+	class="desk-glass hidden h-full w-[272px] shrink-0 flex-col rounded-none border-y-0 border-r-0 min-[1100px]:flex"
 >
 	<div class="px-3 pt-3 pb-2">
 		<div class="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
