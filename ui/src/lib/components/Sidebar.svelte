@@ -121,7 +121,7 @@
 			? ''
 			: 'hidden'} {page.url.pathname.startsWith('/search') ? 'text-foreground' : ''}"
 	>
-		<HugeiconsIcon icon={Search01Icon} class="h-4 w-4" />
+		<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-4 w-4" />
 	</a>
 	<form
 		class="relative mx-0.5 hidden {wide('block')}"
@@ -151,7 +151,7 @@
 				aria-label="Clear search"
 				onclick={() => (searchQ = '')}
 			>
-				<HugeiconsIcon icon={Cancel01Icon} class="h-3.5 w-3.5" />
+				<HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} class="h-3.5 w-3.5" />
 			</button>
 		{/if}
 		<button
@@ -159,7 +159,7 @@
 			class="absolute top-1/2 right-1.5 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
 			aria-label="Submit search"
 		>
-			<HugeiconsIcon icon={Search01Icon} class="h-3.5 w-3.5" />
+			<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-3.5 w-3.5" />
 		</button>
 	</form>
 
@@ -228,7 +228,7 @@
 					class="flex h-8 w-full items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/55 transition-colors hover:bg-foreground/5 hover:text-sidebar-foreground"
 					onclick={() => (dialogOpen = true)}
 				>
-					<HugeiconsIcon icon={Add01Icon} class="h-3.5 w-3.5 shrink-0" />
+					<HugeiconsIcon icon={Add01Icon} strokeWidth={2} class="h-3.5 w-3.5 shrink-0" />
 					Create New
 				</button>
 			{/if}

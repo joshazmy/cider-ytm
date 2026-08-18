@@ -162,13 +162,13 @@
 				/>
 			{:else}
 				<span class="flex size-12 items-center justify-center text-muted-foreground/50">
-					<HugeiconsIcon icon={MusicNote01Icon} class="h-4 w-4" />
+					<HugeiconsIcon strokeWidth={2} icon={MusicNote01Icon} class="h-4 w-4" />
 				</span>
 			{/if}
 			<span
 				class="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100"
 			>
-				<HugeiconsIcon icon={ArrowUp01Icon} class="h-4 w-4 text-white" />
+				<HugeiconsIcon strokeWidth={2} icon={ArrowUp01Icon} class="h-4 w-4 text-white" />
 			</span>
 		</button>
 		<div class="min-w-0 flex-1">
@@ -187,7 +187,7 @@
 				{/if}
 				{#if autoplayTrack}
 					<span class="shrink-0 text-muted-foreground" title="Playing similar music (Autoplay)">
-						<HugeiconsIcon icon={InfinityIcon} class="h-3 w-3" />
+						<HugeiconsIcon strokeWidth={2} icon={InfinityIcon} class="h-3 w-3" />
 					</span>
 				{/if}
 			</div>
@@ -228,7 +228,7 @@
 		{#if playback.now && !api.isLocalId(playback.now.videoId)}
 			<Button variant="ghost" size="icon-sm" onclick={toggleLike} aria-label="Like">
 				<span class="inline-flex" class:animate-heart-pop={justLiked} onanimationend={() => (justLiked = false)}>
-					<HugeiconsIcon
+					<HugeiconsIcon strokeWidth={2}
 						icon={StarIcon}
 						class="h-4 w-4 {playback.rating === 'like' ? 'fill-current text-primary' : 'text-muted-foreground'}"
 					/>
@@ -242,10 +242,10 @@
 			aria-label="Shuffle"
 			aria-pressed={shuffleOn}
 		>
-			<HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}" />
+			<HugeiconsIcon strokeWidth={2} icon={ShuffleIcon} class="h-4 w-4 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}" />
 		</Button>
 		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.prevTrack()} aria-label="Previous">
-			<HugeiconsIcon icon={PreviousIcon} class="h-4 w-4" />
+			<HugeiconsIcon strokeWidth={2} icon={PreviousIcon} class="h-4 w-4" />
 		</Button>
 		<button
 			type="button"
@@ -265,7 +265,7 @@
 			{/if}
 		</button>
 		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.nextTrack()} aria-label="Next">
-			<HugeiconsIcon icon={NextIcon} class="h-4 w-4" />
+			<HugeiconsIcon strokeWidth={2} icon={NextIcon} class="h-4 w-4" />
 		</Button>
 		<Button
 			variant="ghost"
@@ -274,7 +274,7 @@
 			aria-label="Repeat: {repeat}"
 			aria-pressed={repeat !== 'off'}
 		>
-			<HugeiconsIcon
+			<HugeiconsIcon strokeWidth={2}
 				icon={RepeatIcon}
 				altIcon={RepeatOne01Icon}
 				showAlt={repeat === 'one'}
@@ -288,7 +288,7 @@
 			onclick={onToggleLyrics}
 			aria-label="Toggle lyrics"
 		>
-			<HugeiconsIcon icon={Mic01Icon} class="h-4 w-4" />
+			<HugeiconsIcon strokeWidth={2} icon={Mic01Icon} class="h-4 w-4" />
 		</Button>
 		<span class="ml-1 w-[4.5rem] text-[11px] tabular-nums text-muted-foreground">
 			{fmtClock(shownPosition)} / {fmtClock(durationSecs)}
@@ -305,7 +305,7 @@
 			onclick={toggleMute}
 			aria-label={playback.volume === 0 ? 'Unmute' : 'Mute'}
 		>
-			<HugeiconsIcon
+			<HugeiconsIcon strokeWidth={2}
 				icon={VolumeHighIcon}
 				altIcon={VolumeMute02Icon}
 				showAlt={playback.volume === 0}
@@ -329,7 +329,7 @@
 			</span>
 		{/if}
 		<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
-			<HugeiconsIcon icon={MinimizeScreenIcon} class="h-4 w-4" />
+			<HugeiconsIcon strokeWidth={2} icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</Button>
 		<Button
 			variant="ghost"
@@ -338,7 +338,7 @@
 			onclick={onToggleQueue}
 			aria-label="Toggle queue"
 		>
-			<HugeiconsIcon icon={Queue01Icon} class="h-4 w-4" />
+			<HugeiconsIcon strokeWidth={2} icon={Queue01Icon} class="h-4 w-4" />
 		</Button>
 		{#if currentSong}
 			<TrackMenu

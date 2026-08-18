@@ -139,7 +139,7 @@
 				title="Back"
 				aria-label="Back"
 			>
-				<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2.5} class="h-4 w-4" />
+				<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} class="h-4 w-4" />
 			</button>
 			<button
 				class="flex h-full w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
@@ -148,7 +148,7 @@
 				title="Forward"
 				aria-label="Forward"
 			>
-				<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2.5} class="h-4 w-4" />
+				<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} class="h-4 w-4" />
 			</button>
 		</div>
 	</div>
@@ -189,21 +189,21 @@
 			onclick={() => win.minimize()}
 			aria-label="Minimize"
 		>
-			<HugeiconsIcon icon={MinusSignIcon} class="h-4 w-4" />
+			<HugeiconsIcon icon={MinusSignIcon} strokeWidth={2} class="h-4 w-4" />
 		</button>
 		<button
 			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={() => win.toggleMaximize()}
 			aria-label="Maximize"
 		>
-			<HugeiconsIcon icon={SquareIcon} class="h-3.5 w-3.5" />
+			<HugeiconsIcon icon={SquareIcon} strokeWidth={2} class="h-3.5 w-3.5" />
 		</button>
 		<button
 			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/80 hover:text-white"
 			onclick={() => win.close()}
 			aria-label="Close"
 		>
-			<HugeiconsIcon icon={Cancel01Icon} class="h-4 w-4" />
+			<HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} class="h-4 w-4" />
 		</button>
 	</div>
 </header>
@@ -230,7 +230,7 @@
 			class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
 			onclick={disconnect}
 		>
-			<HugeiconsIcon icon={HotspotOfflineIcon} class="h-4 w-4" /> Disconnect
+			<HugeiconsIcon icon={HotspotOfflineIcon} strokeWidth={2} class="h-4 w-4" /> Disconnect
 		</button>
 	</div>
 {/if}
