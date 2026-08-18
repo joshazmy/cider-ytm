@@ -79,20 +79,30 @@ export async function startGoogleSignIn() {
 	}
 	desk.signingIn = true;
 	try {
+		let lastErr = '';
+		const tryImport = async () => {
+			try {
+				await api.importBrowserCookies();
+				return true;
+			} catch (e) {
+				const msg = String(e);
+				if (!/no youtube session/i.test(msg)) lastErr = msg;
+				return false;
+			}
+		};
+		// Already signed into YTM in Zen? Import and skip the tab.
+		if (await tryImport()) return;
 		await api.openInBrowser(api.GOOGLE_LOGIN);
-		toast('Opened Zen. Finish Google there — click Sign in again to cancel.');
+		toast('Opened Google sign-in in Zen. Pick your account — click Sign in again to cancel.');
 		for (let i = 0; i < 90; i++) {
 			if (!desk.signingIn) return;
 			if (auth.account?.signedIn) return;
 			await new Promise((r) => setTimeout(r, 2000));
-			try {
-				await api.importBrowserCookies();
-				return;
-			} catch {
-				// not signed in yet
-			}
+			if (await tryImport()) return;
 		}
-		toast.error('Still no YouTube session. Sign in in Zen (default), then Settings → Import.');
+		toast.error(
+			lastErr || 'Still no YouTube session. Finish Google in Zen, then Settings → Import.'
+		);
 	} catch (e) {
 		toast.error(String(e));
 	} finally {

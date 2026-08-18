@@ -322,8 +322,11 @@ export const signOut = () => invoke<void>('sign_out');
 /** Open Google sign-in in the OS browser. Session is imported from Zen/Firefox cookies. */
 export const loginWebview = () => invoke<void>('login_webview');
 export const importBrowserCookies = () => invoke<string>('import_browser_cookies');
+/** Google account UI, then YTM. `continue` is encoded so openers cannot treat
+ *  `https://music.youtube.com/` as a second URL. AccountChooser + passive=false
+ *  so an existing Zen Google session cannot skip straight to the YTM home page. */
 export const GOOGLE_LOGIN =
-	'https://accounts.google.com/ServiceLogin?service=youtube&continue=https://music.youtube.com/';
+	'https://accounts.google.com/AccountChooser?continue=https%3A%2F%2Fmusic.youtube.com%2F&hl=en&passive=false&service=youtube';
 
 // --- mini player (Rust mini.rs) ---------------------------------------------------------------
 /** Hide the app to the tray and open the floating widget (a second window running this same SPA). */

@@ -587,6 +587,25 @@ mod tests {
         assert!(!parts.iter().any(|p| p == "b"));
     }
 
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn exec_keeps_encoded_google_login_as_one_arg() {
+        let url = crate::session::GOOGLE_LOGIN_URL;
+        let exec = "/usr/bin/flatpak run --file-forwarding app.zen_browser.zen @@u %u @@";
+        let mut parts = shell_words(exec);
+        let mut out = Vec::new();
+        for x in parts.drain(..) {
+            if x == "%u" {
+                out.push(url.to_string());
+            } else {
+                out.push(x);
+            }
+        }
+        assert_eq!(out.iter().filter(|p| p.starts_with("https://")).count(), 1);
+        assert!(out.iter().any(|p| p == url));
+        assert!(!out.iter().any(|p| p.contains("music.youtube.com") && !p.contains("accounts.google.com")));
+    }
+
     #[test]
     fn api_sig_is_sorted_concat_md5() {
         let params = vec![

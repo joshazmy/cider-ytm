@@ -962,6 +962,7 @@ mod tests {
     fn browser_urls_must_be_http() {
         assert!(is_browser_url("https://github.com/joshazmy/cider-ytm/releases"));
         assert!(is_browser_url("http://127.0.0.1:1"));
+        assert!(is_browser_url(crate::session::GOOGLE_LOGIN_URL));
         assert!(!is_browser_url("file:///etc/passwd"));
         assert!(!is_browser_url("javascript:alert(1)"));
     }
