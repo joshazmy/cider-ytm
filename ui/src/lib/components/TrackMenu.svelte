@@ -24,7 +24,7 @@
 	import * as api from '$lib/api';
 	import type { SongItem } from '$lib/api';
 	import { anchorMenu, toBody } from '$lib/menu';
-	import { addPick, enqueue, ratingOf, startRadio, toggleRating } from '$lib/player.svelte';
+	import { addPick, enqueue, ratingOf, startRadio, toast, toggleRating } from '$lib/player.svelte';
 	import TempoPitchDialog from './TempoPitchDialog.svelte';
 
 	let {
@@ -192,11 +192,16 @@
 			<button
 				class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/10"
 				onclick={(e) =>
-					run(e, () =>
-						navigator.clipboard.writeText(
-							`https://music.youtube.com/watch?v=${song.video_id}`
-						)
-					)}
+					run(e, async () => {
+						try {
+							await navigator.clipboard.writeText(
+								`https://music.youtube.com/watch?v=${song.video_id}`
+							);
+							toast.success('Copied YouTube Music link');
+						} catch {
+							toast.error('Could not copy link');
+						}
+					})}
 			>
 				<HugeiconsIcon icon={Link04Icon} class="h-4 w-4" /> Copy YouTube Music link
 			</button>
