@@ -709,38 +709,33 @@
 				<img
 					src={hiRes((pl.thumbnail ?? bgImage)!)}
 					alt=""
-					class="pointer-events-none absolute inset-0 h-full w-full scale-150 object-cover object-center blur-3xl brightness-110 saturate-[1.85]"
+					class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-40 blur-3xl saturate-[1.3]"
 				/>
 			{/if}
 			<div
 				class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/80"
 			></div>
 			<div
-				class="content-in relative flex min-h-[46vh] shrink-0 flex-col items-center px-6 pb-7 pt-12 text-center"
+				class="content-in relative flex shrink-0 items-end gap-4 px-6 pb-4 pt-5"
 			>
 				{#if isOnRepeat}
 					<div
-						style="width:220px;height:220px"
-						class="relative flex shrink-0 items-center justify-center rounded-[28px] bg-primary/10 text-primary shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+						class="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10"
 					>
-						<HugeiconsIcon icon={ListRestartIcon} class="h-24 w-24" />
+						<HugeiconsIcon icon={ListRestartIcon} class="h-8 w-8" />
 					</div>
 				{:else if pl.thumbnail}
 					<img
 						src={hiRes(pl.thumbnail)}
 						alt=""
-						style="width:220px;height:220px"
-						class="relative shrink-0 rounded-[28px] object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+						class="relative h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
 					/>
 				{:else}
-					<div
-						style="width:220px;height:220px"
-						class="relative shrink-0 rounded-[28px] bg-muted ring-1 ring-white/10"
-					></div>
+					<div class="relative h-20 w-20 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"></div>
 				{/if}
-				<div class="relative mt-5 min-w-0">
+				<div class="relative min-w-0 flex-1">
 					{#if editingName}
-						<div class="flex items-center justify-center gap-2">
+						<div class="flex items-center gap-2">
 							<input
 								use:autofocus
 								bind:value={nameDraft}
@@ -748,7 +743,7 @@
 									if (e.key === 'Enter') saveRename();
 									else if (e.key === 'Escape') (editingName = false);
 								}}
-								class="min-w-0 max-w-xl flex-1 rounded-md border bg-black/35 px-3 py-1 text-center font-heading text-3xl font-bold text-white outline-none focus:border-accent"
+								class="min-w-0 max-w-xl flex-1 rounded-md border bg-black/35 px-3 py-1 text-[1.25rem] font-semibold text-white outline-none focus:border-accent"
 								aria-label="Playlist name"
 							/>
 							<Button size="icon" aria-label="Save name" onclick={saveRename}>
@@ -764,14 +759,12 @@
 							</Button>
 						</div>
 					{:else}
-						<h1
-							class="font-heading text-5xl font-bold tracking-tight text-white drop-shadow-lg"
-						>
+						<h1 class="truncate text-[1.25rem] font-semibold tracking-tight text-white">
 							{pl.title ?? 'Playlist'}
 						</h1>
 					{/if}
 					{#if heroPills.length}
-						<div class="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+						<div class="mt-2 flex flex-wrap items-center gap-1.5">
 							{#each heroPills as pill (pill)}
 								<span
 									class="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-[3px] text-[10px] font-semibold tracking-[0.14em] text-white/75 ring-1 ring-white/10"
@@ -786,7 +779,7 @@
 							{/each}
 						</div>
 					{/if}
-					<div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+					<div class="mt-3 flex flex-wrap items-center gap-2">
 						<Button
 							class="h-11 min-w-[7.5rem] gap-2 rounded-full px-8 text-[13px] font-semibold"
 							onclick={() => playAll(null)}

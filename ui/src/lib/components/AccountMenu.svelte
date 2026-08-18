@@ -6,7 +6,7 @@
 	import { UserCircleIcon, Logout01Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as api from '$lib/api';
-	import { auth, openChannelPicker, startGoogleSignIn, toast } from '$lib/player.svelte';
+	import { auth, desk, openChannelPicker, startGoogleSignIn, toast } from '$lib/player.svelte';
 	import { thumb } from '$lib/thumb';
 
 	let { foot = false }: { foot?: boolean } = $props();
@@ -113,7 +113,9 @@
 			<p class="mt-1 text-xs text-muted-foreground">
 				Sign in with your Google account to reach your YouTube Music library and playlists.
 			</p>
-			<Button class="mt-3 w-full" onclick={signInGoogle}>Sign in with Google</Button>
+			<Button class="mt-3 w-full" onclick={signInGoogle} disabled={desk.signingIn}>
+				{desk.signingIn ? 'Waiting for browser…' : 'Sign in with Google'}
+			</Button>
 			<Button
 				variant="outline"
 				class="mt-2 w-full"

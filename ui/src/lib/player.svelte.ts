@@ -69,23 +69,27 @@ export async function openYtmUrl(raw: string): Promise<boolean> {
 
 /** Open Google in the default OS browser (never an in-app webview). Then poll Zen/Firefox cookies. */
 export async function startGoogleSignIn() {
+	if (desk.signingIn) return;
+	desk.signingIn = true;
 	try {
 		await api.openInBrowser(api.GOOGLE_LOGIN);
+		toast('Opened your default browser. Finish Google there — then Yapel imports the session.');
+		for (let i = 0; i < 90; i++) {
+			if (!desk.signingIn) return;
+			await new Promise((r) => setTimeout(r, 2000));
+			try {
+				await api.importBrowserCookies();
+				return;
+			} catch {
+				// not signed in yet
+			}
+		}
+		toast.error('Still no YouTube session. Sign in in Zen (default), then Settings → Import.');
 	} catch (e) {
 		toast.error(String(e));
-		return;
+	} finally {
+		desk.signingIn = false;
 	}
-	toast('Opened your default browser. Finish Google there — then Yapel imports the session.');
-	for (let i = 0; i < 90; i++) {
-		await new Promise((r) => setTimeout(r, 2000));
-		try {
-			await api.importBrowserCookies();
-			return;
-		} catch {
-			// not signed in yet
-		}
-	}
-	toast.error('Still no YouTube session. Sign in at music.youtube.com, then Settings → Import.');
 }
 
 /** Flip local pause immediately so the play/pause glyph cannot wait on mpv's event. */
@@ -104,7 +108,8 @@ export const desk = $state({
 	warnQueue: true,
 	sleepUntil: 0,
 	audioProfile: 'dry' as 'dry' | 'dimisco',
-	lyricsOffset: Number(localStorage.getItem('desk-lyrics-offset') || 0) || 0
+	lyricsOffset: Number(localStorage.getItem('desk-lyrics-offset') || 0) || 0,
+	signingIn: false
 });
 
 export function setLyricsOffset(secs: number) {
