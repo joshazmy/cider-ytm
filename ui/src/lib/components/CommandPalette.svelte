@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { np, playback, togglePlayUi, ui } from '$lib/player.svelte';
+	import { desk, np, playback, togglePlayUi, ui } from '$lib/player.svelte';
 	import * as api from '$lib/api';
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
@@ -39,13 +39,19 @@
 				id: 'dry',
 				label: 'Speakers (305P dry)',
 				hint: 'Audio',
-				run: () => api.setSetting('audio_profile', 'dry')
+				run: () => {
+					desk.audioProfile = 'dry';
+					api.setSetting('audio_profile', 'dry');
+				}
 			},
 			{
 				id: 'dimi',
 				label: 'DimiSco (spatial approx)',
 				hint: 'Audio',
-				run: () => api.setSetting('audio_profile', 'dimisco')
+				run: () => {
+					desk.audioProfile = 'dimisco';
+					api.setSetting('audio_profile', 'dimisco');
+				}
 			},
 			{ id: 'set', label: 'Settings', hint: '', run: () => (ui.settingsOpen = true) }
 		];
