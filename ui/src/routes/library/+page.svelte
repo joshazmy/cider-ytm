@@ -24,6 +24,7 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import LocalMusic from '$lib/components/LocalMusic.svelte';
+	import TrackRow from '$lib/components/TrackRow.svelte';
 	import MediaCard from '$lib/components/MediaCard.svelte';
 	import MediaCardSkeleton from '$lib/components/MediaCardSkeleton.svelte';
 	import ErrorState from '$lib/components/ErrorState.svelte';
@@ -38,7 +39,9 @@
 		loadLibraryExtras,
 		createLibraryPlaylist,
 		syncSavedToYouTube,
-		startGoogleSignIn
+		startGoogleSignIn,
+		playPlaylist,
+		openAddToPlaylist
 	} from '$lib/player.svelte';
 	import { mergeSaved, unsynced, recentItems } from '$lib/personal';
 
@@ -72,6 +75,31 @@
 	const artists = $derived(mergeSaved(personal, library.artists, 'artist'));
 	const all = $derived([...playlists, ...albums, ...artists]);
 	const recents = $derived(recentItems(personal, 60));
+	let songs = $state<api.SongItem[]>([]);
+	let songsLoading = $state(false);
+	let songsError = $state<string | null>(null);
+
+	async function loadSongs() {
+		if (!auth.account?.signedIn) {
+			songs = [];
+			return;
+		}
+		songsLoading = true;
+		songsError = null;
+		try {
+			const page = await api.getPlaylist('FEmusic_liked_videos');
+			const items = page.tracks ?? [];
+			songs = items[0]?.video_id ? items : items.slice(1);
+		} catch (e) {
+			songsError = String(e);
+		} finally {
+			songsLoading = false;
+		}
+	}
+
+	$effect(() => {
+		if (tab === 'songs') void loadSongs();
+	});
 	const loading = $derived((library.loading || library.extrasLoading) && !all.length);
 	const error = $derived(library.error ?? library.extrasError);
 	// Only the empty states differ: signed out there is no account library to be missing yet.
@@ -225,6 +253,7 @@
 			<Tabs.Trigger value="all">
 				<HugeiconsIcon icon={SquareStackIcon} class="h-4 w-4" /> All
 			</Tabs.Trigger>
+			<Tabs.Trigger value="songs">Songs</Tabs.Trigger>
 			<Tabs.Trigger value="recent">Recently Added</Tabs.Trigger>
 			<Tabs.Trigger value="playlists">
 				<HugeiconsIcon icon={Playlist02Icon} class="h-4 w-4" /> Playlists
@@ -266,6 +295,32 @@
 							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Home.'
 							: 'Your library is empty. Save a playlist or album to keep it here.'
 					)}
+				{/if}
+			</Tabs.Content>
+			<Tabs.Content value="songs">
+				{#if tab === 'songs'}
+					{#if songsLoading && !songs.length}
+						<p class="text-sm text-muted-foreground">Loading songs…</p>
+					{:else if songsError && !songs.length}
+						<ErrorState message={songsError} onRetry={loadSongs} />
+					{:else if !songs.length}
+						<p class="max-w-md text-[13px] text-muted-foreground">
+							{signedOut
+								? 'Sign in to see every song in your YouTube Music library.'
+								: 'No library songs yet.'}
+						</p>
+					{:else}
+						<div class="flex flex-col">
+							{#each songs as song, n (song.video_id + n)}
+								<TrackRow
+									{song}
+									index={n}
+									onplay={() => playPlaylist(songs, n, undefined, 'Songs')}
+									onAdd={() => openAddToPlaylist(song)}
+								/>
+							{/each}
+						</div>
+					{/if}
 				{/if}
 			</Tabs.Content>
 			<Tabs.Content value="recent">
