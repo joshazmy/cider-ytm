@@ -394,6 +394,7 @@ pub fn run() {
             commands::get_home,
             commands::get_home_more,
             commands::get_library,
+            commands::get_library_songs,
             commands::get_library_albums,
             commands::get_library_artists,
             commands::get_playlist,

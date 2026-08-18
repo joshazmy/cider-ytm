@@ -447,6 +447,24 @@ pub async fn get_library(state: St<'_>) -> Result<Vec<BrowseItem>, String> {
 
 /// Empty rather than an error when signed out: the Library page merges the user's local saves into
 /// these grids, so "nothing of yours on YouTube" is an answer, not a failure.
+/// Library Songs (`FEmusic_liked_videos`) as a track list — not a playlist.
+#[tauri::command]
+pub async fn get_library_songs(state: St<'_>) -> Result<PlaylistPage, String> {
+    if !state.it.is_logged_in() {
+        return Ok(PlaylistPage {
+            title: Some("Songs".into()),
+            subtitle: None,
+            thumbnail: None,
+            items: Vec::new(),
+            continuation: None,
+            owned: false,
+            sort_menu: None,
+        });
+    }
+    let client = metadata_client(&state)?;
+    state.it.library_songs(client).await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub async fn get_library_albums(state: St<'_>) -> Result<Vec<BrowseItem>, String> {
     if !state.it.is_logged_in() {
@@ -477,6 +495,9 @@ pub async fn get_playlist(
     sort: Option<PlaylistSort>,
     desc: Option<bool>,
 ) -> Result<PlaylistPage, String> {
+    if id == "FEmusic_liked_videos" {
+        return get_library_songs(state).await;
+    }
     if id == ON_REPEAT_ID {
         let items = on_repeat_songs(&state);
         return Ok(PlaylistPage {

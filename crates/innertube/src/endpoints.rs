@@ -321,6 +321,27 @@ impl InnerTube {
         Ok(browse::parse_library(&value))
     }
 
+    /// Library Songs (`FEmusic_liked_videos`) as a track list. Not a playlist: no VL sort
+    /// protobufs, not owned, title forced. Mix/radio first row (no video id) is dropped.
+    pub async fn library_songs(
+        &self,
+        client: &YouTubeClient,
+    ) -> Result<browse::PlaylistPage, Error> {
+        let value = self.browse(client, Some("FEmusic_liked_videos"), None).await?;
+        let mut page = browse::parse_playlist(&value);
+        page.title = Some("Songs".into());
+        page.owned = false;
+        page.sort_menu = None;
+        if page
+            .items
+            .first()
+            .is_some_and(|s| s.video_id.is_empty())
+        {
+            page.items.remove(0);
+        }
+        Ok(page)
+    }
+
     /// A playlist or album page by browseId (`VL…` / `MPRE…`). context/08.
     ///
     /// `sort` asks YouTube to order the tracks — see `PlaylistSort::params`. Passing `None` gets

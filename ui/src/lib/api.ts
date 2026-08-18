@@ -339,6 +339,7 @@ export const getLibraryArtists = () => invoke<BrowseItem[]>('get_library_artists
  * `sort` asks YouTube to order the tracks; omit it to get whatever order the account already has
  * the list in, which is the one a fresh visit wants (it is what YouTube Music would show).
  */
+export const getLibrarySongs = () => invoke<PlaylistPage>('get_library_songs');
 export const getPlaylist = (id: string, sort?: ServerSort, desc?: boolean) =>
 	invoke<PlaylistPage>('get_playlist', { id, sort, desc });
 /**

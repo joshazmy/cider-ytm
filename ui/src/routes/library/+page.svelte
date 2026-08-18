@@ -87,7 +87,7 @@
 		songsLoading = true;
 		songsError = null;
 		try {
-			const page = await api.getPlaylist('FEmusic_liked_videos');
+			const page = await api.getLibrarySongs();
 			const items = page.items ?? [];
 			songs = items[0]?.video_id ? items : items.slice(1);
 		} catch (e) {
