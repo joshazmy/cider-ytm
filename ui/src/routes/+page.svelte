@@ -52,7 +52,7 @@
 
 	const chipClass = (active: boolean) =>
 		`inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-medium transition-colors ${
-			active ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/70'
+			active ? 'bg-white/12 text-foreground' : 'bg-muted text-foreground hover:bg-muted/70'
 		}`;
 
 	// "Forgotten favourites" is pulled out of the feed and rendered as a list above it (see the
@@ -399,7 +399,7 @@
 		transition:fade={{ duration: 150 }}
 		onclick={() => scroller?.scrollTo({ top: 0, behavior: 'smooth' })}
 		aria-label="Back to top"
-		class="fixed z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 {playback.now
+		class="fixed z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-foreground text-background shadow-lg {playback.now}
 			? 'bottom-24'
 			: 'bottom-6'} right-6 min-[1100px]:right-[18.5rem]"
 	>

@@ -30,7 +30,7 @@
 	<div class="mb-3 flex items-baseline justify-between gap-3">
 		{#if onMore}
 			<button class="min-w-0 cursor-pointer text-left hover:underline" onclick={onMore}>
-				<h2 class="truncate font-heading text-lg font-semibold">{section.title}</h2>
+				<h2 class="truncate text-[15px] font-semibold">{section.title}</h2>
 			</button>
 			<button
 				class="flex shrink-0 cursor-pointer items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -40,7 +40,7 @@
 				<HugeiconsIcon icon={ArrowRight01Icon} class="h-3.5 w-3.5" />
 			</button>
 		{:else}
-			<h2 class="truncate font-heading text-lg font-semibold">{section.title}</h2>
+			<h2 class="truncate text-[15px] font-semibold">{section.title}</h2>
 		{/if}
 	</div>
 	<!-- CSS columns, not a grid: it fills top-to-bottom like the shelf it replaces, balances the last

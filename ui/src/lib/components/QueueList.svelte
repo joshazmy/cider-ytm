@@ -13,6 +13,8 @@
 	import { playback, openAddToPlaylist } from '$lib/player.svelte';
 	import { lt } from '$lib/lt.svelte';
 
+	let { upcomingOnly = false }: { upcomingOnly?: boolean } = $props();
+
 	// Guests are add-only in a session — no removing (theirs or anyone's) and no reordering. The
 	// playing row can't be removed either (backend guards it too).
 	const canRemove = $derived(lt.role !== 'guest');
@@ -174,7 +176,23 @@
 	{@attach sc.attach}
 	{@attach (node) => dragScroll(node, QUEUE_ROW_MIME)}
 >
-	{#if view.now}
+	{#if upcomingOnly}
+		{#each view.blocks as block, b (block.key)}
+			{#if block.autoplay}
+				<div
+					class="mt-2 flex items-center gap-2 px-2 pt-1 pb-1.5 text-muted-foreground"
+				>
+					<HugeiconsIcon icon={InfinityIcon} class="h-3.5 w-3.5" />
+					<span class="text-xs font-medium">Similar</span>
+				</div>
+			{:else if block.heading}
+				<h3 class="truncate px-2 pt-1 pb-1 text-[12px] font-semibold">{block.heading}</h3>
+			{/if}
+			{@render rows(block.rows, wins[b + 3])}
+		{:else}
+			<p class="p-3 text-[12px] text-muted-foreground">Nothing next.</p>
+		{/each}
+	{:else if view.now}
 		<!-- The queue in front of the playing track that was never reached: start an album at track
 		     4 and the backend still queues 1-3. Always drawn: they are not history. -->
 		{#if view.earlier.length}

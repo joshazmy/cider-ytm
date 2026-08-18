@@ -36,7 +36,7 @@
 		: `absolute inset-y-0 right-0 z-30 flex h-full w-80 max-w-[80vw] flex-col border-l bg-card shadow-2xl ${queueOpen ? 'lg:right-80' : ''}`}
 >
 	<div class="flex items-center justify-between border-b px-4 py-3">
-		<h2 class="font-heading text-sm font-semibold">Lyrics</h2>
+		<h2 class="text-sm font-semibold">Lyrics</h2>
 		<button
 			onclick={() => (expanded = !expanded)}
 			class="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"

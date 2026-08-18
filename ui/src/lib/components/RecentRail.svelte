@@ -41,7 +41,7 @@
 </script>
 
 <section>
-	<h2 class="mb-3 font-heading text-lg font-semibold">Jump back in</h2>
+	<h2 class="mb-3 text-[15px] font-semibold">Jump back in</h2>
 	<!-- CSS columns, same idiom as Forgotten favourites: fills top-to-bottom, balances the last
 	     column itself, and needs no row count per breakpoint. -->
 	<div class="columns-1 gap-x-6 md:columns-2 xl:columns-3">

@@ -20,8 +20,8 @@
 	class="desk-glass hidden h-full w-[272px] shrink-0 flex-col rounded-none border-y-0 border-r-0 min-[1100px]:flex"
 >
 	<div class="px-3 pt-3 pb-2">
-		<div class="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-			<span>Now Playing</span>
+		<div class="flex items-center justify-between text-[12px] font-semibold text-muted-foreground">
+			<span>Playing</span>
 			<div class="flex items-center gap-1">
 				{#if total}
 					<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
@@ -67,14 +67,12 @@
 		{/if}
 	</div>
 	<div class="min-h-0 flex-1 overflow-hidden">
-		<div class="px-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-			Playing Next
+		<div class="px-3 pb-1 text-[12px] font-semibold text-muted-foreground">
+			Next
 			{#if from}
-				<span class="mt-0.5 block text-[10px] font-medium normal-case tracking-normal text-muted-foreground/80"
-					>from {from}</span
-				>
+				<span class="mt-0.5 block text-[10px] font-medium text-muted-foreground/80">from {from}</span>
 			{/if}
 		</div>
-		<QueueList />
+		<QueueList upcomingOnly />
 	</div>
 </aside>

@@ -70,18 +70,23 @@
 	const sleepLeft = $derived(
 		desk.sleepUntil > nowTick ? Math.max(0, desk.sleepUntil - nowTick) : 0
 	);
-	const sleepLabel = $derived.by(() => {
-		if (!sleepLeft || !desk.sleepUntil) return '';
+	const sleepLeftShort = $derived.by(() => {
+		if (!sleepLeft) return '';
 		const mins = Math.ceil(sleepLeft / 60_000);
-		const left =
-			mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
-		const end = new Date(desk.sleepUntil).toLocaleTimeString([], {
-			hour: 'numeric',
-			minute: '2-digit'
-		});
-		return `${left} → ${end}`;
+		return mins >= 60 ? `${Math.floor(mins / 60)}h` : `${mins}m`;
 	});
+	const sleepEnd = $derived(
+		desk.sleepUntil
+			? new Date(desk.sleepUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+			: ''
+	);
 	let sleepOpen = $state(false);
+	function onSleepKey(e: KeyboardEvent) {
+		if (e.key === 'Escape') sleepOpen = false;
+	}
+	function onSleepDoc(e: PointerEvent) {
+		if (!(e.target as HTMLElement).closest('[data-sleep]')) sleepOpen = false;
+	}
 
 	let justLiked = $state(false);
 
@@ -153,6 +158,7 @@
 	});
 </script>
 
+<svelte:window onkeydown={onSleepKey} onpointerdown={onSleepDoc} />
 <footer
 	class="desk-glass mx-2 mb-2 flex h-16 items-center gap-3 px-3"
 >
@@ -244,7 +250,7 @@
 	</div>
 
 	<div
-		class="flex shrink-0 items-center gap-0.5 [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+		class="flex shrink-0 items-center gap-0.5 [&_button]:focus-visible:ring-0"
 	>
 		{#if playback.now && !api.isLocalId(playback.now.videoId)}
 			<Button variant="ghost" size="icon-sm" onclick={toggleLike} aria-label="Like">
@@ -270,7 +276,7 @@
 		</Button>
 		<button
 			type="button"
-			class="flex size-9 items-center justify-center rounded-full bg-foreground text-background hover:bg-foreground/90"
+			class="desk-focus flex size-9 items-center justify-center rounded-full bg-foreground text-background hover:bg-foreground/90"
 			onclick={() => togglePlayUi()}
 			aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 		>
@@ -317,7 +323,7 @@
 	</div>
 
 	<div
-		class="flex min-w-0 flex-1 items-center justify-end [&_button]:focus-visible:border-transparent [&_button]:focus-visible:ring-0"
+		class="flex min-w-0 flex-1 items-center justify-end"
 	>
 		<Button
 			variant="ghost"
@@ -354,33 +360,36 @@
 		>
 			<HugeiconsIcon strokeWidth={2} icon={HeadphonesIcon} class="h-4 w-4" />
 		</Button>
-		<div class="relative mr-1">
+		<div class="relative mr-1" data-sleep>
 			<button
 				type="button"
-				class="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] tabular-nums {sleepLabel
+				class="desk-focus inline-flex h-8 items-center gap-1 rounded-full px-2 text-[11px] tabular-nums {sleepLeftShort
 					? 'bg-white/10 text-foreground'
 					: 'text-muted-foreground hover:bg-white/8 hover:text-foreground'}"
 				onclick={() => (sleepOpen = !sleepOpen)}
 				aria-expanded={sleepOpen}
-				aria-label="Sleep timer"
+				aria-label={sleepLeftShort ? `Sleep ${sleepLeftShort}` : 'Sleep timer'}
 			>
 				<HugeiconsIcon strokeWidth={2} icon={Moon02Icon} class="h-3.5 w-3.5" />
-				{sleepLabel || 'Sleep'}
+				{#if sleepLeftShort}{sleepLeftShort}{/if}
 			</button>
 			{#if sleepOpen}
-				<div
-					class="absolute right-0 bottom-8 z-30 flex gap-1 rounded-lg border bg-popover p-1 shadow-lg"
-				>
-					{#each [0, 15, 30, 45, 60] as m (m)}
-						<button
-							type="button"
-							class="rounded-md px-2 py-1 text-[11px] hover:bg-muted"
-							onclick={() => {
-								void setSleepMins(m);
-								sleepOpen = false;
-							}}>{m === 0 ? 'Off' : `${m}m`}</button
-						>
-					{/each}
+				<div class="absolute right-0 bottom-9 z-30 min-w-[10rem] rounded-lg border bg-popover p-1.5 shadow-md">
+					{#if sleepEnd}
+						<p class="px-2 pb-1 text-[11px] text-muted-foreground">Until {sleepEnd}</p>
+					{/if}
+					<div class="flex gap-1">
+						{#each [0, 15, 30, 45, 60] as m (m)}
+							<button
+								type="button"
+								class="rounded-md px-2 py-1 text-[11px] hover:bg-muted"
+								onclick={() => {
+									void setSleepMins(m);
+									sleepOpen = false;
+								}}>{m === 0 ? 'Off' : `${m}m`}</button
+							>
+						{/each}
+					</div>
 				</div>
 			{/if}
 		</div>

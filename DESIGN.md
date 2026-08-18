@@ -8,7 +8,7 @@ Live Cider on this machine is a **three-column catalog desk** (sidebar · number
 - Genre: atmospheric — late-night music desk; the collection is the page, the track tints it.
 - Macrostructure: **Workbench** (primary) — sidebar · catalog · inspector rail · docked transport. Split studio is a *mode* (Ctrl+P lyrics), not the default desk.
 - Type: Outfit (lyrics / playlist heroes only) + IBM Plex Sans (all chrome). No Inter, no Outfit on the word “Library”.
-- Palette: paper oklch(0.12 0.012 250) / ink oklch(0.97 0.004 250) / accent oklch(0.68 0.195 8) — factory default **rose**, never blue. Seek and volume are this accent. AA+ on body.
+- Palette: paper oklch(0.12 0.012 250) / ink oklch(0.97 0.004 250) / accent oklch(0.68 0.195 8) — factory default **rose**. Solid rose only on seek and like. Selected chrome is a white plate (AA). AA+ on body.
 - Spacing: 4pt. Playlist row pitch **58px** (54px plate + 4px gap). Sidebar 240px. Rail ≥250px from 1100px width.
 - Motion: restrained (transform/opacity only). `prefers-reduced-motion: reduce` cuts fly-ins. Ban `transition: all`.
 - Control states: default · hover · focus-visible · active · disabled · loading · error · success. Transport cluster: focus-visible ring-0 (bar is not a focus trap). Playlist row: hover plate + playing plate + play glyph replaces the index.

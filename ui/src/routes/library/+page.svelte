@@ -41,7 +41,8 @@
 		syncSavedToYouTube,
 		startGoogleSignIn,
 		playFrom,
-		openAddToPlaylist
+		openAddToPlaylist,
+		playback
 	} from '$lib/player.svelte';
 	import { mergeSaved, unsynced, recentItems } from '$lib/personal';
 
@@ -281,17 +282,23 @@
 				{:else if songsError && !songs.length}
 					<ErrorState message={songsError} onRetry={loadSongs} />
 				{:else if !songs.length}
-					<p class="max-w-md text-[13px] text-muted-foreground">
-						{signedOut
-							? 'Sign in to see every song in your YouTube Music library.'
-							: 'No library songs yet.'}
-					</p>
+					<div class="flex max-w-md flex-col items-start gap-3">
+						<p class="text-[13px] text-muted-foreground">
+							{signedOut
+								? 'Sign in to see every song in your YouTube Music library.'
+								: 'No library songs yet.'}
+						</p>
+						{#if signedOut}
+							<Button size="sm" onclick={() => startGoogleSignIn()}>Sign in</Button>
+						{/if}
+					</div>
 				{:else}
-					<div class="flex flex-col">
+					<div class="flex flex-col gap-1">
 						{#each songs as song, n (song.video_id + n)}
 							<TrackRow
 								{song}
 								index={n}
+								active={song.video_id === playback.now?.videoId}
 								onplay={() =>
 									playFrom(
 										{

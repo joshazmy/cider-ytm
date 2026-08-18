@@ -120,7 +120,7 @@
 
 {#if loading ? ids.length >= MIN : artists.length >= MIN}
 	<section>
-		<h2 class="mb-3 font-heading text-lg font-semibold">Familiar Artists</h2>
+		<h2 class="mb-3 text-[15px] font-semibold">Familiar Artists</h2>
 		<div class="grid items-center gap-6 md:grid-cols-2 md:gap-10">
 			<div class="flex flex-col gap-1">
 				{#if loading}

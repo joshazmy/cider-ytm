@@ -18,6 +18,20 @@
 	import LyricsView from './LyricsView.svelte';
 
 	beforeNavigate(() => (np.open = false));
+	function onWinKey(e: KeyboardEvent) {
+		if (e.key === 'Escape' && np.open) {
+			e.preventDefault();
+			np.open = false;
+		}
+	}
+
+	let plate: HTMLDivElement | undefined = $state();
+	$effect(() => {
+		if (np.open) plate?.focus();
+	});
+	function onPlateKey(e: KeyboardEvent) {
+		onWinKey(e);
+	}
 
 	let attempt = $state(0);
 	$effect(() => {
@@ -41,9 +55,16 @@
 </script>
 
 <!-- Full-bleed plate over sidebar + rail (Cider immersive). The desk bar stays above this. -->
+<svelte:window onkeydown={onWinKey} />
 <div
+	bind:this={plate}
+	role="dialog"
+	aria-modal="true"
+	aria-label="Now playing"
+	tabindex="-1"
+	onkeydown={onPlateKey}
 	transition:fly={{ y: '100%', duration: 320, easing: cubicOut }}
-	class="absolute inset-0 z-20 isolate flex min-h-0 overflow-hidden bg-black"
+	class="absolute inset-0 z-20 isolate flex min-h-0 overflow-hidden bg-black outline-none"
 >
 	{#if src && attempt < srcs.length}
 		<img
@@ -119,8 +140,8 @@
 					type="button"
 					onclick={() => (np.tab = 'queue')}
 					class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] {np.tab === 'queue'
-						? 'bg-white/15 text-white'
-						: 'text-white/55 hover:text-white'}"
+						? 'bg-white/20 text-white'
+						: 'text-white/70 hover:text-white'}"
 				>
 					<HugeiconsIcon icon={Queue01Icon} class="h-4 w-4" /> Queue
 				</button>
@@ -128,15 +149,15 @@
 					type="button"
 					onclick={() => (np.tab = 'lyrics')}
 					class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] {np.tab === 'lyrics'
-						? 'bg-white/15 text-white'
-						: 'text-white/55 hover:text-white'}"
+						? 'bg-white/20 text-white'
+						: 'text-white/70 hover:text-white'}"
 				>
 					<HugeiconsIcon icon={Mic01Icon} class="h-4 w-4" /> Lyrics
 				</button>
 			</div>
 			{#if np.tab === 'queue'}
-				<div class="min-h-0 flex-1 overflow-hidden rounded-xl bg-black/25">
-					<QueueList />
+				<div class="min-h-0 flex-1 overflow-hidden rounded-xl bg-black/20 text-white">
+					<QueueList upcomingOnly />
 				</div>
 			{:else}
 				<LyricsView expanded onCover />

@@ -117,7 +117,7 @@
 </script>
 
 <aside
-	class="flex h-full shrink-0 flex-col bg-transparent px-1.5 py-2 text-sidebar-foreground {collapsed
+	class="flex h-full shrink-0 flex-col border-r border-white/10 bg-transparent px-1.5 py-2 text-sidebar-foreground {collapsed
 		? 'w-16'
 		: 'w-60'}"
 >
@@ -150,7 +150,7 @@
 		/>
 		<button
 			type="submit"
-			class="absolute top-1/2 right-1.5 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+			class="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
 			aria-label="Submit search"
 		>
 			<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-3.5 w-3.5" />
@@ -201,7 +201,7 @@
 				href={n.href}
 				title={n.label}
 				class="{navRow} {wide('justify-start')} {isActive(n.href)
-					? 'bg-primary text-primary-foreground'
+					? 'bg-white/[0.10] text-foreground'
 					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
 				<HugeiconsIcon icon={n.icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
@@ -237,7 +237,7 @@
 							href={playlistHref(pl)}
 							title={pl.title}
 							class="flex h-8 items-center gap-2 rounded-full py-0 pr-8 pl-1.5 transition-colors {onThis
-								? 'bg-primary text-primary-foreground'
+								? 'bg-white/[0.10] text-foreground'
 								: 'text-sidebar-foreground/85 hover:bg-foreground/6'}"
 						>
 							<div
