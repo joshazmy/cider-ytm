@@ -38,6 +38,7 @@
 	import { mergeSaved, orderLibrary } from '$lib/personal';
 	import * as api from '$lib/api';
 	import AccountMenu from './AccountMenu.svelte';
+	import SearchSuggest from './SearchSuggest.svelte';
 
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home01Icon },
@@ -142,26 +143,11 @@
 			strokeWidth={2}
 			class="pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
 		/>
-		<input
+		<SearchSuggest
 			bind:value={searchQ}
-			type="text"
-			placeholder="Search"
-			autocomplete="off"
-			aria-label="Search"
-			class="h-8 w-full rounded-lg border-0 bg-black/40 pl-7 text-[13px] text-foreground outline-none ring-1 ring-white/10 placeholder:text-muted-foreground/70 focus:bg-black/50 {searchQ
-				? 'pr-14'
-				: 'pr-8'}"
+			inputClass="h-8 rounded-lg border-0 bg-black/40 pl-7 text-[13px] ring-1 ring-white/10"
+			panelClass="left-0 w-[22rem]"
 		/>
-		{#if searchQ}
-			<button
-				type="button"
-				class="absolute top-1/2 right-7 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
-				aria-label="Clear search"
-				onclick={() => (searchQ = '')}
-			>
-				<HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} class="h-3.5 w-3.5" />
-			</button>
-		{/if}
 		<button
 			type="submit"
 			class="absolute top-1/2 right-1.5 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
