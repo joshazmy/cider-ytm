@@ -40,7 +40,7 @@
 		createLibraryPlaylist,
 		syncSavedToYouTube,
 		startGoogleSignIn,
-		playPlaylist,
+		playFrom,
 		openAddToPlaylist
 	} from '$lib/player.svelte';
 	import { mergeSaved, unsynced, recentItems } from '$lib/personal';
@@ -88,7 +88,7 @@
 		songsError = null;
 		try {
 			const page = await api.getPlaylist('FEmusic_liked_videos');
-			const items = page.tracks ?? [];
+			const items = page.items ?? [];
 			songs = items[0]?.video_id ? items : items.slice(1);
 		} catch (e) {
 			songsError = String(e);
@@ -315,7 +315,16 @@
 								<TrackRow
 									{song}
 									index={n}
-									onplay={() => playPlaylist(songs, n, undefined, 'Songs')}
+									onplay={() =>
+										playFrom(
+											{
+												kind: 'playlist',
+												id: 'FEmusic_liked_videos',
+												title: 'Songs'
+											},
+											songs,
+											n
+										)}
 									onAdd={() => openAddToPlaylist(song)}
 								/>
 							{/each}
