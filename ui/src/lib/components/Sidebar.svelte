@@ -41,7 +41,7 @@
 		{ href: '/', label: 'Home', icon: Home01Icon },
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
 		{ href: '/library?tab=recent', label: 'Recently Added', icon: Clock01Icon },
-		{ href: '/playlist/LM', label: 'Songs', icon: MusicNote01Icon },
+		{ href: '/playlist/VLLM', label: 'Songs', icon: MusicNote01Icon },
 		{ href: '/library?tab=albums', label: 'Albums', icon: MusicNoteSquare02Icon },
 		{ href: '/library?tab=artists', label: 'Artists', icon: UserSharingIcon }
 	];
