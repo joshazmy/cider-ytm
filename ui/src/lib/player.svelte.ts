@@ -80,6 +80,7 @@ function remainingQueue(): number {
 
 export const desk = $state({ warnQueue: true, sleepUntil: 0 });
 
+const SLEEP_KEY = 'desk-sleep-until';
 let sleepHandle: ReturnType<typeof setTimeout> | null = null;
 
 export function sleepRemainingLabel(): string {
@@ -102,13 +103,11 @@ export function armSleep(until: number) {
 	if (until <= Date.now()) return;
 	sleepHandle = setTimeout(() => {
 		desk.sleepUntil = 0;
-		api.setSetting('sleep_until', '0').catch(() => {});
+		localStorage.setItem(SLEEP_KEY, '0');
 		if (!playback.paused) api.togglePause();
 		toast.success('Sleep timer — paused');
 	}, until - Date.now());
 }
-
-const SLEEP_KEY = 'desk-sleep-until';
 
 export async function setSleepMins(mins: number) {
 	const until = mins > 0 ? Date.now() + mins * 60_000 : 0;
