@@ -91,12 +91,16 @@
 	// One entry per block, in render order. A collapsed history is 0 rows but still charged a
 	// heading it doesn't draw, which shifts every window's *choice* of slice by 40px and none of
 	// their heights: the overscan swallows it (see HEADING_PX).
-	const counts = $derived([
-		view.earlier.length,
-		showPrev ? view.prev.length : 0,
-		view.now ? 1 : 0,
-		...view.blocks.map((b) => b.rows.length)
-	]);
+	const counts = $derived(
+		upcomingOnly
+			? view.blocks.map((b) => b.rows.length)
+			: [
+					view.earlier.length,
+					showPrev ? view.prev.length : 0,
+					view.now ? 1 : 0,
+					...view.blocks.map((b) => b.rows.length)
+				]
+	);
 	const windowed = $derived(counts.reduce((a, c) => a + c, 0) > WINDOW_ABOVE);
 	const wins = $derived(
 		windowed
@@ -188,7 +192,7 @@
 			{:else if block.heading}
 				<h3 class="truncate px-2 pt-1 pb-1 text-[12px] font-semibold">{block.heading}</h3>
 			{/if}
-			{@render rows(block.rows, wins[b + 3])}
+			{@render rows(block.rows, wins[b] ?? { start: 0, end: block.rows.length, padTop: 0, padBottom: 0 })}
 		{:else}
 			<p class="p-3 text-[12px] text-muted-foreground">Nothing next.</p>
 		{/each}
