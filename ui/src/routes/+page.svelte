@@ -263,7 +263,7 @@
 </script>
 
 <div {@attach watchScroll}>
-	<HomeHero />
+	<HomeHero onRefresh={() => load(selected)} />
 	<!-- Mood chips filter the whole feed, so they're page-level controls: sticky, they stay reachable
 	     while the feed scrolls under them instead of leaving with the header they were pinned to.
 	     Opaque rather than blurred — a backdrop-filter repainting on every scroll frame is the one

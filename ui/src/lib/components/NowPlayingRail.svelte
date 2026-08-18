@@ -2,6 +2,7 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { MusicNote01Icon } from '@hugeicons/core-free-icons';
 	import { np, playback } from '$lib/player.svelte';
+	import * as api from '$lib/api';
 	import { isLetterTile, thumb } from '$lib/thumb';
 	import QueueList from './QueueList.svelte';
 
@@ -16,11 +17,22 @@
 	<div class="px-3 pt-3 pb-2">
 		<div class="flex items-center justify-between text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
 			<span>Now Playing</span>
-			{#if total}
-				<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
-					>{at} of {total}</span
-				>
-			{/if}
+			<div class="flex items-center gap-1">
+				{#if total}
+					<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
+						>{total} items</span
+					>
+				{/if}
+				{#if total > 1}
+					<button
+						type="button"
+						class="rounded-full px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal text-muted-foreground hover:bg-white/8 hover:text-foreground"
+						onclick={() => api.clearQueued()}
+					>
+						Clear
+					</button>
+				{/if}
+			</div>
 		</div>
 		{#if playback.now}
 			<button

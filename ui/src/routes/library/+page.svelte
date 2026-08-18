@@ -39,7 +39,7 @@
 		syncSavedToYouTube,
 		startGoogleSignIn
 	} from '$lib/player.svelte';
-	import { mergeSaved, unsynced } from '$lib/personal';
+	import { mergeSaved, unsynced, recentItems } from '$lib/personal';
 
 	let dialogOpen = $state(false);
 	let newTitle = $state('');
@@ -58,6 +58,7 @@
 	const albums = $derived(mergeSaved(personal, library.albums, 'album'));
 	const artists = $derived(mergeSaved(personal, library.artists, 'artist'));
 	const all = $derived([...playlists, ...albums, ...artists]);
+	const recents = $derived(recentItems(personal, 60));
 	const loading = $derived((library.loading || library.extrasLoading) && !all.length);
 	const error = $derived(library.error ?? library.extrasError);
 	// Only the empty states differ: signed out there is no account library to be missing yet.
@@ -211,6 +212,7 @@
 			<Tabs.Trigger value="all">
 				<HugeiconsIcon icon={SquareStackIcon} class="h-4 w-4" /> All
 			</Tabs.Trigger>
+			<Tabs.Trigger value="recent">Recently Added</Tabs.Trigger>
 			<Tabs.Trigger value="playlists">
 				<HugeiconsIcon icon={Playlist02Icon} class="h-4 w-4" /> Playlists
 			</Tabs.Trigger>
@@ -250,6 +252,14 @@
 						signedOut
 							? 'Nothing saved yet. Sign in for the library on your account, or save a playlist from Home.'
 							: 'Your library is empty. Save a playlist or album to keep it here.'
+					)}
+				{/if}
+			</Tabs.Content>
+			<Tabs.Content value="recent">
+				{#if tab === 'recent'}
+					{@render grid(
+						recents,
+						'Nothing recent yet. Play a playlist, album, or artist and it will show up here.'
 					)}
 				{/if}
 			</Tabs.Content>

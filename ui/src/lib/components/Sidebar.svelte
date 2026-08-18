@@ -6,6 +6,7 @@
 		Home01Icon,
 		Search01Icon,
 		LibraryIcon,
+		Clock01Icon,
 		MusicNoteSquare02Icon,
 		UserSharingIcon,
 		Settings01Icon,
@@ -39,12 +40,15 @@
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home01Icon },
 		{ href: '/library', label: 'Library', icon: LibraryIcon },
+		{ href: '/library?tab=recent', label: 'Recently Added', icon: Clock01Icon },
+		{ href: '/playlist/LM', label: 'Songs', icon: MusicNote01Icon },
 		{ href: '/library?tab=albums', label: 'Albums', icon: MusicNoteSquare02Icon },
 		{ href: '/library?tab=artists', label: 'Artists', icon: UserSharingIcon }
 	];
 	const isActive = (href: string) => {
 		if (href === '/') return page.url.pathname === '/';
-		if (href.includes('tab=')) return page.url.href.includes(href.split('?')[1] ?? '');
+		if (href.startsWith('/playlist/')) return page.url.pathname === href;
+		if (href.includes('tab=')) return page.url.searchParams.get('tab') === href.split('tab=')[1];
 		return page.url.pathname.startsWith('/library') && !page.url.searchParams.get('tab');
 	};
 

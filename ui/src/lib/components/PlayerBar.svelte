@@ -4,6 +4,9 @@
 	import {
 		PreviousIcon,
 		NextIcon,
+		ShuffleIcon,
+		RepeatIcon,
+		RepeatOne01Icon,
 		Queue01Icon,
 		Mic01Icon,
 		VolumeHighIcon,
@@ -19,7 +22,9 @@
 	import {
 		np,
 		playback,
+		desk,
 		commitVolume,
+		cycleRepeat,
 		dragVolume,
 		openAddToPlaylist,
 		openMiniPlayer,
@@ -48,6 +53,24 @@
 
 	// Pop the star once when the user favourites (not when un-favouriting). Reset on animation end
 	// so the next like can replay it.
+	const shuffleOn = $derived(playback.queue.shuffle ?? false);
+	const repeat = $derived(playback.queue.repeat ?? 'off');
+	let nowTick = $state(Date.now());
+	$effect(() => {
+		if (!desk.sleepUntil) return;
+		const id = setInterval(() => (nowTick = Date.now()), 15_000);
+		return () => clearInterval(id);
+	});
+	const sleepLeft = $derived(
+		desk.sleepUntil > nowTick ? Math.max(0, desk.sleepUntil - nowTick) : 0
+	);
+	const sleepLabel = $derived.by(() => {
+		if (!sleepLeft) return '';
+		const mins = Math.ceil(sleepLeft / 60_000);
+		if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+		return `${mins}m`;
+	});
+
 	let justLiked = $state(false);
 
 	function toggleLike() {
@@ -212,6 +235,15 @@
 				</span>
 			</Button>
 		{/if}
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			onclick={() => api.toggleShuffle()}
+			aria-label="Shuffle"
+			aria-pressed={shuffleOn}
+		>
+			<HugeiconsIcon icon={ShuffleIcon} class="h-4 w-4 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}" />
+		</Button>
 		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.prevTrack()} aria-label="Previous">
 			<HugeiconsIcon icon={PreviousIcon} class="h-4 w-4" />
 		</Button>
@@ -234,6 +266,20 @@
 		</button>
 		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.nextTrack()} aria-label="Next">
 			<HugeiconsIcon icon={NextIcon} class="h-4 w-4" />
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			onclick={cycleRepeat}
+			aria-label="Repeat: {repeat}"
+			aria-pressed={repeat !== 'off'}
+		>
+			<HugeiconsIcon
+				icon={RepeatIcon}
+				altIcon={RepeatOne01Icon}
+				showAlt={repeat === 'one'}
+				class="h-4 w-4 {repeat !== 'off' ? 'text-primary' : 'text-muted-foreground'}"
+			/>
 		</Button>
 		<Button
 			variant="ghost"
@@ -277,6 +323,11 @@
 			onchange={onVolumeCommit}
 			aria-label="Volume"
 		/>
+		{#if sleepLabel}
+			<span class="mr-1 text-[11px] tabular-nums text-muted-foreground" title="Sleep timer">
+				{sleepLabel}
+			</span>
+		{/if}
 		<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
 			<HugeiconsIcon icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</Button>

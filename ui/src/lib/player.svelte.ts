@@ -78,7 +78,45 @@ function remainingQueue(): number {
 	return Math.max(0, items - idx);
 }
 
-export const desk = $state({ warnQueue: true });
+export const desk = $state({ warnQueue: true, sleepUntil: 0 });
+
+let sleepHandle: ReturnType<typeof setTimeout> | null = null;
+
+export function sleepRemainingLabel(): string {
+	if (!desk.sleepUntil) return '';
+	const ms = desk.sleepUntil - Date.now();
+	if (ms <= 0) return '';
+	const mins = Math.ceil(ms / 60_000);
+	if (mins >= 60) {
+		const h = Math.floor(mins / 60);
+		const m = mins % 60;
+		return `${h}h ${m}m`;
+	}
+	return `${mins}m`;
+}
+
+export function armSleep(until: number) {
+	if (sleepHandle) clearTimeout(sleepHandle);
+	sleepHandle = null;
+	desk.sleepUntil = until;
+	if (until <= Date.now()) return;
+	sleepHandle = setTimeout(() => {
+		desk.sleepUntil = 0;
+		api.setSetting('sleep_until', '0').catch(() => {});
+		if (!playback.paused) api.togglePause();
+		toast.success('Sleep timer — paused');
+	}, until - Date.now());
+}
+
+const SLEEP_KEY = 'desk-sleep-until';
+
+export async function setSleepMins(mins: number) {
+	const until = mins > 0 ? Date.now() + mins * 60_000 : 0;
+	localStorage.setItem(SLEEP_KEY, String(until));
+	await api.setSetting('sleep_mins', String(mins)).catch(() => {});
+	armSleep(until);
+	if (mins > 0) toast.success(`Sleep in ${mins} min`);
+}
 
 function confirmReplaceQueue(): boolean {
 	if (!desk.warnQueue) return true;
@@ -691,6 +729,8 @@ let started = false;
 export function initApp(mini = false): () => void {
 	if (started) return () => {};
 	started = true;
+	const savedSleep = Number(localStorage.getItem(SLEEP_KEY) || 0);
+	if (savedSleep > Date.now()) armSleep(savedSleep);
 	const subs = [
 		api.onNowPlaying((n) => {
 			playback.now = n;

@@ -10,7 +10,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Select from '$lib/components/ui/select';
 	import * as api from '$lib/api';
-	import { desk, ui, toast, playback, setTempoPitch } from '$lib/player.svelte';
+	import { desk, ui, toast, playback, setTempoPitch, setSleepMins } from '$lib/player.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import {
 		THEMES,
@@ -215,7 +215,6 @@
 	const eqPreset = $derived(settings.eq_preset ?? 'flat');
 	const notifyOn = $derived(settings.notifications !== 'false');
 	let sleepMins = $state(0);
-	let sleepHandle: ReturnType<typeof setTimeout> | null = null;
 
 	async function setEq(preset: string) {
 		settings.eq_preset = preset;
@@ -229,16 +228,7 @@
 
 	async function setSleep(mins: number) {
 		sleepMins = mins;
-		if (sleepHandle) clearTimeout(sleepHandle);
-		sleepHandle = null;
-		await api.setSetting('sleep_mins', String(mins));
-		if (mins > 0) {
-			sleepHandle = setTimeout(() => {
-				api.togglePause();
-				toast.success('Sleep timer — paused');
-			}, mins * 60_000);
-			toast.success(`Sleep in ${mins} min`);
-		}
+		await setSleepMins(mins);
 	}
 
 	async function setHideVideos(on: boolean) {

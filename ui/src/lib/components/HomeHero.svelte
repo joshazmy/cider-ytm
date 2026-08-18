@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { UserGroup02Icon } from '@hugeicons/core-free-icons';
+	import { UserGroup02Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 	import { playback, ui } from '$lib/player.svelte';
 	import { lt } from '$lib/lt.svelte';
 	import { isLetterTile, thumb } from '$lib/thumb';
 
 	// Google's CDN doesn't serve every rewritten size, so a 404'd backdrop must degrade to nothing
 	// rendered, never a broken-image glyph. Re-arm whenever the track changes, mirroring MediaCard.
+	let { onRefresh }: { onRefresh?: () => void } = $props();
 	let artFailed = $state(false);
 	$effect(() => {
 		playback.now?.thumbnail; // re-arm when the track changes
@@ -47,6 +48,18 @@
 	<div class="relative px-6 pt-5 pb-3">
 		<div class="flex items-center justify-between gap-4">
 			<h1 class="text-[1.65rem] font-semibold tracking-tight">Home</h1>
+			<div class="flex items-center gap-1">
+			{#if onRefresh}
+				<button
+					type="button"
+					onclick={onRefresh}
+					title="Refresh"
+					aria-label="Refresh Home"
+					class="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-white/8 hover:text-foreground"
+				>
+					<HugeiconsIcon icon={RefreshIcon} strokeWidth={2} class="h-4 w-4" />
+				</button>
+			{/if}
 			<button
 				onclick={() => (ui.ltOpen = true)}
 				title="Listen Together"
@@ -63,6 +76,7 @@
 					></span>
 				{/if}
 			</button>
+			</div>
 		</div>
 	</div>
 </div>
