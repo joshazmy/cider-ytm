@@ -1542,6 +1542,9 @@ impl AppState {
             "streamClient": stream_client,
             "rating": item.rating,
             "bitrate": bitrate_label(self.last_itag.load(Ordering::Relaxed) as i64),
+            "explicit": item.explicit,
+            "album": item.album,
+            "albumId": item.album_id,
         })
     }
 

@@ -15,7 +15,9 @@
 		InfinityIcon,
 		MinimizeScreenIcon,
 		MusicNote01Icon,
-		ArrowUp01Icon
+		ArrowUp01Icon,
+		ArrowDown01Icon,
+		HeadphonesIcon
 	} from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as api from '$lib/api';
@@ -29,6 +31,7 @@
 		openAddToPlaylist,
 		openMiniPlayer,
 		setSleepMins,
+		toggleAudioProfile,
 		toggleMute,
 		toggleNowPlayingLike,
 		togglePlayUi
@@ -37,6 +40,7 @@
 	import { isLetterTile, thumb } from '$lib/thumb';
 	import { fmtClock, trackDurationSecs } from '$lib/clock';
 	import ArtistLine from './ArtistLine.svelte';
+	import ExplicitIcon from './ExplicitIcon.svelte';
 	import Marquee from './Marquee.svelte';
 	import TrackMenu from './TrackMenu.svelte';
 
@@ -149,7 +153,7 @@
 </script>
 
 <footer
-	class="flex h-16 items-center gap-3 border-t border-white/8 bg-background/90 px-3"
+	class="desk-glass mx-2 mb-2 flex h-16 items-center gap-3 px-3"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-2.5">
 		<button
@@ -175,7 +179,13 @@
 			<span
 				class="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100"
 			>
-				<HugeiconsIcon strokeWidth={2} icon={ArrowUp01Icon} class="h-4 w-4 text-white" />
+				<HugeiconsIcon
+					strokeWidth={2}
+					icon={ArrowUp01Icon}
+					altIcon={ArrowDown01Icon}
+					showAlt={np.open}
+					class="h-4 w-4 text-white"
+				/>
 			</span>
 		</button>
 		<div class="min-w-0 flex-1">
@@ -184,6 +194,9 @@
 					text={playback.now?.title ?? 'Nothing playing'}
 					class="text-[13px] font-medium leading-tight"
 				/>
+				{#if playback.now?.explicit}
+					<ExplicitIcon class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+				{/if}
 				{#if playback.now?.bitrate}
 					<span
 						class="shrink-0 rounded bg-white/10 px-1 py-px text-[9px] font-semibold tracking-wide text-muted-foreground"
@@ -330,6 +343,16 @@
 			onchange={onVolumeCommit}
 			aria-label="Volume"
 		/>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class={desk.audioProfile === 'dimisco' ? 'text-primary' : 'text-muted-foreground'}
+			onclick={() => toggleAudioProfile()}
+			aria-label={desk.audioProfile === 'dimisco' ? 'DimiSco spatial' : 'Dry stereo'}
+			aria-pressed={desk.audioProfile === 'dimisco'}
+		>
+			<HugeiconsIcon strokeWidth={2} icon={HeadphonesIcon} class="h-4 w-4" />
+		</Button>
 		<div class="relative mr-1">
 			<button
 				type="button"

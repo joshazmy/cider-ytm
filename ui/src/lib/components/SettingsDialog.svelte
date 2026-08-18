@@ -198,6 +198,7 @@
 
 	async function setAudioProfile(profile: 'dry' | 'dimisco') {
 		settings.audio_profile = profile;
+		desk.audioProfile = profile;
 		await api.setSetting('audio_profile', profile);
 	}
 

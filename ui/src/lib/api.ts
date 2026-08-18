@@ -62,6 +62,9 @@ export interface NowPlaying {
 	rating?: Rating | null;
 	/** kbps label when we know the itag (e.g. "256"). */
 	bitrate?: string | null;
+	explicit?: boolean;
+	album?: string;
+	albumId?: string;
 }
 
 export type RepeatMode = 'off' | 'all' | 'one';

@@ -78,7 +78,17 @@ function remainingQueue(): number {
 	return Math.max(0, items - idx);
 }
 
-export const desk = $state({ warnQueue: true, sleepUntil: 0 });
+export const desk = $state({
+	warnQueue: true,
+	sleepUntil: 0,
+	audioProfile: 'dry' as 'dry' | 'dimisco'
+});
+
+export async function toggleAudioProfile() {
+	const next = desk.audioProfile === 'dimisco' ? 'dry' : 'dimisco';
+	desk.audioProfile = next;
+	await api.setSetting('audio_profile', next);
+}
 
 const SLEEP_KEY = 'desk-sleep-until';
 let sleepHandle: ReturnType<typeof setTimeout> | null = null;
@@ -803,6 +813,7 @@ export function initApp(mini = false): () => void {
 	api.getSettings()
 		.then((s) => {
 			desk.warnQueue = s.warn_before_queue_override !== 'false';
+			desk.audioProfile = s.audio_profile === 'dimisco' ? 'dimisco' : 'dry';
 			const speed = Number.parseFloat(s.playback_speed ?? '1.15');
 			const semitones = Number.parseInt(s.playback_semitones ?? '0', 10);
 			playback.speed = Number.isFinite(speed) ? speed : 1.15;
