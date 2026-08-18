@@ -229,7 +229,7 @@
 {:else if album}
     <!-- Playlist-matching hero: cover wash, large rounded art, Play + Shuffle pills. -->
     <div
-        class="content-in relative flex min-h-[48vh] flex-col items-center overflow-hidden px-6 pb-8 pt-14 text-center"
+        class="content-in relative flex h-20 shrink-0 items-center overflow-hidden px-6 py-2"
     >
         {#if album.thumbnail}
             <!-- Blur-2xl destroys detail, so the smallest source that still holds the cover colours. -->
@@ -257,27 +257,20 @@
             <img
                 src={thumb(album.thumbnail, 400)}
                 alt=""
-                class="relative h-52 w-52 rounded-3xl object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/10"
+                class="relative h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
             />
         {:else}
             <div
-                class="relative h-52 w-52 rounded-3xl bg-muted ring-1 ring-white/10"
+                class="relative h-16 w-16 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"
             ></div>
         {/if}
 
-        <div class="relative mt-6 min-w-0 max-w-3xl">
-            <div
-                class="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase"
-            >
-                {album.subtitle ?? "Album"}
-            </div>
-            <h1
-                class="mt-2 font-heading text-5xl font-bold tracking-tight drop-shadow-lg"
-            >
+        <div class="relative ml-3 min-w-0 flex-1">
+            <h1 class="truncate text-[1.25rem] font-semibold tracking-tight">
                 {album.title ?? "Album"}
             </h1>
             <div
-                class="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted-foreground"
+                class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground"
             >
                 {#if album.explicit}
                     <ExplicitIcon class="h-4 w-4 shrink-0" />
@@ -306,34 +299,16 @@
             </div>
         </div>
 
-        {#if album.description}
-            <div class="relative mt-4 max-w-2xl">
-                <p
-                    class="text-sm text-foreground/80 {expanded
-                        ? ''
-                        : 'line-clamp-2'}"
-                >
-                    {album.description}
-                </p>
-                <button
-                    class="mt-1 cursor-pointer text-xs font-semibold uppercase text-muted-foreground hover:text-foreground"
-                    onclick={() => (expanded = !expanded)}
-                >
-                    {expanded ? "Less" : "More"}
-                </button>
-            </div>
-        {/if}
-
-        <div class="relative mt-5 flex flex-wrap items-center justify-center gap-3">
+        <div class="relative ml-3 flex shrink-0 flex-wrap items-center gap-2">
             <button
-                class="flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-foreground transition hover:opacity-90 disabled:opacity-50"
+                class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background disabled:opacity-50"
                 onclick={() => playAll(null)}
                 disabled={!album.items.length}
             >
                 <HugeiconsIcon icon={PlayIcon} class="h-4 w-4" /> Play
             </button>
             <button
-                class="flex h-10 cursor-pointer items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-foreground transition hover:opacity-90 disabled:opacity-50"
+                class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-white/10 px-4 text-[13px] font-semibold text-foreground disabled:opacity-50"
                 onclick={shuffle}
                 disabled={!album.items.length}
             >
