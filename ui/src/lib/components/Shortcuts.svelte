@@ -94,7 +94,7 @@
 <section>
 	<div class="mb-3 flex items-baseline justify-between gap-3">
 		<div class="flex min-w-0 items-center gap-2">
-			<h2 class="font-heading text-lg font-semibold">Shortcuts</h2>
+			<h2 class="text-[15px] font-semibold">Shortcuts</h2>
 			{#if onEdit}
 				<!-- Labelled and outlined, not a bare glyph: this is the only entry point to rearranging
 				     home, and as an icon on its own nobody found it. The tooltip carries the scope the

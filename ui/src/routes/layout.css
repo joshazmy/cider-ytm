@@ -108,8 +108,8 @@
 .chip-row {
 	scrollbar-width: none;
 	-ms-overflow-style: none;
-	mask-image: linear-gradient(to right, #000 88%, transparent);
-	-webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+	mask-image: linear-gradient(to right, #000 95%, transparent);
+	-webkit-mask-image: linear-gradient(to right, #000 95%, transparent);
 }
 .chip-row::-webkit-scrollbar {
 	display: none;

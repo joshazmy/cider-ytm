@@ -51,8 +51,8 @@
 	);
 
 	const chipClass = (active: boolean) =>
-		`shrink-0 cursor-pointer rounded-full px-3 py-1 text-[13px] font-medium transition-colors ${
-			active ? 'bg-foreground text-background' : 'bg-muted text-foreground hover:bg-muted/70'
+		`inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-medium transition-colors ${
+			active ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-muted/70'
 		}`;
 
 	// "Forgotten favourites" is pulled out of the feed and rendered as a list above it (see the
