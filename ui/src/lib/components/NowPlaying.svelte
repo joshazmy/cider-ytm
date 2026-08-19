@@ -6,14 +6,14 @@
 	import {
 		ArrowDown01Icon,
 		Mic01Icon,
-		MusicNote01Icon,
 		PlayIcon,
 		PauseIcon,
 		Queue01Icon
 	} from '@hugeicons/core-free-icons';
 	import { np, playback, togglePlayUi } from '$lib/player.svelte';
-	import { hiresCandidates } from '$lib/thumb';
+	import { coverCandidates } from '$lib/thumb';
 	import ArtistLine from './ArtistLine.svelte';
+	import CoverArt from './CoverArt.svelte';
 	import QueueList from './QueueList.svelte';
 	import LyricsView from './LyricsView.svelte';
 
@@ -38,10 +38,12 @@
 		playback.now?.thumbnail;
 		attempt = 0;
 	});
-	const srcs = $derived(hiresCandidates(playback.now?.thumbnail, 1600));
+	const srcs = $derived(
+		coverCandidates(playback.now?.thumbnail, playback.now?.videoId, 900)
+	);
 	const src = $derived(srcs[attempt]);
 	const imgFailed = () => {
-		if (attempt < srcs.length - 1) attempt++;
+		attempt += 1;
 	};
 
 	let flash: 'play' | 'pause' | null = $state(null);
@@ -72,15 +74,13 @@
 			alt=""
 			onerror={imgFailed}
 			decoding="async"
-			class="pointer-events-none absolute inset-0 h-full w-full object-cover"
+			class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
 		/>
 	{:else}
-		<div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black text-white/20">
-			<HugeiconsIcon icon={MusicNote01Icon} class="h-20 w-20" />
-		</div>
+		<div class="pointer-events-none absolute inset-0 bg-black"></div>
 	{/if}
-	<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-black/50"></div>
-	<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20"></div>
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-black/55"></div>
+	<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/25"></div>
 
 	<button
 		type="button"
@@ -99,6 +99,16 @@
 			aria-label={playback.paused ? 'Play' : 'Pause'}
 			class="absolute inset-0 cursor-pointer"
 		>
+			<div
+				class="pointer-events-none absolute top-[18%] right-10 left-10 aspect-square max-h-[58%] overflow-hidden rounded-2xl bg-black/30 shadow-[0_24px_80px_rgba(0,0,0,0.55)] ring-1 ring-white/12"
+			>
+				<CoverArt
+					url={playback.now?.thumbnail}
+					videoId={playback.now?.videoId}
+					size={720}
+					imgClass="h-full w-full object-cover"
+				/>
+			</div>
 			{#if flash}
 				<div
 					in:scale={{ start: 0.7, duration: 150, easing: cubicOut }}

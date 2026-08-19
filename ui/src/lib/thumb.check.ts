@@ -2,7 +2,15 @@
 //
 //     node --experimental-strip-types ui/src/lib/thumb.check.ts
 //
-import { artworkDpr, hiresCandidates, isLetterTile, rewriteThumbSize, ytimgLadder } from './thumb.ts';
+import {
+	artworkDpr,
+	coverCandidates,
+	hiresCandidates,
+	isLetterTile,
+	rewriteThumbSize,
+	videoStills,
+	ytimgLadder
+} from './thumb.ts';
 
 const eq = (a: unknown, b: unknown, msg: string) => {
 	if (a !== b) throw new Error(`${msg}: ${a} !== ${b}`);
@@ -50,5 +58,18 @@ eq(isLetterTile('https://yt3.ggpht.com/xyz'), true, 'yt3 ggpht is a letter tile'
 eq(isLetterTile('https://lh3.googleusercontent.com/cover=w544-h544'), false, 'lh3 album art');
 eq(isLetterTile('https://i.ytimg.com/vi/abc/hqdefault.jpg'), false, 'ytimg video thumb');
 eq(isLetterTile(undefined), false, 'empty');
+
+eq(videoStills('abcdefghijk')[0], 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg', 'still maxres');
+eq(videoStills('bad').length, 0, 'reject short id');
+eq(
+	coverCandidates('https://yt3.googleusercontent.com/abc=s88', 'abcdefghijk', 48)[0],
+	'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg',
+	'letter tile falls back to video still'
+);
+eq(
+	coverCandidates(ytimg, 'abcdefghijk', 1600).includes('https://i.ytimg.com/vi/abc/hqdefault.jpg'),
+	true,
+	'catalog ytimg kept'
+);
 
 console.log('ok');

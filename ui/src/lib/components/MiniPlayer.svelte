@@ -34,7 +34,8 @@
 		togglePlayUi
 	} from '$lib/player.svelte';
 	import { transportGlyph } from '$lib/transport';
-	import { isLetterTile, thumb } from '$lib/thumb';
+	import { thumb } from '$lib/thumb';
+	import CoverArt from './CoverArt.svelte';
 	import { trackDurationSecs } from '$lib/clock';
 	import Marquee from './Marquee.svelte';
 
@@ -110,15 +111,18 @@
 	<!-- Cover art under the left half, masked so it dissolves into the card instead of ending on a
 	     seam. Keyed so a track change cross-fades. -->
 	{#key now?.videoId}
-		{#if now?.thumbnail && !isLetterTile(now.thumbnail)}
-			<img
-				src={thumb(now.thumbnail, 480)}
-				alt=""
-				in:fade={{ duration: 300 }}
-				class="pointer-events-none absolute inset-y-0 left-0 h-full w-[62%] object-cover"
-				style="mask-image:linear-gradient(to right,#000 0,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 0,#000 70%,transparent 100%)"
+		<div
+			in:fade={{ duration: 300 }}
+			class="pointer-events-none absolute inset-y-0 left-0 h-full w-[62%]"
+			style="mask-image:linear-gradient(to right,#000 0,#000 70%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 0,#000 70%,transparent 100%)"
+		>
+			<CoverArt
+				url={now?.thumbnail}
+				videoId={now?.videoId}
+				size={480}
+				imgClass="h-full w-full object-cover"
 			/>
-		{/if}
+		</div>
 	{/key}
 	<!-- Enough shade to keep white text readable over a bright cover, following the same fade so it
 	     never draws an edge of its own. The art stays plainly visible under it. -->

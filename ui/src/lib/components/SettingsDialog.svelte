@@ -2,7 +2,14 @@
 	import { onMount, untrack } from 'svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Cancel01Icon } from '@hugeicons/core-free-icons';
+	import {
+		Cancel01Icon,
+		Settings01Icon,
+		PaintBrush01Icon,
+		PlayIcon,
+		Database01Icon,
+		InformationCircleIcon
+	} from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Switch } from '$lib/components/ui/switch';
@@ -40,12 +47,12 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 
 	type TabId = 'general' | 'themes' | 'playback' | 'data' | 'about';
-	const TABS: { id: TabId; label: string }[] = [
-		{ id: 'general', label: 'General' },
-		{ id: 'themes', label: 'Themes' },
-		{ id: 'playback', label: 'Playback' },
-		{ id: 'data', label: 'Data & storage' },
-		{ id: 'about', label: 'About' }
+	const TABS: { id: TabId; label: string; icon: typeof Settings01Icon }[] = [
+		{ id: 'general', label: 'General', icon: Settings01Icon },
+		{ id: 'themes', label: 'Look', icon: PaintBrush01Icon },
+		{ id: 'playback', label: 'Playback', icon: PlayIcon },
+		{ id: 'data', label: 'Data', icon: Database01Icon },
+		{ id: 'about', label: 'About', icon: InformationCircleIcon }
 	];
 
 	const ACCENT_THEMES = THEMES.filter((t) => t.kind === 'accent');
@@ -299,22 +306,23 @@
 
 <Dialog.Root bind:open={ui.settingsOpen}>
 	<Dialog.Content class="gap-0 overflow-hidden p-0 sm:max-w-3xl">
-		<div class="flex items-center border-b px-6 py-4">
-			<Dialog.Title class="text-lg font-semibold">Settings</Dialog.Title>
+		<div class="flex items-center border-b px-6 py-3.5">
+			<Dialog.Title class="text-[17px] font-semibold">Settings</Dialog.Title>
 			<Dialog.Description class="sr-only">Application settings</Dialog.Description>
 		</div>
 
-		<div class="flex h-[28rem]">
-			<!-- Tab rail -->
+		<div class="flex h-[min(36rem,72vh)]">
+			<!-- Tab rail. Frost plate, not factory rose. -->
 			<nav class="w-48 shrink-0 border-r p-2">
 				{#each TABS as t (t.id)}
 					<button
 						onclick={() => (tab = t.id)}
-						class="w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors {tab ===
+						class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors {tab ===
 						t.id
-							? 'bg-accent text-accent-foreground'
-							: 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}"
+							? 'bg-white/[0.10] text-foreground'
+							: 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'}"
 					>
+						<HugeiconsIcon icon={t.icon} strokeWidth={2} class="h-4 w-4 shrink-0" />
 						{t.label}
 					</button>
 				{/each}
@@ -326,6 +334,31 @@
 				{#if !loaded}
 					<p class="text-sm text-muted-foreground">Loading…</p>
 				{:else if tab === 'general'}
+					<p class="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+						Account
+					</p>
+					<div class="flex items-start justify-between gap-4 border-b py-3">
+						<div class="min-w-0">
+							<div class="font-medium">Import session from browser</div>
+							<p class="mt-0.5 text-sm text-muted-foreground">
+								Pull a YouTube Music login from Zen or Firefox if this desk is signed out.
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={async () => {
+								try {
+									await api.importBrowserCookies();
+									toast.success('Imported from your browser');
+								} catch (e) {
+									toast.error(String(e));
+								}
+							}}
+						>
+							Import
+						</Button>
+					</div>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
 							<div class="font-medium">Watch history</div>
@@ -335,12 +368,16 @@
 						</div>
 						<Switch checked={historyOn} onCheckedChange={setHistory} />
 					</div>
+
+					<p class="mt-5 mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+						Integrations
+					</p>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
 							<div class="font-medium">Discord rich presence</div>
 							<p class="mt-0.5 text-sm text-muted-foreground">
-								Show what you're listening to on your Discord profile. Needs the Discord desktop app
-								running — no login here.
+								Show what you're listening to on Discord. Needs the Discord desktop app — no login
+								here.
 							</p>
 						</div>
 						<Switch checked={discordOn} onCheckedChange={setDiscord} />
@@ -362,6 +399,10 @@
 							{lastfm.connected ? 'Disconnect' : 'Connect'}
 						</Button>
 					</div>
+
+					<p class="mt-5 mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+						Desktop
+					</p>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
 							<div class="font-medium">Close to tray</div>
@@ -428,28 +469,6 @@
 								await getCurrentWindow().setAlwaysOnTop(on);
 							}}
 						/>
-					</div>
-					<div class="flex items-start justify-between gap-4 py-3">
-						<div class="min-w-0">
-							<div class="font-medium">Import session from browser</div>
-							<p class="mt-0.5 text-sm text-muted-foreground">
-								If you already signed into YouTube Music in Zen or Firefox, pull that session here.
-							</p>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							onclick={async () => {
-								try {
-									await api.importBrowserCookies();
-									toast.success('Imported from your browser');
-								} catch (e) {
-									toast.error(String(e));
-								}
-							}}
-						>
-							Import
-						</Button>
 					</div>
 				{:else if tab === 'themes'}
 					<div class="flex items-center justify-between gap-8 border-b py-3">

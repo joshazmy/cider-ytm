@@ -15,7 +15,6 @@
 		InfinityIcon,
 		MinimizeScreenIcon,
 		Moon02Icon,
-		MusicNote01Icon,
 		ArrowUp01Icon,
 		ArrowDown01Icon,
 		HeadphonesIcon
@@ -38,7 +37,7 @@
 		togglePlayUi
 	} from '$lib/player.svelte';
 	import { transportGlyph } from '$lib/transport';
-	import { isLetterTile, thumb } from '$lib/thumb';
+	import CoverArt from './CoverArt.svelte';
 	import { fmtClock, trackDurationSecs } from '$lib/clock';
 	import ArtistLine from './ArtistLine.svelte';
 	import ExplicitIcon from './ExplicitIcon.svelte';
@@ -152,13 +151,7 @@
 		goto(`/album/${encodeURIComponent(albumId)}`);
 	}
 
-	// YouTube letter tiles (and 404s from a rewritten size) must not sit in the bar as a lone "D".
-	let artFailed = $state(false);
-	const letterTile = $derived(isLetterTile(playback.now?.thumbnail));
-	$effect(() => {
-		playback.now?.videoId;
-		artFailed = false;
-	});
+
 </script>
 
 <svelte:window onkeydown={onSleepKey} onpointerdown={onSleepDoc} />
@@ -173,19 +166,12 @@
 			aria-label={np.open ? 'Close immersive' : 'Immersive player'}
 			aria-expanded={np.open}
 		>
-			{#if playback.now?.thumbnail && !artFailed && !letterTile}
-				<img
-					src={thumb(playback.now.thumbnail, 48)}
-					alt=""
-					style="max-width:none"
-					class="size-12 object-cover"
-					onerror={() => (artFailed = true)}
-				/>
-			{:else}
-				<span class="flex size-12 items-center justify-center text-muted-foreground/50">
-					<HugeiconsIcon strokeWidth={2} icon={MusicNote01Icon} class="h-4 w-4" />
-				</span>
-			{/if}
+			<CoverArt
+				url={playback.now?.thumbnail}
+				videoId={playback.now?.videoId}
+				size={48}
+				imgClass="size-12 object-cover"
+			/>
 			<span
 				class="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100"
 			>

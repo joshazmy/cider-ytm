@@ -49,6 +49,25 @@ export function hiresCandidates(url: string | undefined | null, cssPx: number): 
 	return out;
 }
 
+/** YouTube stills for a video id. Catalog art is often a yt3 letter tile; this is the real frame. */
+export function videoStills(videoId: string | undefined | null): string[] {
+	if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
+	return YTIMG_STEPS.map((name) => `https://i.ytimg.com/vi/${videoId}/${name}.jpg`);
+}
+
+/** Catalog thumb first (if it is not a letter tile), then the video still ladder. */
+export function coverCandidates(
+	url: string | undefined | null,
+	videoId: string | undefined | null,
+	cssPx: number
+): string[] {
+	const out: string[] = [];
+	for (const u of [...hiresCandidates(url, cssPx), ...videoStills(videoId)]) {
+		if (!out.includes(u)) out.push(u);
+	}
+	return out;
+}
+
 // Rewrite a Google image URL to (about) the pixel size a slot actually renders, so WebKitGTK
 // doesn't decode a 544px (or 1080p) image for a 40px row. Only lh3/yt3 googleusercontent-style
 // URLs carry the size in the URL (`=w544-h544` / `=s576` suffixes); anything else (notably
