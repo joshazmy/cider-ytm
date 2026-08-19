@@ -419,7 +419,17 @@ pub async fn get_library(state: St<'_>) -> Result<Vec<BrowseItem>, String> {
     // Signed out there is no YouTube library to ask for (the browse would come back as a sign-in
     // shell), but On Repeat is built from this machine's play history and is still real.
     let mut items = if state.it.is_logged_in() {
-        state.it.library_playlists(client).await.map_err(|e| e.to_string())?
+        match state.it.library_playlists(client).await {
+            Ok(v) => v,
+            Err(e) if e.to_string().contains("session expired") => {
+                crate::session::import_login_from_browser(state.inner().clone())
+                    .await
+                    .map_err(|_| e.to_string())?;
+                let client = metadata_client(&state)?;
+                state.it.library_playlists(client).await.map_err(|e| e.to_string())?
+            }
+            Err(e) => return Err(e.to_string()),
+        }
     } else {
         Vec::new()
     };
@@ -462,7 +472,18 @@ pub async fn get_library_songs(state: St<'_>) -> Result<PlaylistPage, String> {
         });
     }
     let client = metadata_client(&state)?;
-    state.it.library_songs(client).await.map_err(|e| e.to_string())
+    match state.it.library_songs(client).await {
+        Ok(page) => Ok(page),
+        Err(e) if e.to_string().contains("session expired") => {
+            // Cookie may have rotated in Zen since we last imported. Refresh once.
+            crate::session::import_login_from_browser(state.inner().clone())
+                .await
+                .map_err(|_| e.to_string())?;
+            let client = metadata_client(&state)?;
+            state.it.library_songs(client).await.map_err(|e| e.to_string())
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -471,7 +492,17 @@ pub async fn get_library_albums(state: St<'_>) -> Result<Vec<BrowseItem>, String
         return Ok(Vec::new());
     }
     let client = metadata_client(&state)?;
-    state.it.library_albums(client).await.map_err(|e| e.to_string())
+    match state.it.library_albums(client).await {
+        Ok(v) => Ok(v),
+        Err(e) if e.to_string().contains("session expired") => {
+            crate::session::import_login_from_browser(state.inner().clone())
+                .await
+                .map_err(|_| e.to_string())?;
+            let client = metadata_client(&state)?;
+            state.it.library_albums(client).await.map_err(|e| e.to_string())
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[tauri::command]
@@ -480,7 +511,17 @@ pub async fn get_library_artists(state: St<'_>) -> Result<Vec<BrowseItem>, Strin
         return Ok(Vec::new());
     }
     let client = metadata_client(&state)?;
-    state.it.library_artists(client).await.map_err(|e| e.to_string())
+    match state.it.library_artists(client).await {
+        Ok(v) => Ok(v),
+        Err(e) if e.to_string().contains("session expired") => {
+            crate::session::import_login_from_browser(state.inner().clone())
+                .await
+                .map_err(|_| e.to_string())?;
+            let client = metadata_client(&state)?;
+            state.it.library_artists(client).await.map_err(|e| e.to_string())
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 /// A playlist or album page. `id` is the browseId (`VL…` / `MPRE…`); Liked Songs is `VLLM`, and
@@ -515,7 +556,17 @@ pub async fn get_playlist(
     }
     let client = metadata_client(&state)?;
     let sort = sort.map(|s| (s, desc.unwrap_or(false)));
-    state.it.playlist(client, &id, sort).await.map_err(|e| e.to_string())
+    match state.it.playlist(client, &id, sort).await {
+        Ok(page) => Ok(page),
+        Err(e) if e.to_string().contains("session expired") => {
+            crate::session::import_login_from_browser(state.inner().clone())
+                .await
+                .map_err(|_| e.to_string())?;
+            let client = metadata_client(&state)?;
+            state.it.playlist(client, &id, sort).await.map_err(|e| e.to_string())
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 /// Store a sort order on a playlist, so YouTube Music and every other client show it the same way.

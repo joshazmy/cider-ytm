@@ -805,8 +805,23 @@ fn text_or_runs(v: Option<&Value>) -> Option<String> {
 /// True if a browse response is YouTube's logged-out "Sign in" empty state — which is what the
 /// server returns when the cookie has gone stale (its `__Secure-*SIDTS` cookies rotate ~hourly).
 /// The endpoints turn this into a clear "session expired" error instead of a silently-empty page.
+///
+/// A lone `signInEndpoint` is not enough: signed-in Songs / Liked / Home payloads still embed
+/// that key in chrome ("Sign in to like"). Treating any hit as expired blanked those pages
+/// while the account foot stayed signed in.
 pub(crate) fn is_signed_out(root: &Value) -> bool {
-    !find_all(root, "signInEndpoint").is_empty()
+    if find_all(root, "signInEndpoint").is_empty() {
+        return false;
+    }
+    let has_music = !find_all(root, "musicResponsiveListItemRenderer").is_empty()
+        || !find_all(root, "musicTwoRowItemRenderer").is_empty()
+        || !find_all(root, "musicCarouselShelfRenderer").is_empty()
+        || !find_all(root, "musicPlaylistShelfRenderer").is_empty()
+        || !find_all(root, "musicShelfRenderer").is_empty();
+    if has_music {
+        return false;
+    }
+    !find_all(root, "messageRenderer").is_empty()
 }
 
 // --- node parsers -------------------------------------------------------------------------
@@ -1342,6 +1357,23 @@ mod tests {
         // A normal playlist response has no signInEndpoint.
         let ok = json!({ "contents": { "musicPlaylistShelfRenderer": { "contents": [] } } });
         assert!(!is_signed_out(&ok));
+        // Signed-in Songs/Liked still ship a chrome signInEndpoint next to real rows.
+        let signed_in_songs = json!({
+            "contents": { "singleColumnBrowseResultsRenderer": { "tabs": [{ "tabRenderer": { "content": {
+                "sectionListRenderer": { "contents": [
+                    { "musicPlaylistShelfRenderer": { "contents": [
+                        { "musicResponsiveListItemRenderer": { "playlistItemData": { "videoId": "abc" } } }
+                    ] } }
+                ] }
+            } } }] } },
+            "header": { "chipCloudChipRenderer": {
+                "navigationEndpoint": { "signInEndpoint": { "hack": true } }
+            } }
+        });
+        assert!(
+            !is_signed_out(&signed_in_songs),
+            "chrome signInEndpoint must not expire a page that already has tracks"
+        );
     }
 
     #[test]
