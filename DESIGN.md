@@ -27,6 +27,83 @@ Live Cider on this machine is a **three-column catalog desk** (sidebar · number
 | A11y | aria-labels on transport | source | **preserve**; add body Sign-in control |
 | Integrations | Last.fm/Discord in Settings | Last.fm keys missing on host | **preserve** placement; keys are ops not UI |
 
+## Approved responsive sidebar recovery (2026-08-20)
+
+Mode: **redesign-preserve**. This addendum repairs one measured layout regression without changing
+the Workbench macrostructure, factory rose palette, typography, density, motion, routes, data, or
+playback behavior. The pre-change real Tauri window at 900×620 rendered the 240px wide sidebar even
+though the supported minimum and surrounding layout expect the 64px rail.
+
+### Breakpoint and state contract
+
+- Below Tailwind `lg` (0–1023px), the sidebar is exactly 64px (`w-16`) regardless of the stored
+  large-screen preference. Search, primary navigation, Settings, and Account remain available as
+  centered icon controls with their existing accessible names and tooltips. Search input, text
+  labels, section headings, playlists, and the account-foot identity are hidden.
+- At and above `lg` (1024px+), an uncollapsed sidebar is exactly 240px (`w-60`): search input,
+  Library heading, navigation labels, playlist tree, Settings label, and account-foot identity are
+  visible. Manual collapse yields the same 64px icon rail.
+- Automatic narrow layout is CSS-only. It never calls `toggleSidebar`, writes storage, or changes
+  `ui.sidebarCollapsed`; therefore an expanded or collapsed wide-screen preference survives
+  1100→900→1100 resizing.
+- The collapse/expand button remains a large-screen control. The narrow rail does not show a
+  control whose effect cannot become visible at that width.
+- Sidebar width and main content must fit the viewport without horizontal page overflow. The
+  account trigger and its menu anchor must stay fully on-screen at every accepted width.
+
+| Surface | Narrow, <1024px | Wide expanded, ≥1024px | Wide manually collapsed |
+|---|---|---|---|
+| Search | icon link | input + submit affordance | icon link |
+| Library tools | icons centered; collapse hidden | heading + collapse control | icons centered; expand visible |
+| Primary nav | icon rows centered | icon + label rows left-aligned | icon rows centered |
+| Playlists | hidden | visible and scrollable | hidden |
+| Settings | centered icon | icon + label, left-aligned | centered icon |
+| Account | compact icon trigger | full account-foot trigger | compact icon trigger |
+
+### Interaction, accessibility, and complete states
+
+- Existing links, buttons, routes, titles, and accessible names are preserved. Keyboard Tab reaches
+  every visible sidebar control in visual order; Enter/Space retains native activation; focus-visible
+  treatment remains visible and un-clipped. Hidden variants must not remain in the accessibility or
+  tab order.
+- Active navigation keeps its white plate and readable contrast. Default, hover, focus-visible, and
+  active states use the existing sidebar tokens. Disabled/loading/error/success presentations are
+  unchanged and only apply where an existing async control already owns them; the responsive shell
+  introduces no fake state or swallowed failure.
+- The account menu must open from the compact trigger at 900px and from the full foot at 1100px,
+  remain within the window, close normally, and expose the same account actions in both variants.
+- Reduced-motion behavior is unchanged. Resizing adds no animation listener or transition; it uses
+  the existing CSS breakpoint only.
+
+### Preservation audit
+
+| Area | Evidence | Decision |
+|---|---|---|
+| Routes and navigation | Existing SvelteKit links and `isActive` mapping | preserve destinations and selection |
+| Forms | Existing search form and suggestion panel | preserve semantics; switch only responsive visibility |
+| Auth/account | Existing `AccountMenu` icon and `foot` variants | reuse both; no session or sign-in change |
+| Integrations | Tauri, Last.fm, Discord, MPRIS, YTM | untouched |
+| Analytics / SEO | N/A for this local desktop slice | N/A |
+| Accessibility | Existing labels, titles, native controls | preserve; prevent hidden duplicate controls |
+| Localization | Current literals are not localized | no new user-facing copy |
+| Responsive layout | Source comments, consumers, prior `lg:` pattern, 900px minimum | fix 64/240px regression |
+| Performance | CSS utilities only | no listener, store, dependency, or runtime work |
+| Adjacent surfaces | catalog, rail, player, overlays, dialogs | preserve; gain the intended 176px at narrow widths |
+
+### Acceptance evidence and taste audit
+
+- Inspect the real Tauri WebView at 900×620, 1023×620, 1024×620, and 1100×860. Record Hyprland
+  window sizes plus fresh accessibility states/actions and screenshots. Screenshots supplement, not
+  replace, working navigation, account-menu, queue/now-playing, and collapse/expand interactions.
+- At 900 and 1023, prove the 64px icon rail, hidden wide-only content, reachable account trigger,
+  and no horizontal overflow. At 1024 and 1100, prove 240px expanded width and complete wide content.
+  At 1100, prove manual collapse/expand and both narrow→wide persistence paths.
+- Preserve rose accent restraint, paper/ink contrast, IBM Plex Sans chrome, 4pt rhythm, 58px track
+  pitch, 1100px now-playing rail, and restrained motion. The repair must not introduce a new card,
+  gradient, shadow, font, accent, radius, breakpoint, copy style, or animation.
+- Do not add Playwright, browser fixtures, dependencies, lockfile/CI changes, JavaScript media-query
+  state, native code, unrelated accessibility polish, or any other UI redesign in this slice.
+
 ## Intentional exceptions
 - Do not self-install updates. Open `https://github.com/joshazmy/cider-ytm/releases`.
 - Do not invent BPM or genre chips (no field in `SongItem`). Honest rail: source playlist, N of M, like, explicit.
