@@ -118,22 +118,22 @@
 </script>
 
 <aside
-	class="flex h-full shrink-0 flex-col border-r border-white/10 bg-transparent px-1.5 py-2 text-sidebar-foreground {collapsed
-		? 'w-16'
-		: 'w-60'}"
+	class="flex h-full w-16 shrink-0 flex-col border-r border-white/10 bg-transparent px-1.5 py-2 text-sidebar-foreground {wide(
+		'lg:w-60'
+	)}"
 >
 	<!-- Search sits first, like the live desktop rail. Icon-only on the 64px column. -->
 	<a
 		href="/search"
 		title="Search"
-		class="mx-auto flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground {collapsed
-			? ''
-			: 'hidden'} {page.url.pathname.startsWith('/search') ? 'text-foreground' : ''}"
+		class="mx-auto flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground {wide(
+			'lg:hidden'
+		)} {page.url.pathname.startsWith('/search') ? 'text-foreground' : ''}"
 	>
 		<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-4 w-4" />
 	</a>
 	<form
-		class="relative mx-0.5 hidden {wide('block')}"
+		class="relative mx-0.5 hidden {wide('lg:block')}"
 		onsubmit={(e) => {
 			e.preventDefault();
 			submitSearch();
@@ -159,7 +159,7 @@
 	</form>
 
 	<!-- Tools sit on the Library label when wide; stack under search on the icon rail. -->
-	<div class="mt-1 flex flex-col items-center gap-0.5 {collapsed ? '' : 'hidden'}">
+	<div class="mt-1 flex flex-col items-center gap-0.5 {collapsed ? '' : 'lg:hidden'}">
 		<Button
 			variant="ghost"
 			size="icon-sm"
@@ -177,7 +177,7 @@
 		</Button>
 	</div>
 
-	<div class="mt-2 hidden items-center justify-between px-2 {wide('flex')}">
+	<div class="mt-2 hidden items-center justify-between px-2 {wide('lg:flex')}">
 		<span class="text-[11px] text-muted-foreground">Library</span>
 		<Button
 			variant="ghost"
@@ -201,12 +201,12 @@
 			<a
 				href={n.href}
 				title={n.label}
-				class="{navRow} {wide('justify-start')} {isActive(n.href)
+				class="{navRow} {wide('lg:justify-start')} {isActive(n.href)
 					? 'bg-white/[0.10] text-foreground'
 					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
 				<HugeiconsIcon icon={n.icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
-				<span class="hidden {wide('inline')}">{n.label}</span>
+				<span class="hidden {wide('lg:inline')}">{n.label}</span>
 			</a>
 		{/each}
 	</nav>
@@ -214,7 +214,7 @@
 	<!-- Playlists. Hidden on the icon rail (needs labels; matches YTM's collapsed rail). flex-1 lets
 	     the list fill the space and scroll. Signed out the section still appears once there is
 	     something in it: On Repeat, or a playlist saved on this machine. -->
-	<div class="mt-2 hidden min-h-0 flex-1 flex-col {wide('flex')}">
+	<div class="mt-2 hidden min-h-0 flex-1 flex-col {wide('lg:flex')}">
 		<span class="px-2 pb-0.5 text-[11px] text-muted-foreground">Playlists</span>
 			<!-- Creating one is a YouTube write action, so it needs an account. -->
 			{#if auth.account?.signedIn}
@@ -332,16 +332,24 @@
 			onclick={() => (ui.settingsOpen = true)}
 			title="Settings"
 			class="{navRow} text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground {wide(
-				'justify-start'
+				'lg:justify-start'
 			)}"
 		>
 			<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
-			<span class="hidden {wide('inline')}">Settings</span>
+			<span class="hidden {wide('lg:inline')}">Settings</span>
 		</button>
-		{#if !collapsed}
+		<!-- `foot` opens above and left-aligned, which keeps the menu inside the window from the
+		     bottom-left rail. The compact wrapper hides the foot-only label/chevron without changing
+		     that safe anchor. When expanded, it gives way to the complete foot at lg. -->
+		<div
+			class="flex h-8 w-8 self-center rounded-md [&>button]:justify-center [&>button]:px-0 [&>button>span]:hidden [&>button>svg:last-child]:hidden {wide(
+				'lg:hidden'
+			)}"
+		>
 			<AccountMenu foot />
-		{:else}
-			<AccountMenu />
-		{/if}
+		</div>
+		<div class="hidden {wide('lg:block')}">
+			<AccountMenu foot />
+		</div>
 	</div>
 </aside>
