@@ -15,16 +15,19 @@ with the stored large-screen manual collapse preference preserved. Prove the fin
 through the real Tauri WebView, source-blind desktop acceptance, and immutable-range review.
 
 ## Current state
-The approved Design addendum and scoped `Sidebar.svelte` implementation are committed. Locked
-frontend dependencies were installed offline in the worktree without changing the lockfile. The
-feature-worktree Vite server is running on 127.0.0.1:5183 and the existing same-base Tauri debug
-binary is attached to it. Source-aware native preflight passed at 900, 1023, 1024, and 1100px;
-fresh source-blind acceptance and immutable review remain.
+The approved Design addendum and scoped `Sidebar.svelte` implementation are committed. An initial
+immutable review caught the compact account menu using the wrong titlebar anchor; the implementation
+now keeps compact controls icon-only while using the existing bottom-left/above `foot` anchor. Locked
+frontend dependencies were installed offline without changing the lockfile. The feature-worktree
+Vite server and existing same-base Tauri debug binary are running. Source-aware native preflight
+passed at 900, 1023, 1024, and 1100px; fresh source-blind acceptance and repeat immutable review remain.
 
 ## Decisions
 - Use CSS breakpoint utilities only, so automatic narrow layout cannot overwrite persisted
   `ui.sidebarCollapsed` state.
 - Reuse both existing `AccountMenu` variants: compact below `lg`, foot at/above `lg`.
+- Use the existing `foot` placement for compact sidebar account triggers too; wrapper selectors hide
+  only the label/chevron so the popup opens above and inside the left viewport edge.
 - Do not add Playwright, fixtures, dependencies, CI, native changes, or unrelated UI polish.
 - Park locally after READY; GitHub push/PR/merge/deploy are not authorized.
 
@@ -47,12 +50,16 @@ fresh source-blind acceptance and immutable review remain.
   no Collapse control; 1024×620 exposed Collapse and wide Playlists. At 1100×860, manual collapse
   exposed Expand, remained collapsed after 900→1100, then expansion remained expanded after the
   same resize cycle.
+- Review-fix preflight at 900×620: compact account trigger opened an accessible menu with Close and
+  account actions; compositor screenshot confirmed the full 288px panel remained above and inside
+  the window. The menu then closed through its labeled action.
 
 ## Git state
 - Branch: `task/restore-responsive-sidebar-and-verify-real-desktop-journey`
-- HEAD SHA: product tip `d0df3bd`; the handoff-only commit containing this record follows it
+- HEAD SHA: `dc46416` before the review correction; the commit containing this record adds only the
+  scoped compact-account anchor correction plus this handoff update
 - Base SHA (review boundary): `824f6cfa0e2db51c57fd9aaa46dddd4bea8b353a`  <!-- also in .brain/ten-star/base-sha -->
-- Tree: clean after the handoff commit · Commits since base: 3
+- Tree: clean after the correction commit · Commits since base: 4
 - Pushed: NO — local park explicitly approved; GitHub delivery not authorized
 - Reviewed HEAD: pending immutable Check
 

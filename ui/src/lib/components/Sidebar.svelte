@@ -338,15 +338,18 @@
 			<HugeiconsIcon icon={Settings01Icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
 			<span class="hidden {wide('lg:inline')}">Settings</span>
 		</button>
-		{#if collapsed}
-			<AccountMenu />
-		{:else}
-			<div class="flex h-8 items-center justify-center lg:hidden">
-				<AccountMenu />
-			</div>
-			<div class="hidden lg:block">
-				<AccountMenu foot />
-			</div>
-		{/if}
+		<!-- `foot` opens above and left-aligned, which keeps the menu inside the window from the
+		     bottom-left rail. The compact wrapper hides the foot-only label/chevron without changing
+		     that safe anchor. When expanded, it gives way to the complete foot at lg. -->
+		<div
+			class="flex h-8 w-8 self-center rounded-md [&>button]:justify-center [&>button]:px-0 [&>button>span]:hidden [&>button>svg:last-child]:hidden {wide(
+				'lg:hidden'
+			)}"
+		>
+			<AccountMenu foot />
+		</div>
+		<div class="hidden {wide('lg:block')}">
+			<AccountMenu foot />
+		</div>
 	</div>
 </aside>
