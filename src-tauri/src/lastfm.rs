@@ -603,7 +603,9 @@ mod tests {
         }
         assert_eq!(out.iter().filter(|p| p.starts_with("https://")).count(), 1);
         assert!(out.iter().any(|p| p == url));
-        assert!(!out.iter().any(|p| p.contains("music.youtube.com") && !p.contains("accounts.google.com")));
+        assert!(!out
+            .iter()
+            .any(|p| p.contains("music.youtube.com") && !p.contains("accounts.google.com")));
     }
 
     #[test]

@@ -247,10 +247,7 @@ pub async fn set_setting(
         crate::state::write_desk_profile(profile);
     }
     if key == "eq_preset" {
-        state
-            .player
-            .set_eq(player::EqPreset::parse(&value))
-            .map_err(|e| e.to_string())?;
+        state.player.set_eq(player::EqPreset::parse(&value)).map_err(|e| e.to_string())?;
     }
     // Registers/removes the login autostart entry on toggle; the OS persists it from there.
     // ponytail: no startup re-sync against the OS state — add reconciliation only if drift is
@@ -997,9 +994,7 @@ pub(crate) fn is_browser_url(url: &str) -> bool {
     if url.contains([' ', '\n', '\t', ';', '`', '$', '"', '\'']) {
         return false;
     }
-    let rest = url
-        .strip_prefix("https://")
-        .or_else(|| url.strip_prefix("http://"));
+    let rest = url.strip_prefix("https://").or_else(|| url.strip_prefix("http://"));
     let Some(rest) = rest else { return false };
     let host = rest.split(['/', '?', '#']).next().unwrap_or("");
     host.contains('.') || host.starts_with("127.0.0.1") || host.starts_with('[')

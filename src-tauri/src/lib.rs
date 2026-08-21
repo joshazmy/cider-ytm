@@ -224,7 +224,8 @@ pub fn run() {
             let _ = player.set_speed(state::saved_speed(&db));
             let _ = player.set_pitch(state::saved_semitones(&db));
             let _ = player.set_profile(state::saved_profile(&db));
-            let _ = player.set_eq(EqPreset::parse(&db.get_setting("eq_preset").unwrap_or_default()));
+            let _ =
+                player.set_eq(EqPreset::parse(&db.get_setting("eq_preset").unwrap_or_default()));
             let events = player.take_events().expect("player events");
 
             // Phase 2 extraction stack: cipher + PoToken hidden webviews behind the orchestrator.

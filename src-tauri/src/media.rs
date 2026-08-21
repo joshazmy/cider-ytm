@@ -27,7 +27,10 @@ enum MediaUpdate {
         duration: Option<f64>,
     },
     Duration(f64),
-    Playback { playing: bool, pos: f64 },
+    Playback {
+        playing: bool,
+        pos: f64,
+    },
 }
 
 /// App-side handle to the media-controls thread. Cheap to clone-send into. `None` when the OS

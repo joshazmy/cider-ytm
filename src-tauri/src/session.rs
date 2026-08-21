@@ -272,11 +272,7 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
         let mut stmt = conn.prepare(sql).ok()?;
         let rows = stmt
             .query_map([], |row| {
-                Ok((
-                    row.get::<_, String>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, String>(2)?,
-                ))
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
             })
             .ok()?;
         // name → (host rank, value). music.youtube.com beats .youtube.com if both exist.
@@ -308,12 +304,7 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
             cookies = jar.len(),
             "imported unpartitioned youtube cookies"
         );
-        Some(
-            jar.into_iter()
-                .map(|(k, (_, v))| format!("{k}={v}"))
-                .collect::<Vec<_>>()
-                .join("; "),
-        )
+        Some(jar.into_iter().map(|(k, (_, v))| format!("{k}={v}")).collect::<Vec<_>>().join("; "))
     })();
     let _ = std::fs::remove_file(&tmp);
     let _ = std::fs::remove_file(&tmp_wal);
@@ -400,10 +391,7 @@ mod tests {
             return;
         }
         let cookie = import_youtube_cookies().expect("zen youtube SAPISID should import");
-        assert!(
-            innertube::cookie_sapisid(&cookie).is_some(),
-            "imported header must carry SAPISID"
-        );
+        assert!(innertube::cookie_sapisid(&cookie).is_some(), "imported header must carry SAPISID");
         assert!(
             cookie.len() < 8_192,
             "cookie header must stay under typical HTTP limits, got {}",

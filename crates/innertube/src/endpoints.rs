@@ -332,11 +332,7 @@ impl InnerTube {
         page.title = Some("Songs".into());
         page.owned = false;
         page.sort_menu = None;
-        if page
-            .items
-            .first()
-            .is_some_and(|s| s.video_id.is_empty())
-        {
+        if page.items.first().is_some_and(|s| s.video_id.is_empty()) {
             page.items.remove(0);
         }
         Ok(page)
