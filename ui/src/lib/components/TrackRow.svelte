@@ -78,23 +78,13 @@
 		!compact && !hideRating && rated !== 'indifferent' && !api.isLocalId(song.video_id)
 	);
 
-	// The whole row is a play target (role="button"), so mirror native button keyboard activation.
-	// Only when the key lands on the row itself — keydowns bubble up from nested interactive
-	// elements (⋯ menu, artist link), and hijacking those would play the row instead.
-	function onKey(e: KeyboardEvent) {
-		if (e.target !== e.currentTarget) return;
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			onplay();
-		}
-	}
 </script>
 
 <!-- Both rating buttons, so they can't drift apart. `icon` is a constant per call site, not a
      reactive ternary, which is the only way HugeiconsIcon takes it (it freezes at mount). -->
 {#snippet rateButton(icon: IconSvgElement, want: 'like' | 'dislike', label: string)}
-	<button
-		class="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
+		<button
+			class="desk-focus pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
 		aria-label={rated === want ? 'Remove rating' : label}
 		aria-pressed={rated === want}
 		onclick={(e) => {
@@ -119,17 +109,22 @@
      never has more than 15 rows to skip. @container: the artist column hides when this row is
      narrower than 28rem (queue panel, squeezed playlist), not when the window is. -->
 <div
-	role="button"
-	tabindex="0"
-	onclick={onplay}
-	onkeydown={onKey}
-	aria-label={guestAdd ? `Add ${song.title} to the session queue` : `Play ${song.title}`}
-	class="@container group flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-white/[0.08] {compact
+	class="@container group relative flex w-full items-center gap-2.5 rounded-lg px-2 transition-colors hover:bg-white/[0.08] has-[button:focus-visible]:bg-white/[0.08] {compact
 		? 'h-12'
 		: 'h-[54px] [content-visibility:auto] [contain-intrinsic-size:auto_3.375rem]'} {active
 		? 'bg-white/[0.10]'
 		: ''}"
 >
+	<!-- A native play button is a sibling of every artist/rating/menu action. The visual row is
+	     pointer-transparent except for those explicit actions, so there are no interactive descendants
+	     inside an ARIA button and a click anywhere else still activates playback. -->
+	<button
+		type="button"
+		class="desk-focus absolute inset-0 z-0 rounded-lg"
+		onclick={onplay}
+		aria-label={guestAdd ? `Add ${song.title} to the session queue` : `Play ${song.title}`}
+	></button>
+	<div class="pointer-events-none contents">
 	{#if index !== undefined}
 		<span class="relative w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
 			<span class={active ? 'opacity-0' : 'group-hover:opacity-0'}>{index + 1}</span>
@@ -177,7 +172,7 @@
 					<span class="truncate">{song.album}</span>
 					<span class="shrink-0">·</span>
 				{/if}
-				<ArtistLine runs={song.artist_runs} text={song.artists} />
+					<ArtistLine runs={song.artist_runs} text={song.artists} class="pointer-events-auto relative z-10" />
 				{#if duration}
 					<span class="shrink-0">· {duration}</span>
 				{/if}
@@ -186,10 +181,10 @@
 			<div class="truncate text-[11px] leading-[14px] text-muted-foreground">{song.album}</div>
 		{:else}
 			<!-- No album: keep the artist under the title when the wide column is hidden. -->
-			<ArtistLine
-				runs={song.artist_runs}
-				text={song.artists}
-				class="block text-[11px] leading-[14px] text-muted-foreground @md:hidden"
+				<ArtistLine
+					runs={song.artist_runs}
+					text={song.artists}
+					class="pointer-events-auto relative z-10 block text-[11px] leading-[14px] text-muted-foreground @md:hidden"
 			/>
 		{/if}
 	</div>
@@ -199,7 +194,7 @@
 			<ArtistLine
 				runs={song.artist_runs}
 				text={song.artists}
-				class="block text-sm text-muted-foreground"
+				class="pointer-events-auto relative z-10 block text-sm text-muted-foreground"
 			/>
 		</div>
 	{/if}
@@ -213,15 +208,15 @@
 		</div>
 	{/if}
 
-	<div class="flex shrink-0 items-center {compact ? 'gap-0.5' : 'gap-2'}">
+	<div class="relative z-10 flex shrink-0 items-center {compact ? 'gap-0.5' : 'gap-2'}">
 		<!-- Always on, unlike the thumbs beside it: this is a property of the song, not an action,
 		     so hiding it until the pointer arrives would be hiding half of what it's for. -->
 		{#if song.explicit && !hideRating}
 			<ExplicitIcon class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
 		{/if}
 		{#if !compact && !hideRating && !api.isLocalId(song.video_id)}
-			<button
-				class="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
+				<button
+					class="desk-focus pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
 				aria-label={isLiked(song) ? 'Remove like' : 'Like'}
 				aria-pressed={isLiked(song)}
 				onclick={(e) => {
@@ -246,8 +241,8 @@
 		{/if}
 		{#if compact}
 			<!-- Persistent, not hover-only: a filled heart is state the row has to keep showing. -->
-			<button
-				class="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
+				<button
+					class="desk-focus pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent/20 hover:text-foreground"
 				aria-label={isLiked(song) ? 'Remove from liked songs' : 'Save to liked songs'}
 				aria-pressed={isLiked(song)}
 				onclick={(e) => {
@@ -266,9 +261,10 @@
 			{onAdd}
 			{onRemove}
 			{removeLabel}
-			triggerClass="cursor-pointer rounded-md p-1.5 text-muted-foreground transition hover:bg-accent/20 hover:text-foreground focus-visible:opacity-100 {compact
+			triggerClass="desk-focus pointer-events-auto flex size-11 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-accent/20 hover:text-foreground focus-visible:opacity-100 {compact
 				? ''
 				: 'opacity-0 group-hover:opacity-100'}"
-		/>
+			/>
+		</div>
 	</div>
 </div>

@@ -17,7 +17,9 @@
 		Moon02Icon,
 		ArrowUp01Icon,
 		ArrowDown01Icon,
-		HeadphonesIcon
+		HeadphonesIcon,
+		MoreHorizontalIcon,
+		MusicNote01Icon
 	} from '@hugeicons/core-free-icons';
 	import { Button } from '$lib/components/ui/button';
 	import * as api from '$lib/api';
@@ -45,15 +47,19 @@
 	import TrackMenu from './TrackMenu.svelte';
 
 	let {
-		onToggleQueue,
-		queueOpen,
-		onToggleLyrics,
-		lyricsOpen
-	}: {
-		onToggleQueue: () => void;
-		queueOpen: boolean;
-		onToggleLyrics: () => void;
-		lyricsOpen: boolean;
+			onToggleQueue,
+			queueOpen,
+			queueControls,
+			onToggleLyrics,
+			lyricsOpen,
+			lyricsControls
+		}: {
+			onToggleQueue: (trigger: HTMLElement) => void;
+			queueOpen: boolean;
+			queueControls: string;
+			onToggleLyrics: (trigger: HTMLElement) => void;
+			lyricsOpen: boolean;
+			lyricsControls: string;
 	} = $props();
 
 	// Pop the star once when the user favourites (not when un-favouriting). Reset on animation end
@@ -80,14 +86,20 @@
 			: ''
 	);
 	let sleepOpen = $state(false);
-	function onSleepKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape' || !sleepOpen) return;
+	let moreOpen = $state(false);
+	function onAuxKey(e: KeyboardEvent) {
+		if (e.key !== 'Escape' || (!sleepOpen && !moreOpen)) return;
+		// A TrackMenu is portalled to <body>; let that topmost child consume the first Escape and
+		// restore focus before the player's overflow layer is eligible to close.
+		if (moreOpen && document.querySelector('[data-track-menu]')) return;
 		e.preventDefault();
 		e.stopPropagation();
 		sleepOpen = false;
+		moreOpen = false;
 	}
-	function onSleepDoc(e: PointerEvent) {
+	function onAuxDoc(e: PointerEvent) {
 		if (!(e.target as HTMLElement).closest('[data-sleep]')) sleepOpen = false;
+		if (!(e.target as HTMLElement).closest('[data-player-more]')) moreOpen = false;
 	}
 
 	let justLiked = $state(false);
@@ -154,9 +166,10 @@
 
 </script>
 
-<svelte:window onkeydown={onSleepKey} onpointerdown={onSleepDoc} />
+<svelte:window onkeydown={onAuxKey} onpointerdown={onAuxDoc} />
 <footer
-	class="desk-glass mx-2 mb-2 flex h-16 items-center gap-3 px-3"
+	aria-label="Player"
+	class="desk-glass flex h-full w-full items-center gap-3 px-3"
 >
 	<div class="flex min-w-0 flex-1 items-center gap-2.5">
 		<button
@@ -224,25 +237,28 @@
 					{/if}
 				{/if}
 			</div>
-			<input
-				type="range"
-				class="range mt-1 h-3 w-full"
-				style="--pct:{durationSecs ? (shownPosition / durationSecs) * 100 : 0}%"
-				min="0"
-				max={durationSecs || 0}
-				value={shownPosition}
-				oninput={onSeekInput}
-				onchange={onSeekCommit}
-				aria-label="Seek"
-			/>
+				<div class="mt-1 flex min-w-0 items-center gap-2">
+					<input
+						type="range"
+						class="range min-w-0 flex-1"
+						style="--pct:{durationSecs ? (shownPosition / durationSecs) * 100 : 0}%"
+						min="0"
+						max={durationSecs || 0}
+						value={shownPosition}
+						oninput={onSeekInput}
+						onchange={onSeekCommit}
+						aria-label="Seek"
+					/>
+					<span data-player-time class="desk-player-compact-only shrink-0 text-[10px] tabular-nums text-muted-foreground">
+						{fmtClock(shownPosition)} / {fmtClock(durationSecs)}
+					</span>
+				</div>
 		</div>
 	</div>
 
-	<div
-		class="flex shrink-0 items-center gap-0.5 [&_button]:focus-visible:ring-0"
-	>
+	<div class="flex shrink-0 items-center gap-0.5">
 		{#if playback.now && !api.isLocalId(playback.now.videoId)}
-			<Button variant="ghost" size="icon-sm" onclick={toggleLike} aria-label="Like">
+			<Button variant="ghost" size="icon-sm" class="desk-player-wide-only" onclick={toggleLike} aria-label="Like">
 				<span class="inline-flex" class:animate-heart-pop={justLiked} onanimationend={() => (justLiked = false)}>
 					<HugeiconsIcon strokeWidth={2}
 						icon={StarIcon}
@@ -254,18 +270,19 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
+			class="desk-player-wide-only"
 			onclick={() => api.toggleShuffle()}
 			aria-label="Shuffle"
 			aria-pressed={shuffleOn}
 		>
 			<HugeiconsIcon strokeWidth={2} icon={ShuffleIcon} class="h-4 w-4 {shuffleOn ? 'text-primary' : 'text-muted-foreground'}" />
 		</Button>
-		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.prevTrack()} aria-label="Previous">
+		<Button variant="ghost" size="icon-sm" class="size-11 text-muted-foreground" onclick={() => api.prevTrack()} aria-label="Previous">
 			<HugeiconsIcon strokeWidth={2} icon={PreviousIcon} class="h-4 w-4" />
 		</Button>
 		<button
 			type="button"
-			class="desk-focus flex size-9 items-center justify-center rounded-full bg-foreground text-background hover:bg-foreground/90"
+			class="desk-focus flex size-11 items-center justify-center rounded-full bg-foreground text-background hover:bg-foreground/90"
 			onclick={() => togglePlayUi()}
 			aria-label={transportGlyph(playback.paused) === 'play' ? 'Play' : 'Pause'}
 		>
@@ -280,12 +297,13 @@
 				</svg>
 			{/if}
 		</button>
-		<Button variant="ghost" size="icon-sm" class="text-muted-foreground" onclick={() => api.nextTrack()} aria-label="Next">
+		<Button variant="ghost" size="icon-sm" class="size-11 text-muted-foreground" onclick={() => api.nextTrack()} aria-label="Next">
 			<HugeiconsIcon strokeWidth={2} icon={NextIcon} class="h-4 w-4" />
 		</Button>
 		<Button
 			variant="ghost"
 			size="icon-sm"
+			class="desk-player-wide-only"
 			onclick={cycleRepeat}
 			aria-label="Repeat: {repeat}"
 			aria-pressed={repeat !== 'off'}
@@ -300,13 +318,15 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class={lyricsOpen ? 'text-primary' : 'text-muted-foreground'}
-			onclick={onToggleLyrics}
+			class="size-11 {lyricsOpen ? 'text-primary' : 'text-muted-foreground'}"
+			onclick={(event) => onToggleLyrics(event.currentTarget)}
 			aria-label="Toggle lyrics"
+			aria-expanded={lyricsOpen}
+			aria-controls={lyricsControls}
 		>
 			<HugeiconsIcon strokeWidth={2} icon={Mic01Icon} class="h-4 w-4" />
 		</Button>
-		<span class="ml-1 w-[4.5rem] text-[11px] tabular-nums text-muted-foreground">
+		<span class="desk-player-wide-only ml-1 w-[4.5rem] text-[11px] tabular-nums text-muted-foreground">
 			{fmtClock(shownPosition)} / {fmtClock(durationSecs)}
 		</span>
 	</div>
@@ -317,7 +337,7 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class="text-muted-foreground"
+			class="size-11 text-muted-foreground"
 			onclick={toggleMute}
 			aria-label={playback.volume === 0 ? 'Unmute' : 'Mute'}
 		>
@@ -330,7 +350,7 @@
 		</Button>
 		<input
 			type="range"
-			class="range w-20"
+			class="range desk-player-wide-only w-20"
 			style="--pct:{playback.volume}%"
 			min="0"
 			max="100"
@@ -342,17 +362,17 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class={desk.audioProfile === 'dimisco' ? 'text-primary' : 'text-muted-foreground'}
+			class="desk-player-wide-only {desk.audioProfile === 'dimisco' ? 'text-primary' : 'text-muted-foreground'}"
 			onclick={() => toggleAudioProfile()}
 			aria-label={desk.audioProfile === 'dimisco' ? 'DimiSco spatial' : 'Dry stereo'}
 			aria-pressed={desk.audioProfile === 'dimisco'}
 		>
 			<HugeiconsIcon strokeWidth={2} icon={HeadphonesIcon} class="h-4 w-4" />
 		</Button>
-		<div class="relative mr-1" data-sleep>
+		<div class="desk-player-wide-only relative mr-1" data-sleep>
 			<button
 				type="button"
-				class="desk-focus inline-flex h-8 items-center gap-1 rounded-full px-2 text-[11px] tabular-nums {sleepLeftShort
+				class="desk-focus inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2 text-[11px] tabular-nums {sleepLeftShort
 					? 'bg-white/10 text-foreground'
 					: 'text-muted-foreground hover:bg-white/8 hover:text-foreground'}"
 				onclick={() => (sleepOpen = !sleepOpen)}
@@ -363,7 +383,7 @@
 				{#if sleepLeftShort}{sleepLeftShort}{/if}
 			</button>
 			{#if sleepOpen}
-				<div class="absolute right-0 bottom-9 z-30 min-w-[10rem] rounded-lg border bg-popover p-1.5 shadow-md">
+				<div class="absolute right-0 bottom-12 z-30 min-w-[10rem] rounded-lg border bg-popover p-1.5 shadow-md">
 					{#if sleepEnd}
 						<p class="px-2 pb-1 text-[11px] text-muted-foreground">Until {sleepEnd}</p>
 					{/if}
@@ -371,7 +391,7 @@
 						{#each [0, 15, 30, 45, 60] as m (m)}
 							<button
 								type="button"
-								class="rounded-md px-2 py-1 text-[11px] hover:bg-muted"
+								class="desk-focus flex h-11 min-w-11 items-center justify-center rounded-md px-2 text-[11px] hover:bg-muted"
 								onclick={() => {
 									void setSleepMins(m);
 									sleepOpen = false;
@@ -382,25 +402,99 @@
 				</div>
 			{/if}
 		</div>
-		<Button variant="ghost" size="icon-sm" onclick={openMiniPlayer} aria-label="Mini player">
+		<Button variant="ghost" size="icon-sm" class="desk-player-wide-only" onclick={openMiniPlayer} aria-label="Mini player">
 			<HugeiconsIcon strokeWidth={2} icon={MinimizeScreenIcon} class="h-4 w-4" />
 		</Button>
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class={queueOpen ? 'text-primary' : 'text-muted-foreground'}
-			onclick={onToggleQueue}
+			class="size-11 {queueOpen ? 'text-primary' : 'text-muted-foreground'}"
+			onclick={(event) => onToggleQueue(event.currentTarget)}
 			aria-label="Toggle queue"
+			aria-expanded={queueOpen}
+			aria-controls={queueControls}
 		>
 			<HugeiconsIcon strokeWidth={2} icon={Queue01Icon} class="h-4 w-4" />
 		</Button>
-		{#if currentSong}
-			<TrackMenu
-				song={currentSong}
-				linksOnly
-				onAdd={() => openAddToPlaylist(currentSong!)}
-				triggerClass="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-			/>
-		{/if}
+		<div class="desk-player-compact-only relative" data-player-more>
+			<button
+				type="button"
+				class="desk-focus flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/8 hover:text-foreground"
+				onclick={() => (moreOpen = !moreOpen)}
+				aria-label="More player controls"
+				aria-expanded={moreOpen}
+			>
+				<HugeiconsIcon icon={MoreHorizontalIcon} class="size-4" />
+			</button>
+				{#if moreOpen}
+					<div data-player-more-menu class="absolute right-0 bottom-14 z-50 max-h-[min(26rem,calc(100vh-7.5rem))] w-56 overflow-y-auto overscroll-contain rounded-xl border border-white/10 bg-popover p-1.5 text-sm shadow-2xl">
+						<label class="flex h-11 items-center gap-3 px-3 text-muted-foreground">
+							<HugeiconsIcon icon={VolumeHighIcon} class="size-4 shrink-0" />
+							<span class="sr-only">Volume</span>
+							<input
+								type="range"
+								class="range min-w-0 flex-1"
+								style="--pct:{playback.volume}%"
+								min="0"
+								max="100"
+								value={playback.volume}
+								oninput={onVolume}
+								onchange={onVolumeCommit}
+								aria-label="Volume"
+							/>
+							<span class="w-8 text-right text-[11px] tabular-nums">{playback.volume}%</span>
+						</label>
+					{#if playback.now && !api.isLocalId(playback.now.videoId)}
+						<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={toggleLike}>
+							<HugeiconsIcon icon={StarIcon} class="size-4 {playback.rating === 'like' ? 'fill-current text-primary' : ''}" /> Like
+						</button>
+					{/if}
+					<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={() => api.toggleShuffle()} aria-pressed={shuffleOn}>
+						<HugeiconsIcon icon={ShuffleIcon} class="size-4 {shuffleOn ? 'text-primary' : ''}" /> Shuffle
+					</button>
+					<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={cycleRepeat} aria-pressed={repeat !== 'off'}>
+						<HugeiconsIcon icon={RepeatIcon} altIcon={RepeatOne01Icon} showAlt={repeat === 'one'} class="size-4 {repeat !== 'off' ? 'text-primary' : ''}" /> Repeat: {repeat}
+					</button>
+					<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={() => toggleAudioProfile()} aria-pressed={desk.audioProfile === 'dimisco'}>
+						<HugeiconsIcon icon={HeadphonesIcon} class="size-4" /> {desk.audioProfile === 'dimisco' ? 'DimiSco spatial' : 'Dry stereo'}
+					</button>
+						<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={() => { openMiniPlayer(); moreOpen = false; }}>
+							<HugeiconsIcon icon={MinimizeScreenIcon} class="size-4" /> Mini player
+						</button>
+						{#if currentSong}
+							<TrackMenu
+								song={currentSong}
+								linksOnly
+								onAdd={() => openAddToPlaylist(currentSong!)}
+								triggerText="Track actions"
+								triggerClass="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8"
+							/>
+							<button type="button" class="desk-focus flex h-11 w-full items-center gap-3 rounded-lg px-3 hover:bg-white/8" onclick={() => { openAddToPlaylist(currentSong!); moreOpen = false; }}>
+								<HugeiconsIcon icon={MusicNote01Icon} class="size-4" /> Add to playlist
+						</button>
+					{/if}
+					<div class="mt-1 border-t border-white/10 px-2 pt-2">
+						<p class="mb-1 text-[11px] text-muted-foreground">Sleep timer</p>
+						<div class="flex justify-between gap-1">
+							{#each [0, 15, 30, 45, 60] as minutes (minutes)}
+								<button type="button" class="desk-focus min-h-11 min-w-11 rounded-md px-1 text-[11px] hover:bg-white/8" onclick={() => { void setSleepMins(minutes); moreOpen = false; }}>
+									{minutes === 0 ? 'Off' : `${minutes}m`}
+								</button>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/if}
+		</div>
+		<span class="desk-player-wide-only">
+			{#if currentSong}
+				<TrackMenu
+					song={currentSong}
+					linksOnly
+					onAdd={() => openAddToPlaylist(currentSong!)}
+					triggerClass="desk-focus inline-flex size-11 cursor-pointer items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+				/>
+			{/if}
+		</span>
 	</div>
 </footer>

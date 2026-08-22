@@ -114,11 +114,12 @@
 	}
 
 	const navRow =
-		'group flex h-8 items-center justify-center gap-2 rounded-md px-2 text-[13px] transition-colors';
+		'desk-focus group relative flex h-11 items-center justify-center gap-3 rounded-lg px-2 text-[13px] transition-colors';
 </script>
 
 <aside
-	class="flex h-full w-16 shrink-0 flex-col border-r border-white/10 bg-transparent px-1.5 py-2 text-sidebar-foreground {wide(
+	aria-label="Primary navigation"
+	class="flex h-full w-16 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-2 py-2 text-sidebar-foreground {wide(
 		'lg:w-60'
 	)}"
 >
@@ -126,14 +127,14 @@
 	<a
 		href="/search"
 		title="Search"
-		class="mx-auto flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground {wide(
+		class="desk-focus mx-auto flex size-11 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground {wide(
 			'lg:hidden'
 		)} {page.url.pathname.startsWith('/search') ? 'text-foreground' : ''}"
 	>
 		<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-4 w-4" />
 	</a>
 	<form
-		class="relative mx-0.5 hidden {wide('lg:block')}"
+		class="relative mx-0.5 hidden h-11 items-center {wide('lg:flex')}"
 		onsubmit={(e) => {
 			e.preventDefault();
 			submitSearch();
@@ -146,12 +147,12 @@
 		/>
 		<SearchSuggest
 			bind:value={searchQ}
-			inputClass="h-8 rounded-lg border-0 bg-black/40 pl-7 text-[13px] ring-1 ring-white/10"
-			panelClass="left-0 w-[22rem]"
+			inputClass="h-10 rounded-lg border-0 bg-black/35 pl-8 pr-11 text-[13px] ring-1 ring-white/10"
+			panelClass="left-[calc(100%+12px)] w-[min(560px,calc(100vw-276px))] max-w-none"
 		/>
 		<button
 			type="submit"
-			class="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+			class="desk-focus absolute top-1/2 right-0 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
 			aria-label="Submit search"
 		>
 			<HugeiconsIcon icon={Search01Icon} strokeWidth={2} class="h-3.5 w-3.5" />
@@ -163,7 +164,7 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class="hidden hover:text-primary lg:inline-flex"
+			class="hidden size-11 hover:text-primary lg:inline-flex"
 			onclick={toggleSidebar}
 			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
@@ -177,12 +178,12 @@
 		</Button>
 	</div>
 
-	<div class="mt-2 hidden items-center justify-between px-2 {wide('lg:flex')}">
+	<div class="mt-1 hidden h-11 items-center justify-between px-2 {wide('lg:flex')}">
 		<span class="text-[11px] text-muted-foreground">Library</span>
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			class="hidden h-6 w-6 hover:text-primary lg:inline-flex"
+			class="hidden size-11 hover:text-primary lg:inline-flex"
 			onclick={toggleSidebar}
 			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
@@ -201,8 +202,9 @@
 			<a
 				href={n.href}
 				title={n.label}
+				aria-current={isActive(n.href) ? 'page' : undefined}
 				class="{navRow} {wide('lg:justify-start')} {isActive(n.href)
-					? 'bg-white/[0.10] text-foreground'
+					? 'bg-white/[0.08] text-foreground before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
 					: 'text-sidebar-foreground/55 hover:bg-white/[0.05] hover:text-sidebar-foreground'}"
 			>
 				<HugeiconsIcon icon={n.icon} strokeWidth={2} class="h-[18px] w-[18px] shrink-0" />
@@ -220,7 +222,7 @@
 			{#if auth.account?.signedIn}
 				<button
 					type="button"
-					class="flex h-8 w-full items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/55 transition-colors hover:bg-foreground/5 hover:text-sidebar-foreground"
+					class="desk-focus flex h-11 w-full items-center gap-2 rounded-lg px-2 text-[13px] text-sidebar-foreground/55 transition-colors hover:bg-foreground/5 hover:text-sidebar-foreground"
 					onclick={() => (dialogOpen = true)}
 				>
 					<HugeiconsIcon icon={Add01Icon} strokeWidth={2} class="h-3.5 w-3.5 shrink-0" />
@@ -237,7 +239,7 @@
 						<a
 							href={playlistHref(pl)}
 							title={pl.title}
-							class="flex h-8 items-center gap-2 rounded-full py-0 pr-8 pl-1.5 transition-colors {onThis
+							class="desk-focus flex h-11 items-center gap-2 rounded-lg py-0 pr-12 pl-1.5 transition-colors {onThis
 								? 'bg-white/[0.10] text-foreground'
 								: 'text-sidebar-foreground/85 hover:bg-foreground/6'}"
 						>
@@ -278,7 +280,7 @@
 						<PlaylistMenu
 							item={pl}
 							iconClass="h-3.5 w-3.5"
-							triggerClass="absolute right-0.5 top-1/2 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md opacity-0 transition hover:bg-foreground/10 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/row:opacity-100 {onThis
+							triggerClass="desk-focus absolute right-0 top-1/2 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg opacity-0 transition hover:bg-foreground/10 focus-visible:opacity-100 group-hover/row:opacity-100 {onThis
 								? 'text-primary-foreground/80'
 								: 'text-muted-foreground hover:text-foreground'}"
 						/>
@@ -342,13 +344,13 @@
 		     bottom-left rail. The compact wrapper hides the foot-only label/chevron without changing
 		     that safe anchor. When expanded, it gives way to the complete foot at lg. -->
 		<div
-			class="flex h-8 w-8 self-center rounded-md [&>button]:justify-center [&>button]:px-0 [&>button>span]:hidden [&>button>svg:last-child]:hidden {wide(
+			class="flex size-11 self-center rounded-lg [&>button]:size-11 [&>button]:justify-center [&>button]:px-0 [&>button>span]:hidden [&>button>svg:last-child]:hidden {wide(
 				'lg:hidden'
 			)}"
 		>
 			<AccountMenu foot />
 		</div>
-		<div class="hidden {wide('lg:block')}">
+		<div class="hidden [&>button]:h-11 {wide('lg:block')}">
 			<AccountMenu foot />
 		</div>
 	</div>

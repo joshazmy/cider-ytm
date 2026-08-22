@@ -18,13 +18,14 @@
         "minWidth": 900,
         "minHeight": 620,
         "resizable": true,
+		"zoomHotkeysEnabled": true,
         "fullscreen": false,
         "decorations": false,
         "transparent": true
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'self' asset:; connect-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost data: blob: https:; media-src 'self' asset: http://asset.localhost blob: https:; font-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'",
       "assetProtocol": {
         "enable": true,
         "scope": []

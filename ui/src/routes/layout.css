@@ -69,38 +69,38 @@
 }
 
 .dark {
-	--background: oklch(0.12 0.012 var(--hue));
-	--foreground: oklch(0.97 0.004 var(--hue));
-	--card: oklch(0.16 0.014 var(--hue));
-	--card-foreground: oklch(0.97 0.004 var(--hue));
-	--popover: oklch(0.16 0.014 var(--hue));
-	--popover-foreground: oklch(0.97 0.004 var(--hue));
-	--primary: oklch(0.68 0.195 8);
-	--primary-foreground: oklch(0.98 0.01 8);
-	--secondary: oklch(0.22 0.012 var(--hue));
-	--secondary-foreground: oklch(0.97 0.004 var(--hue));
-	--muted: oklch(0.2 0.014 var(--hue));
-	--muted-foreground: oklch(0.68 0.02 var(--hue));
-	--accent: oklch(0.68 0.195 8);
-	--accent-foreground: oklch(0.98 0.01 8);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 7%);
-	--input: oklch(1 0 0 / 10%);
-	--ring: oklch(0.68 0.195 8);
+	--background: #0b0b0f;
+	--foreground: #f4f1f6;
+	--card: #141318;
+	--card-foreground: #f4f1f6;
+	--popover: #141318;
+	--popover-foreground: #f4f1f6;
+	--primary: #e16b8d;
+	--primary-foreground: #160b10;
+	--secondary: #211e25;
+	--secondary-foreground: #f4f1f6;
+	--muted: #211e25;
+	--muted-foreground: #aaa4b0;
+	--accent: #e16b8d;
+	--accent-foreground: #160b10;
+	--destructive: #f07178;
+	--border: rgb(255 255 255 / 0.1);
+	--input: rgb(255 255 255 / 0.12);
+	--ring: #e16b8d;
 	--chart-1: oklch(0.828 0.111 230.318);
 	--chart-2: oklch(0.685 0.169 237.323);
 	--chart-3: oklch(0.588 0.158 241.966);
 	--chart-4: oklch(0.5 0.134 242.749);
 	--chart-5: oklch(0.443 0.11 240.79);
-	--sidebar: oklch(0.11 0.01 var(--hue));
-	--sidebar-foreground: oklch(0.97 0.004 var(--hue));
-	--sidebar-primary: oklch(0.68 0.195 8);
-	--sidebar-primary-foreground: oklch(0.98 0.01 8);
-	--sidebar-accent: oklch(0.2 0.014 var(--hue));
-	--sidebar-accent-foreground: oklch(0.97 0.004 var(--hue));
-	--sidebar-border: oklch(1 0 0 / 6%);
-	--sidebar-ring: oklch(0.68 0.195 8);
-	--radius: 0.75rem;
+	--sidebar: #0b0b0f;
+	--sidebar-foreground: #f4f1f6;
+	--sidebar-primary: #e16b8d;
+	--sidebar-primary-foreground: #160b10;
+	--sidebar-accent: #211e25;
+	--sidebar-accent-foreground: #f4f1f6;
+	--sidebar-border: rgb(255 255 255 / 0.08);
+	--sidebar-ring: #e16b8d;
+	--radius: 0.625rem;
 }
 
 /* Floating frosted player — independent of any other product's chrome. */
@@ -117,19 +117,36 @@
 }
 
 .desk-glass {
-	background: color-mix(in oklab, oklch(0.16 0.018 var(--hue)) 46%, transparent);
-	border: 1px solid oklch(1 0 0 / 14%);
-	border-radius: 1.15rem;
-	box-shadow:
-		0 10px 28px -18px oklch(0 0 0 / 0.4),
-		inset 0 1px 0 oklch(1 0 0 / 18%);
-	backdrop-filter: blur(28px) saturate(1.5);
-	-webkit-backdrop-filter: blur(28px) saturate(1.5);
+	background: color-mix(in oklab, var(--card) 82%, transparent);
+	border: 1px solid rgb(255 255 255 / 0.12);
+	border-radius: 1rem;
+	box-shadow: 0 18px 48px -28px rgb(0 0 0 / 0.92), inset 0 1px 0 rgb(255 255 255 / 0.1);
+	backdrop-filter: blur(28px) saturate(1.15);
+	-webkit-backdrop-filter: blur(28px) saturate(1.15);
 }
 
 .desk-focus:focus-visible {
-	outline: none;
-	box-shadow: inset 0 0 0 1.5px oklch(1 0 0 / 0.88);
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+}
+
+.desk-center {
+	container-type: inline-size;
+}
+
+.desk-player-compact-only {
+	display: none;
+}
+
+/* 1440 with a 240px sidebar and fluid rail leaves ~883px of center. Compact
+   before that width so time/volume/actions cannot collide. */
+@container (max-width: 960px) {
+	.desk-player-wide-only {
+		display: none !important;
+	}
+	.desk-player-compact-only {
+		display: flex;
+	}
 }
 
 /* --- Full-palette preset themes ---
@@ -517,6 +534,9 @@
 		   viewport-defining element, which is <body> while <html> has visible overflow. Only 140+
 		   reads it off <html>, so on an older WebView2 the <html> rule alone is dead CSS. */
 		overscroll-behavior: none;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
 	}
 	html {
 		@apply font-sans;
@@ -534,6 +554,31 @@
 	from { opacity: 0; }
 }
 .content-in { animation: content-in 150ms ease-out; }
+
+/* Critical media-detail geometry avoids media queries. The production CSS optimizer rewrites
+   min-width queries to range syntax, and the WebKitGTK version used by the native Linux app can
+   apply declarations inside those ranges even while matchMedia reports them false. --hero-wide
+   is a 0/1 step at 1240px so compact art stays ≤184 and the wide contract (220–280 art, 320
+   hero) is true from 1241 onward. */
+.playlist-detail-hero,
+.album-detail-hero {
+	--hero-wide-px: clamp(0px, (100vw - 1240px) * 99, 1px);
+	--hero-wide: calc(var(--hero-wide-px) / 1px);
+	--hero-art: calc(
+		clamp(152px, calc(18vw - 39.2px), 184px) * (1 - var(--hero-wide)) +
+			clamp(220px, calc(18vw - 39.2px), 280px) * var(--hero-wide)
+	);
+	min-height: calc(184px + 136px * var(--hero-wide));
+	gap: clamp(1.5rem, calc(4vw - 25.6px), 2rem);
+	padding-inline: clamp(1.5rem, calc(4vw - 25.6px), 2rem);
+}
+.playlist-detail-art {
+	width: var(--hero-art);
+	height: var(--hero-art);
+}
+.album-detail-hero {
+	grid-template-columns: var(--hero-art) minmax(0, 1fr);
+}
 
 /* The card grid behind Library, Local music, search results and "See all". Same reasoning as
    Shelf.svelte: WebKit keeps every card in style, layout and paint, and because it rasterizes in
@@ -586,12 +631,15 @@
 input[type='range'].range {
 	-webkit-appearance: none;
 	appearance: none;
-	height: 16px;
+	height: 44px;
+	min-height: 44px;
+	min-width: 44px;
 	background: transparent;
 	cursor: pointer;
 }
 input[type='range'].range::-webkit-slider-runnable-track {
 	height: 4px;
+	margin-block: 20px;
 	border-radius: 999px;
 	background: linear-gradient(
 		to right,

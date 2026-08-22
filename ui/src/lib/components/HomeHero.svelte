@@ -15,68 +15,71 @@
 	});
 </script>
 
-<!-- overflow-hidden lives on the backdrop wrapper, not the hero: the scaled blur has to be clipped,
-     but the search preview below has to hang out past the bottom edge. -->
-<div class="relative border-b">
+<div class="relative min-h-[clamp(240px,38vh,340px)] overflow-hidden border-b border-white/10">
 	<div class="pointer-events-none absolute inset-0 overflow-hidden">
 		{#if playback.now?.thumbnail && !artFailed && !isLetterTile(playback.now.thumbnail)}
-			<!-- 96px, not display size: blur-2xl is a 40px blur, so every detail above a handful of
-			     pixels is thrown away anyway. The old 1200px source decoded to 5.7 MiB for this, and
-			     re-decoded on every track change. -->
 			<img
 				src={thumb(playback.now.thumbnail, 400)}
 				alt=""
-				class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+				class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-[0.32] blur-3xl saturate-75"
 				onerror={() => (artFailed = true)}
 			/>
 		{:else}
-			<!-- Nothing playing: without this the header is a bare strip with a greeting in it. An accent
-			     wash keeps it a header. Inline style so it can't be lost to a stale dev stylesheet, and it
-			     rides --primary so every preset theme gets its own. -->
 			<div
-				class="pointer-events-none absolute inset-0 opacity-[0.18]"
-				style="background:radial-gradient(120% 130% at 12% 0%, var(--primary) 0%, transparent 58%)"
+				class="pointer-events-none absolute inset-0"
+				style="background: radial-gradient(80% 110% at 12% 5%, rgb(74 70 81 / 0.34), transparent 66%), radial-gradient(70% 100% at 92% 0%, rgb(42 39 47 / 0.42), transparent 68%)"
 			></div>
 		{/if}
-		<div
-			class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/25"
-		></div>
-		<div
-			class="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent"
-		></div>
+		<div class="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-background/20"></div>
+		<div class="absolute inset-0 bg-gradient-to-r from-background/90 via-background/35 to-background/65"></div>
 	</div>
-	<div class="relative px-6 pt-5 pb-3">
-		<div class="flex items-center justify-between gap-4">
-			<h1 class="text-[1.15rem] font-semibold tracking-tight">Home</h1>
-			<div class="flex items-center gap-1">
+	<div class="relative flex min-h-[clamp(240px,38vh,340px)] items-end justify-between gap-8 px-6 py-7 min-[1100px]:px-8">
+		<div class="max-w-2xl">
+			<h1 class="font-heading text-[clamp(2rem,5vw,3.25rem)] leading-[0.98] font-semibold tracking-[-0.035em]">
+				Home
+			</h1>
+			<p class="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground min-[1100px]:text-[15px]">
+				Your mixes, albums, artists, and recent listening — gathered into one calm place.
+			</p>
+			<div class="mt-5 flex flex-wrap items-center gap-2">
 			{#if onRefresh}
 				<button
 					type="button"
 					onclick={onRefresh}
 					title="Refresh"
 					aria-label="Refresh Home"
-					class="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-white/8 hover:text-foreground"
+					class="desk-focus flex h-11 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-semibold text-background transition hover:bg-foreground/90"
 				>
 					<HugeiconsIcon icon={RefreshIcon} strokeWidth={2} class="h-4 w-4" />
+					Refresh
 				</button>
 			{/if}
 			<button
 				onclick={() => (ui.ltOpen = true)}
 				title="Listen Together"
 				aria-label="Listen Together"
-				class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/8 hover:text-foreground {lt.role !==
+				class="desk-focus relative flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.055] px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/[0.09] hover:text-foreground {lt.role !==
 				'none'
 					? 'text-primary'
 					: ''}"
 			>
 				<HugeiconsIcon icon={UserGroup02Icon} class="h-4 w-4" />
+				Listen Together
 				{#if lt.role !== 'none'}
 					<span
-						class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"
+						class="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background"
 					></span>
 				{/if}
 			</button>
 			</div>
 		</div>
+		{#if playback.now?.thumbnail && !artFailed && !isLetterTile(playback.now.thumbnail)}
+			<img
+				src={thumb(playback.now.thumbnail, 400)}
+				alt=""
+				class="hidden size-[clamp(132px,17vw,188px)] shrink-0 rounded-2xl object-cover shadow-2xl ring-1 ring-white/12 min-[760px]:block"
+				onerror={() => (artFailed = true)}
+			/>
+		{/if}
 	</div>
 </div>

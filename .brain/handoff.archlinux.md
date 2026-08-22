@@ -1,76 +1,61 @@
-# Handoff — restore responsive sidebar and verify real desktop journey
+# Handoff — native E2E and Cider-4 visual coherence
 
-> The one shared cross-CLI memory surface for this task worktree (Codex, Claude, and
-> opencode all read + write this file). Overwrite it so it always reflects **NOW** — it
-> is state, not a log. Real decisions append to `.brain/decisions.md`; dead ends to
-> `.brain/tried.md`.
->
-> **Incoming agent: verify before you trust.** Everything below is a *lead, not a verdict*.
-> Re-run the verification commands and re-check the git state yourself before building on
-> any claim here (see the AGENTS.md source-of-truth hierarchy: code+tests > git > this).
+> Current-host continuity state for Codex, Claude, and opencode. Verify every claim against
+> runtime output, tests, source, and Git before continuing.
 
 ## Goal
-Restore Yapel's responsive sidebar: 64px below 1024px, 240px at/above 1024px when expanded,
-with the stored large-screen manual collapse preference preserved. Prove the final local commit
-through the real Tauri WebView, source-blind desktop acceptance, and immutable-range review.
+Finish an original-Yapel, Cider-4-informed desktop UI; prove it through a retry-free real
+Tauri/WebKitGTK native journey; pass immutable Ten-Star Check; push a private PR; wait for required
+GitHub checks; and merge only the unchanged READY SHA. No deploy, release, signing, or publication.
 
 ## Current state
-The approved Design addendum and scoped `Sidebar.svelte` implementation are committed. An initial
-immutable review caught the compact account menu using the wrong titlebar anchor; the implementation
-now keeps compact controls icon-only while using the existing bottom-left/above `foot` anchor. Locked
-frontend dependencies were installed offline without changing the lockfile. The feature-worktree
-Vite server and existing same-base Tauri debug binary are running. Source-aware native preflight
-passed at 900, 1023, 1024, and 1100px; fresh source-blind acceptance and repeat immutable review remain.
+The visual/harness implementation was READY at `4d92e9e` and opened as private PR #2. GitHub native
+E2E, frontend, and rustfmt passed on that SHA. Pure Rust tests failed linking `-lmpv` because the
+job never installed `libmpv-dev`. That CI gap is now fixed in the working tree and invalidates the
+previous review; Check must rerun on the new HEAD.
+
+The attested Plan digest is unchanged:
+`33781f3985edd3b2922942eadd87b51cb64d826131cc5706747ae03237fc8a8d`.
+Never edit approved-plan artifacts directly.
 
 ## Decisions
-- Use CSS breakpoint utilities only, so automatic narrow layout cannot overwrite persisted
-  `ui.sidebarCollapsed` state.
-- Reuse both existing `AccountMenu` variants: compact below `lg`, foot at/above `lg`.
-- Use the existing `foot` placement for compact sidebar account triggers too; wrapper selectors hide
-  only the label/chevron so the popup opens above and inside the left viewport edge.
-- Do not add Playwright, fixtures, dependencies, CI, native changes, or unrelated UI polish.
-- Park locally after READY; GitHub push/PR/merge/deploy are not authorized.
+- Preserve Yapel identity; borrow only high-level music-player layout grammar. Do not copy Cider
+  branding, assets, source, or unsupported feature claims.
+- Linux/WebKitGTK is the only fully validated platform for this task.
+- Use the real Tauri application, real WebKitWebDriver/tauri-driver, disposable XDG/SQLite state,
+  closed outbound proxy, no browser surrogate, no mocked IPC, no retry, and no arbitrary sleep.
+- Native 200% zoom is tested through `zoomHotkeysEnabled` and only
+  `core:webview:allow-set-webview-zoom`.
+- The CI Pure Rust tests job must install `libmpv-dev` and `pkg-config` because `-p player` links
+  libmpv. Do not drop player from that job to paper over a missing library.
+- Josh authorized commit, private push, PR, required-check wait, and merge of the exact READY SHA.
+  No deploy/release is authorized.
 
 ## Files changed
-- `.brain/.gitignore` — ignores volatile Ten-Star boundary state.
-- `.brain/handoff.archlinux.md` — this current-host continuity record.
-- `DESIGN.md` — approved redesign-preserve responsive sidebar contract and acceptance matrix.
-- `ui/src/lib/components/Sidebar.svelte` — base 64px rail, `lg:` wide expansion/visibility/alignment,
-  and responsive account variants.
+Product/harness scope plus the rust-tests link-deps fix:
+- CI/docs: `.github/workflows/checks.yml`, `docs/TESTING.md`
+- Prior implementation remains in range from `74f6eee`
+- Continuity: this handoff
 
 ## Verification
-- Pre-fix real Tauri at 900×620: screenshot and visual inspection showed a ~240px wide sidebar with
-  wide labels; this reproduced the failure.
-- `node --experimental-strip-types ui/src/lib/*.check.ts`: 11/11 files exited 0 (one Node
-  experimental localStorage warning; no failed assertion).
-- `cd ui && pnpm check`: `svelte-check found 0 errors and 0 warnings`.
-- `cd ui && pnpm build`: Vite 8.1.3 production build completed and adapter-static wrote `build`.
-- `git diff --check`: exited 0.
-- Source-aware real Tauri preflight: Hyprland confirmed 1023×620 exposed the compact Search link and
-  no Collapse control; 1024×620 exposed Collapse and wide Playlists. At 1100×860, manual collapse
-  exposed Expand, remained collapsed after 900→1100, then expansion remained expanded after the
-  same resize cycle.
-- Review-fix preflight at 900×620: compact account trigger opened an accessible menu with Close and
-  account actions; compositor screenshot confirmed the full 288px panel remained above and inside
-  the window. The menu then closed through its labeled action.
+Previous SHA `4d92e9e` proven locally and on GitHub native E2E. This handoff lands before the
+replacement Check. Re-run fmt, unit, svelte-check, build, selected Rust tests, `git diff --check`,
+and one niced native E2E, then `ten-star-gate ready` on the new HEAD.
 
 ## Git state
-- Branch: `task/restore-responsive-sidebar-and-verify-real-desktop-journey`
-- HEAD SHA: `dc46416` before the review correction; the commit containing this record adds only the
-  scoped compact-account anchor correction plus this handoff update
-- Base SHA (review boundary): `824f6cfa0e2db51c57fd9aaa46dddd4bea8b353a`  <!-- also in .brain/ten-star/base-sha -->
-- Tree: clean after the correction commit · Commits since base: 4
-- Pushed: NO — local park explicitly approved; GitHub delivery not authorized
-- Reviewed HEAD: pending immutable Check
+- Worktree: `/home/jhondoe/orca/cider-ytm.worktrees/native-e2e-and-cider-4-visual-coherence`
+- Branch: `task/native-e2e-and-cider-4-visual-coherence`
+- Base: `74f6eee5044824dbd159bf5775702fff6f61d1b9`
+- Previous READY (invalidated by this edit): `4d92e9ea54ca528a93e5f21616f8d12e8aaca499`
+- Remote: private `https://github.com/joshazmy/cider-ytm`; PR #2 is open and will move with HEAD
+- Required identity: Joshua James <jothantranston@pm.me>
 
 ## Known problems
-Cargo/rustc are absent from PATH, so Rust tests and a native rebuild were not run. This UI-only task
-uses the existing debug binary built from the same base repository and the exact feature-worktree
-Vite UI. The persisted YTM session is expired, but local navigation, account controls, queue, and
-now-playing chrome remain available for safe acceptance. Orca's accessibility tree works; its own
-window bitmap is black under this compositor, so Hyprland-sized `grim` captures provide visual proof.
+1. Previous READY evidence is stale the moment this handoff/CI fix is committed.
+2. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` are host-local.
 
 ## Next action
-Run a fresh source-blind real-desktop journey on the exact clean final HEAD, then perform immutable
-base-range review, record runnable acceptance evidence, and require `ten-star-gate ready` before
-`task-finish` and local parking.
+1. Commit this CI/docs/handoff fix.
+2. Rerun complete Check on the new HEAD; require `ten-star-gate ready`.
+3. Push the exact new READY SHA, wait for all independent GitHub checks, verify PR head, merge.
+   Do not deploy or release.

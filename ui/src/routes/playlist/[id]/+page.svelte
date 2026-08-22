@@ -135,12 +135,12 @@
 					? Number(fromSub.replace(/,/g, ''))
 					: pl.items.length;
 		const pills: string[] = [];
-		if (n) pills.push(`${n} TRACK${n === 1 ? '' : 'S'}`);
-		else if (fromSub) pills.push(`${fromSub} TRACKS`);
+		if (n) pills.push(`${n} track${n === 1 ? '' : 's'}`);
+		else if (fromSub) pills.push(`${fromSub} tracks`);
 		for (const e of extra) {
 			if (e.length > 22) continue;
 			const ago = e.match(/(?:updated\s+)?(.+?\s+ago)\s*$/i);
-			pills.push((ago ? ago[1] : e).toUpperCase());
+			pills.push(ago ? ago[1] : e);
 		}
 		return pills;
 	});
@@ -684,13 +684,13 @@
 
 <div class="flex h-full flex-col">
 	{#if loading}
-		<div class="flex items-center gap-4 px-6 py-4">
-			<Skeleton class="h-16 w-16 shrink-0 rounded-xl" />
+		<div class="playlist-detail-hero flex items-end py-6">
+			<Skeleton class="playlist-detail-art shrink-0 rounded-2xl" />
 			<div class="min-w-0 flex-1">
-				<Skeleton class="h-5 w-48 rounded-md" />
+				<Skeleton class="h-12 w-[min(28rem,70%)] rounded-md" />
 				<div class="mt-2 flex gap-2">
-					<Skeleton class="h-8 w-20 rounded-full" />
-					<Skeleton class="h-8 w-20 rounded-full" />
+					<Skeleton class="h-11 w-24 rounded-lg" />
+					<Skeleton class="h-11 w-24 rounded-lg" />
 				</div>
 			</div>
 		</div>
@@ -707,29 +707,32 @@
 				<img
 					src={hiRes((pl.thumbnail ?? bgImage)!)}
 					alt=""
-					class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-40 blur-3xl saturate-[1.3]"
+					class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-[0.32] blur-3xl saturate-75"
 				/>
 			{/if}
 			<div
-				class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-black/45 to-black/80"
+				class="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/90 via-background/55 to-background/90"
 			></div>
-			<div
-				class="content-in relative flex shrink-0 items-center gap-3 px-6 py-3"
+				<div
+					data-media-hero
+					class="playlist-detail-hero content-in relative flex shrink-0 items-end py-6"
 			>
 				{#if isOnRepeat}
 					<div
-						class="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/10"
+						data-media-art
+						class="playlist-detail-art relative flex shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white shadow-2xl ring-1 ring-white/10"
 					>
 						<HugeiconsIcon icon={ListRestartIcon} class="h-7 w-7" />
 					</div>
 				{:else if pl.thumbnail}
 					<img
+						data-media-art
 						src={hiRes(pl.thumbnail)}
 						alt=""
-						class="relative h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+						class="playlist-detail-art relative shrink-0 rounded-2xl object-cover shadow-2xl ring-1 ring-white/12"
 					/>
 				{:else}
-					<div class="relative h-16 w-16 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"></div>
+					<div data-media-art class="playlist-detail-art relative shrink-0 rounded-2xl bg-muted shadow-2xl ring-1 ring-white/10"></div>
 				{/if}
 				<div class="relative min-w-0 flex-1">
 					{#if editingName}
@@ -741,7 +744,7 @@
 									if (e.key === 'Enter') saveRename();
 									else if (e.key === 'Escape') (editingName = false);
 								}}
-								class="min-w-0 max-w-xl flex-1 rounded-md border bg-black/35 px-3 py-1 text-[1.25rem] font-semibold text-white outline-none focus:border-accent"
+								class="min-w-0 max-w-4xl flex-1 rounded-lg border bg-black/35 px-3 py-2 font-heading text-[clamp(2.25rem,5vw,3.5rem)] leading-[0.98] font-semibold text-white outline-none focus:border-primary"
 								aria-label="Playlist name"
 							/>
 							<Button size="icon" aria-label="Save name" onclick={saveRename}>
@@ -757,29 +760,21 @@
 							</Button>
 						</div>
 					{:else}
-						<h1 class="truncate text-[1.25rem] font-semibold tracking-tight text-white">
+						<h1 class="font-heading max-w-4xl overflow-hidden text-[clamp(2.25rem,5vw,3.5rem)] leading-[0.98] font-semibold tracking-[-0.04em] text-white [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]">
 							{pl.title ?? 'Playlist'}
 						</h1>
 					{/if}
 					{#if heroPills.length}
-						<div class="mt-2 flex flex-wrap items-center gap-1.5">
-							{#each heroPills as pill (pill)}
-								<span
-									class="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-[3px] text-[10px] font-semibold tracking-[0.14em] text-white/75 ring-1 ring-white/10"
-								>
-									{#if /TRACK/.test(pill)}
-										<HugeiconsIcon icon={MusicNote01Icon} class="h-3 w-3" />
-									{:else if /AGO|DAY|WEEK|MONTH|YEAR|MIN|HR|HOUR/.test(pill)}
-										<HugeiconsIcon icon={Clock01Icon} class="h-3 w-3" />
-									{/if}
-									{pill}
-								</span>
+						<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/70">
+							{#each heroPills as pill, index (pill)}
+								{#if index}<span class="text-white/35">•</span>{/if}
+								<span>{pill}</span>
 							{/each}
 						</div>
 					{/if}
-					<div class="mt-1.5 flex flex-wrap items-center gap-2">
+					<div class="mt-5 flex flex-wrap items-center gap-2">
 						<Button
-							class="h-8 min-w-[5.5rem] gap-1.5 rounded-full px-4 text-[13px] font-semibold"
+							class="h-11 min-w-[6rem] gap-2 rounded-lg px-5 text-sm font-semibold"
 							onclick={() => playAll(null)}
 							disabled={!pl.items.length || preparing || resorting}
 						>
@@ -787,7 +782,7 @@
 							{preparing || resorting ? 'Sorting…' : 'Play'}
 						</Button>
 						<Button
-							class="h-8 min-w-[5.5rem] gap-1.5 rounded-full px-4 text-[13px] font-semibold"
+							class="h-11 min-w-[6rem] gap-2 rounded-lg px-5 text-sm font-semibold"
 							onclick={() => run(shufflePlay)}
 							disabled={!pl.items.length || preparing || resorting}
 						>
@@ -814,7 +809,7 @@
 							<Button
 								variant="ghost"
 								size="icon"
-								class="h-10 w-10 rounded-full bg-black/30 text-white/75 ring-1 ring-white/10 hover:bg-black/45 hover:text-white"
+								class="size-11 rounded-lg bg-black/30 text-white/75 ring-1 ring-white/10 hover:bg-black/45 hover:text-white"
 								aria-label="Playlist options"
 								onclick={openMenu}
 							>
@@ -825,7 +820,7 @@
 				</div>
 			</div>
 			<div
-				class="relative flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/5 bg-black/70 backdrop-blur-xl"
+				class="relative flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/10 bg-background"
 			>
 				<div class="flex shrink-0 items-center justify-end gap-1 px-4 pb-1 pt-3">
 					<Button
@@ -850,8 +845,9 @@
 					</Button>
 					<TrackFilter bind:value={query} placeholder="Search this playlist" />
 				</div>
-				<div
-					class="content-in min-h-0 flex-1 overflow-y-auto px-3 pb-4 transition-opacity {resorting
+					<div
+						data-track-list
+						class="content-in min-h-0 flex-1 overflow-y-auto px-3 pb-4 transition-opacity {resorting
 						? 'opacity-50'
 						: ''}"
 					aria-busy={resorting}

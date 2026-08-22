@@ -31,7 +31,7 @@
 </script>
 
 <div
-	class="flex items-center gap-2 rounded-full border bg-background/80 py-1.5 pl-3 pr-2 shadow-sm backdrop-blur focus-within:border-accent"
+	class="flex h-11 w-[min(280px,100%)] items-center gap-2 rounded-lg border border-white/10 bg-card/90 pl-3 shadow-sm focus-within:border-primary"
 >
 	<HugeiconsIcon
 		icon={SearchList01Icon}
@@ -42,12 +42,12 @@
 		bind:value
 		{placeholder}
 		aria-label={placeholder}
-		class="w-48 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+		class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 		onkeydown={(e) => e.key === 'Escape' && (value = '')}
 	/>
 	<!-- Holds its 1rem either way, so typing doesn't resize the box. -->
 	<button
-		class="w-4 shrink-0 cursor-pointer text-muted-foreground transition hover:text-foreground"
+		class="desk-focus flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-white/8 hover:text-foreground"
 		class:invisible={!value}
 		onclick={() => (value = '')}
 		aria-label="Clear search"

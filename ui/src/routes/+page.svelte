@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { ArrowUpBigIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
+	import { Add01Icon, ArrowUpBigIcon, MusicNote01Icon } from '@hugeicons/core-free-icons';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
 	import MediaCardSkeleton from '$lib/components/MediaCardSkeleton.svelte';
@@ -18,7 +19,16 @@
 	import TrackRowSkeleton from '$lib/components/TrackRowSkeleton.svelte';
 	import * as api from '$lib/api';
 	import type { BrowseItem, HomeChip, HomePage, HomeSection } from '$lib/api';
-	import { auth, desk, personal, playback, seedOnRepeatPick, toast, startGoogleSignIn } from '$lib/player.svelte';
+	import {
+		addLocalFolder,
+		auth,
+		desk,
+		personal,
+		playback,
+		seedOnRepeatPick,
+		toast,
+		startGoogleSignIn
+	} from '$lib/player.svelte';
 	import {
 		arrangeSections,
 		hiddenSections,
@@ -27,6 +37,7 @@
 		topArtists
 	} from '$lib/personal';
 	import { getCached, putCached, invalidateCached } from '$lib/pagecache';
+	import { reducedMotion } from '$lib/theme.svelte';
 
 	const FORGOTTEN_KEY = 'home:forgotten';
 
@@ -51,8 +62,8 @@
 	);
 
 	const chipClass = (active: boolean) =>
-		`inline-flex h-8 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-[13px] font-medium transition-colors ${
-			active ? 'bg-white/12 text-foreground' : 'bg-muted text-foreground hover:bg-muted/70'
+		`desk-focus inline-flex h-10 shrink-0 cursor-pointer items-center rounded-lg px-4 text-[13px] font-medium transition-colors ${
+			active ? 'bg-white/12 text-foreground ring-1 ring-white/8' : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
 		}`;
 
 	// "Forgotten favourites" is pulled out of the feed and rendered as a list above it (see the
@@ -169,6 +180,13 @@
 		}
 	}
 
+	async function pickLocalFolder() {
+		const picked = await open({ directory: true, multiple: false, title: 'Add a music folder' });
+		if (typeof picked !== 'string') return;
+		await addLocalFolder(picked);
+		goto('/library?tab=local');
+	}
+
 	async function loadMore() {
 		const token = home?.continuation;
 		if (!token || loadingMore) return;
@@ -198,6 +216,7 @@
 	// has to watch the ancestor rather than the window.
 	let scroller = $state<HTMLElement | null>(null);
 	let scrolled = $state(false);
+	const still = $derived(reducedMotion());
 	function watchScroll(node: HTMLElement) {
 		const el = node.closest('main');
 		if (!el) return;
@@ -271,8 +290,8 @@
 	     Opaque rather than blurred — a backdrop-filter repainting on every scroll frame is the one
 	     thing WebKitGTK reliably chokes on. -->
 	{#if chips.length}
-		<div class="sticky top-0 z-20 border-b bg-background px-6 pt-2.5">
-			<div class="flex flex-wrap gap-2 pb-2.5">
+		<div class="sticky top-0 z-20 border-b border-white/10 bg-background/95 px-6 py-2.5">
+			<div class="chip-row flex h-10 gap-2 overflow-x-auto">
 				<!-- An explicit "All" is the way out of a filter. Clicking the active chip again also
 				     clears it, but nobody discovers that, and nothing else on screen says you're filtered. -->
 				<button onclick={() => load(null)} class={chipClass(!selected)}>All</button>
@@ -353,27 +372,48 @@
 					</div>
 				{/if}
 			{/each}
-			{#if loading}
-				{@render shelfSkeletons(3)}
-			{:else if error}
-				<ErrorState message={error} onRetry={() => load(selected)} />
-			{:else if !home?.sections.length}
+				{#if loading}
+					{@render shelfSkeletons(3)}
+				{:else if error}
+					<div data-home-terminal-state="error" class="flex max-w-2xl flex-col items-start gap-3">
+						<ErrorState message={error} onRetry={() => load(selected)} />
+						<div class="flex flex-wrap gap-2">
+							{#if !auth.account?.signedIn}
+								<Button class="h-11" onclick={() => startGoogleSignIn()} disabled={desk.signingIn}>
+									{desk.signingIn ? 'Waiting…' : 'Sign in with Google'}
+								</Button>
+							{/if}
+							<Button variant="outline" class="h-11 gap-2" onclick={pickLocalFolder}>
+								<HugeiconsIcon icon={Add01Icon} class="size-4" /> Add local folder
+							</Button>
+						</div>
+					</div>
+				{:else if !home?.sections.length}
 				<!-- A dead end needs a way out, not a sentence. Signed out, that's the sign-in that fills
 				     this page; signed in, an empty feed is a bad response and retrying usually fixes it. -->
-				<div class="flex flex-col items-center gap-3 py-20 text-center">
-					<HugeiconsIcon icon={MusicNote01Icon} class="h-8 w-8 text-muted-foreground/40" />
-					<p class="max-w-sm text-sm text-muted-foreground">
+					<div data-home-terminal-state="empty" class="flex max-w-2xl items-center gap-4 rounded-xl border border-dashed border-white/10 bg-card/55 p-5 text-left">
+					<div class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted/70">
+						<HugeiconsIcon icon={MusicNote01Icon} class="h-5 w-5 text-muted-foreground" />
+					</div>
+					<div class="min-w-0 flex-1">
+						<p class="text-sm text-muted-foreground">
 						{auth.account?.signedIn
 							? 'Your home feed came back empty this time.'
 							: 'Sign in and home fills up with mixes and playlists built from what you listen to.'}
-					</p>
-					{#if auth.account?.signedIn}
-						<Button variant="outline" size="sm" onclick={() => load(selected)}>Try again</Button>
-					{:else}
-						<Button size="sm" onclick={() => startGoogleSignIn()} disabled={desk.signingIn}>
-							{desk.signingIn ? 'Waiting…' : 'Sign in with Google'}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap justify-end gap-2">
+						{#if auth.account?.signedIn}
+							<Button variant="outline" class="h-11" onclick={() => load(selected)}>Try again</Button>
+						{:else}
+							<Button class="h-11" onclick={() => startGoogleSignIn()} disabled={desk.signingIn}>
+								{desk.signingIn ? 'Waiting…' : 'Sign in with Google'}
+							</Button>
+						{/if}
+						<Button variant="outline" class="h-11 gap-2" onclick={pickLocalFolder}>
+							<HugeiconsIcon icon={Add01Icon} class="size-4" /> Add local folder
 						</Button>
-					{/if}
+					</div>
 				</div>
 			{:else if home.continuation}
 				{#if moreError}
@@ -398,12 +438,12 @@
 {#if scrolled}
 	<!-- Clears the player bar when there is one. z-10 keeps it under the queue/lyrics overlays. -->
 	<button
-		transition:fade={{ duration: 150 }}
-		onclick={() => scroller?.scrollTo({ top: 0, behavior: 'smooth' })}
+		transition:fade={{ duration: still ? 80 : 150 }}
+		onclick={() => scroller?.scrollTo({ top: 0, behavior: still ? 'instant' : 'smooth' })}
 		aria-label="Back to top"
-		class="fixed z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-foreground text-background shadow-lg {playback.now}
-			? 'bottom-24'
-			: 'bottom-6'} right-6 min-[1100px]:right-[18.5rem]"
+		class="fixed right-6 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-foreground text-background shadow-lg {playback.now
+			? 'bottom-24 min-[1100px]:right-[calc(clamp(272px,22vw,320px)+1.5rem)] min-[1440px]:right-[calc(clamp(288px,22vw,340px)+1.5rem)]'
+			: 'bottom-6'}"
 	>
 		<HugeiconsIcon icon={ArrowUpBigIcon} class="h-5 w-5" />
 	</button>

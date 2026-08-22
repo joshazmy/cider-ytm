@@ -104,8 +104,12 @@ impl EqPreset {
     fn lavfi(self) -> Option<&'static str> {
         match self {
             Self::Flat => None,
-            Self::Bass => Some("lavfi=[equalizer=f=80:t=q:w=0.8:g=4,equalizer=f=200:t=q:w=0.8:g=2]"),
-            Self::Vocal => Some("lavfi=[equalizer=f=3000:t=q:w=1:g=3,equalizer=f=250:t=q:w=1:g=-2]"),
+            Self::Bass => {
+                Some("lavfi=[equalizer=f=80:t=q:w=0.8:g=4,equalizer=f=200:t=q:w=0.8:g=2]")
+            }
+            Self::Vocal => {
+                Some("lavfi=[equalizer=f=3000:t=q:w=1:g=3,equalizer=f=250:t=q:w=1:g=-2]")
+            }
         }
     }
 }
@@ -529,7 +533,9 @@ mod tests {
             af_chain(Some(-6.0), -12, AudioProfile::Dry, EqPreset::Flat),
             "lavfi=[volume=-6dB],rubberband=pitch-scale=0.5"
         );
-        assert!(af_chain(None, 1, AudioProfile::Dry, EqPreset::Flat).ends_with("1.0594630943592953"));
+        assert!(
+            af_chain(None, 1, AudioProfile::Dry, EqPreset::Flat).ends_with("1.0594630943592953")
+        );
         let dimi = af_chain(None, 0, AudioProfile::Dimisco, EqPreset::Flat);
         assert!(dimi.contains("crossfeed"), "dimisco missing crossfeed: {dimi}");
         assert!(dimi.contains("alimiter"), "dimisco missing limiter: {dimi}");

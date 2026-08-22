@@ -14,7 +14,7 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
-	import { initTheme } from '$lib/theme.svelte';
+	import { appearance, initTheme, reducedMotion } from '$lib/theme.svelte';
 	import { dragScroll } from '$lib/dnd';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import Titlebar from '$lib/components/Titlebar.svelte';
@@ -31,8 +31,6 @@
 	import NowPlayingRail from '$lib/components/NowPlayingRail.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import { isLetterTile, thumb } from '$lib/thumb';
-	import { appearance } from '$lib/theme.svelte';
-
 	let paletteOpen = $state(false);
 	import {
 		auth,
@@ -48,15 +46,56 @@
 
 
 	let { children } = $props();
-	// Queue and lyrics toggle independently and both float over the page rather than docking into
-	// it — two docked columns squeezed the content down to an unusable strip. At lg+ they sit side
-	// by side over the content; narrower, they stack (see QueuePanel / LyricsPanel).
-	let queueOpen = $state(false);
-	let lyricsOpen = $state(false);
+	type FocusPanel = 'queue' | 'lyrics';
+	let activePanel = $state<FocusPanel | null>(null);
+	let overlayReturn: HTMLElement | null = null;
+	let widePanels = $state(browser && window.innerWidth >= 1100);
+	const still = $derived(reducedMotion());
+
+	function closeFocusedPanel() {
+		const target = overlayReturn;
+		activePanel = null;
+		requestAnimationFrame(() => target?.focus());
+	}
+
+	function toggleFocusedPanel(panel: FocusPanel, trigger: HTMLElement) {
+		if (np.open) {
+			np.tab = panel;
+			return;
+		}
+		// Wide layouts already dedicate the right rail to queue context. The same controls open the
+		// immersive focused surface there; below 1100px they own the compact center overlay.
+		if (window.innerWidth >= 1100) {
+			np.tab = panel;
+			np.open = true;
+			return;
+		}
+		if (activePanel === panel) {
+			closeFocusedPanel();
+			return;
+		}
+		overlayReturn = trigger;
+		activePanel = panel;
+	}
+	function reconcileFocusedPanel() {
+		if (window.innerWidth < 1100 || !activePanel) return;
+		const panel = activePanel;
+		const trigger = overlayReturn;
+		activePanel = null;
+		trigger?.focus();
+		requestAnimationFrame(() => {
+			np.tab = panel;
+			np.open = true;
+		});
+	}
+	function onViewportResize() {
+		widePanels = window.innerWidth >= 1100;
+		reconcileFocusedPanel();
+	}
 	// The now-playing view carries its own queue and lyrics, so the side panels step aside for it
 	// and the bar's two buttons switch its tabs instead of opening a panel on top of it.
 	$effect(() => {
-		if (np.open) queueOpen = lyricsOpen = false;
+		if (np.open) activePanel = null;
 	});
 
 	// The mini player runs this same SPA in a second window (Rust `mini.rs`), so the window label is
@@ -71,10 +110,18 @@
 	// on every app open (silent unless one exists).
 	function onDeskKey(e: KeyboardEvent) {
 		const el = e.target as HTMLElement | null;
+		// Bits dialogs and owned transient panels keep the global command layer underneath them. This
+		// prevents Ctrl+P (or a transport Space) from opening/changing content behind the topmost layer.
+		if (el?.closest('[data-slot="dialog-content"], [data-overlay-panel]')) return;
 		const typing =
 			el &&
 			(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 		if (typing) return;
+		const interactive =
+			el?.closest(
+				'button, a[href], input, textarea, select, summary, [role="button"], [role="tab"], [role="switch"], [contenteditable="true"]'
+			) ?? null;
+		if (interactive && e.code === 'Space') return;
 		if (e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
 			e.preventDefault();
 			togglePlayUi();
@@ -145,10 +192,12 @@
 		const teardownApp = initApp();
 		const teardownWin = initWin();
 		window.addEventListener('keydown', onDeskKey);
+		window.addEventListener('resize', onViewportResize);
 		return () => {
 			teardownApp();
 			teardownWin();
 			window.removeEventListener('keydown', onDeskKey);
+			window.removeEventListener('resize', onViewportResize);
 		};
 	});
 </script>
@@ -178,33 +227,43 @@
 		{/if}
 		<ResizeBorders />
 		<div class="relative z-10 flex min-h-0 flex-1 flex-col">
-		<Titlebar />
-		<div class="relative flex min-h-0 flex-1">
-			<Sidebar />
-			<main class="min-w-0 flex-1 overflow-y-auto bg-transparent" {@attach dragScroll}>
-				{#key auth.epoch}
-					{@render children()}
-				{/key}
-			</main>
-			{#if playback.now}<NowPlayingRail />{/if}
-			{#if np.open && playback.now}<NowPlaying />{/if}
-			{#if lyricsOpen}<LyricsPanel onClose={() => (lyricsOpen = false)} {queueOpen} />{/if}
-			{#if queueOpen}<QueuePanel onClose={() => (queueOpen = false)} />{/if}
-		</div>
-		{#if playback.now}
-			<!-- Slides up from its own height on first play; leaves instantly (bar removal is rare).
-			     z-20 on the wrapper, not the bar: the intro's transform makes this a stacking context,
-			     so a z on the footer inside would be trapped under it. The now-playing view is z-20 and
-			     earlier in the DOM, which is what puts it behind the bar as it slides in and out. -->
-			<div class="relative z-20">
-				<PlayerBar
-					onToggleQueue={() => (np.open ? (np.tab = 'queue') : (queueOpen = !queueOpen))}
-					queueOpen={np.open ? np.tab === 'queue' : queueOpen}
-					onToggleLyrics={() => (np.open ? (np.tab = 'lyrics') : (lyricsOpen = !lyricsOpen))}
-					lyricsOpen={np.open ? np.tab === 'lyrics' : lyricsOpen}
-				/>
+					<Titlebar />
+			<div class="relative flex min-h-0 flex-1">
+				<Sidebar />
+				<section
+					class="desk-center relative min-w-0 flex-1 overflow-hidden bg-transparent"
+					aria-label="Content"
+					data-center-region
+				>
+					<main
+						class="h-full min-w-0 overflow-y-auto bg-transparent {playback.now ? 'pb-[88px]' : ''}"
+						{@attach dragScroll}
+					>
+						{#key auth.epoch}
+							{@render children()}
+						{/key}
+					</main>
+					{#if activePanel === 'lyrics'}
+						<LyricsPanel onClose={closeFocusedPanel} />
+					{:else if activePanel === 'queue'}
+						<QueuePanel onClose={closeFocusedPanel} />
+					{/if}
+					{#if playback.now}
+						<div class="absolute inset-x-3 bottom-2 z-40 h-[72px]">
+							<PlayerBar
+								onToggleQueue={(trigger) => toggleFocusedPanel('queue', trigger)}
+								queueOpen={np.open ? np.tab === 'queue' : activePanel === 'queue'}
+								queueControls={np.open || widePanels ? 'now-playing-dialog' : 'queue-panel'}
+								onToggleLyrics={(trigger) => toggleFocusedPanel('lyrics', trigger)}
+								lyricsOpen={np.open ? np.tab === 'lyrics' : activePanel === 'lyrics'}
+								lyricsControls={np.open || widePanels ? 'now-playing-dialog' : 'lyrics-panel'}
+							/>
+						</div>
+					{/if}
+				</section>
+				{#if playback.now}<NowPlayingRail />{/if}
+				{#if np.open && playback.now}<NowPlaying />{/if}
 			</div>
-		{/if}
 		</div>
 	</div>
 
@@ -217,7 +276,7 @@
 	{#if ui.toast}
 		{@const t = ui.toast}
 		<div
-			transition:fly={{ y: 16, duration: 220, easing: cubicOut }}
+				transition:fly={{ y: still ? 0 : 16, duration: still ? 80 : 220, easing: cubicOut }}
 			class="fixed bottom-40 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm shadow-lg"
 		>
 			<!-- Three branches instead of a ternary on `icon`: HugeiconsIcon freezes `icon` at mount, so a

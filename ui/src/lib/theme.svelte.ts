@@ -23,7 +23,7 @@ type Theme =
 	| { id: ThemeId; label: string; kind: 'palette'; color: string };
 
 export const THEMES: Theme[] = [
-	{ id: 'rose', label: 'Rose', kind: 'accent', color: 'oklch(0.68 0.195 8)', fg: 'oklch(0.98 0.01 8)' },
+	{ id: 'rose', label: 'Rose', kind: 'accent', color: '#e16b8d', fg: '#160b10' },
 	{ id: 'blue', label: 'Blue', kind: 'accent', color: 'oklch(0.49 0.22 264)', fg: 'oklch(0.985 0 0)' },
 	{ id: 'lime', label: 'Lime', kind: 'accent', color: 'oklch(0.77 0.2 131)', fg: 'oklch(0.205 0 0)' },
 	{ id: 'purple', label: 'Purple', kind: 'accent', color: 'oklch(0.56 0.25 302)', fg: 'oklch(0.985 0 0)' },
@@ -92,8 +92,21 @@ export const appearance = $state({
 	reduceMotion: false
 });
 
+const motionPreference = $state({ system: false });
+let motionQuery: MediaQueryList | null = null;
+
+/** One decision for CSS classes, Svelte WAAPI transitions, and imperative scrolling. */
+export function reducedMotion(): boolean {
+	return appearance.reduceMotion || motionPreference.system;
+}
+
+function syncMotionClass(): void {
+	document.documentElement.classList.toggle('reduce-motion', reducedMotion());
+}
+
 export function setAppearance(patch: Partial<typeof appearance>): void {
 	Object.assign(appearance, patch);
+	syncMotionClass();
 	localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance));
 }
 
@@ -294,6 +307,10 @@ export function fontAvailable(name: string): boolean {
 
 /** Apply the stored theme + customization on startup (defaults to rose, no overrides). */
 export function initTheme(): void {
+	if (motionQuery) motionQuery.removeEventListener('change', onSystemMotionChange);
+	motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+	motionPreference.system = motionQuery.matches;
+	motionQuery.addEventListener('change', onSystemMotionChange);
 	const stored = localStorage.getItem(KEY) as ThemeId | null;
 	if (!localStorage.getItem(FACTORY_KEY)) {
 		theme.id = !stored || stored === 'blue' ? 'rose' : THEMES.some((t) => t.id === stored) ? stored : 'rose';
@@ -331,9 +348,14 @@ export function initTheme(): void {
 		// unparseable — keep the defaults
 	}
 	document.documentElement.classList.add('dark');
-	document.documentElement.classList.toggle('reduce-motion', appearance.reduceMotion);
+	syncMotionClass();
 	apply();
 	// Async (each file needs its URL granted first), so the app paints in the fallback font for a
 	// frame or two before a loaded font swaps in.
 	if (custom.fontFiles.length) registerFontFiles();
+}
+
+function onSystemMotionChange(event: MediaQueryListEvent): void {
+	motionPreference.system = event.matches;
+	syncMotionClass();
 }

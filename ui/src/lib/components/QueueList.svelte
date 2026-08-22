@@ -12,12 +12,14 @@
 	import { dragScroll, QUEUE_ROW_MIME } from '$lib/dnd';
 	import { playback, openAddToPlaylist } from '$lib/player.svelte';
 	import { lt } from '$lib/lt.svelte';
+	import { reducedMotion } from '$lib/theme.svelte';
 
 	let { upcomingOnly = false }: { upcomingOnly?: boolean } = $props();
 
 	// Guests are add-only in a session — no removing (theirs or anyone's) and no reordering. The
 	// playing row can't be removed either (backend guards it too).
 	const canRemove = $derived(lt.role !== 'guest');
+	const still = $derived(reducedMotion());
 
 	// --- drag to reorder ---------------------------------------------------------------------
 	// Upcoming rows only: the playing track and the history stay put (the backend clamps to the
@@ -134,7 +136,7 @@
 				data-row
 				role="listitem"
 				class="relative"
-				animate:flip={{ duration: windowed ? 0 : 200, easing: cubicOut }}
+				animate:flip={{ duration: windowed || still ? 0 : 200, easing: cubicOut }}
 				draggable={canDrag(i)}
 				ondragstart={(e) => onDragStart(e, i)}
 				ondragover={(e) => onDragOver(e, i)}
@@ -221,7 +223,7 @@
 			<h3 class="truncate text-sm font-semibold">Now playing</h3>
 			{#if view.prev.length}
 				<button
-					class="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+					class="desk-focus flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
 					onclick={togglePrev}
 				>
 					<HugeiconsIcon icon={HistoryIcon} class="h-3.5 w-3.5" />
@@ -243,10 +245,12 @@
 				</div>
 			{:else}
 				<div class="mt-3 flex items-center justify-between gap-2 px-2 pb-1.5">
-					<h3 class="truncate text-sm font-semibold">{block.heading}</h3>
+					<h3 class="min-w-0 truncate text-sm font-semibold">{block.heading}</h3>
 					{#if block.clearable && canRemove}
 						<button
-							class="shrink-0 cursor-pointer text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+							type="button"
+							class="desk-focus flex h-11 min-w-11 shrink-0 items-center rounded-lg px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/8 hover:text-foreground"
+							aria-label="Clear queue"
 							onclick={() => api.clearQueued()}
 						>
 							Clear queue

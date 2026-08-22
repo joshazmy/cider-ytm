@@ -302,10 +302,7 @@ impl AppState {
         discord: Option<DiscordHandle>,
         lastfm: crate::lastfm::LastfmHandle,
     ) -> Self {
-        let last_itag = db
-            .get_setting("last_itag")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
+        let last_itag = db.get_setting("last_itag").and_then(|s| s.parse().ok()).unwrap_or(0);
         AppState {
             it,
             clients,
@@ -3016,9 +3013,8 @@ pub fn saved_semitones(db: &Db) -> i32 {
 }
 
 fn desk_profile_path() -> std::path::PathBuf {
-    let base = std::env::var_os("XDG_CONFIG_HOME")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| {
+    let base =
+        std::env::var_os("XDG_CONFIG_HOME").map(std::path::PathBuf::from).unwrap_or_else(|| {
             std::env::var_os("HOME")
                 .map(|h| std::path::PathBuf::from(h).join(".config"))
                 .unwrap_or_else(|| std::path::PathBuf::from("."))
@@ -3043,11 +3039,8 @@ pub fn saved_profile(db: &Db) -> AudioProfile {
 
 impl AppState {
     fn apply_simple_fade(&self, pos: f64, duration: f64) {
-        let fade_secs = self
-            .db
-            .get_setting("fade_secs")
-            .and_then(|s| s.parse::<f64>().ok())
-            .unwrap_or(5.0);
+        let fade_secs =
+            self.db.get_setting("fade_secs").and_then(|s| s.parse::<f64>().ok()).unwrap_or(5.0);
         if fade_secs <= 0.0 || duration <= fade_secs {
             let _ = self.player.set_fade_scale(1.0);
             return;
