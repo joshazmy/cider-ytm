@@ -22,6 +22,7 @@ const localMediaPath = dataHome
 
 const PRIMARY_NAV = 'aside[aria-label="Primary navigation"]';
 const CENTER = '[data-center-region]';
+const CENTER_XPATH = '//*[@data-center-region]';
 const PLAYER = 'footer[aria-label="Player"]';
 const RAIL = 'aside[aria-label="Now playing queue"]';
 const GLOBAL_LISTEN = '[data-global-action="listen-together"]';
@@ -421,7 +422,165 @@ async function clickNav(driver, href) {
 	const link = await displayed(driver, By.css(`${PRIMARY_NAV} a[href="${href}"]`), `navigation link ${href}`);
 	await link.click();
 	await waitForPath(driver, href.split('?')[0]);
+	if (href.includes('?')) {
+		const search = href.slice(href.indexOf('?'));
+		await driver.wait(
+			async () => (await driver.executeScript('return location.search')) === search,
+			10_000,
+			`route did not keep query ${search}`
+		);
+	}
 	await assertGlobalListenTogether(driver);
+}
+
+async function clickCenterTab(driver, name) {
+	const tab = await displayed(
+		driver,
+		By.xpath(`${CENTER_XPATH}//*[@role='tab' and normalize-space(.)=${JSON.stringify(name)}]`),
+		`${name} library tab`
+	);
+	await tab.click();
+	await driver.wait(
+		async () =>
+			(await tab.getAttribute('aria-selected')) === 'true' ||
+			(await tab.getAttribute('data-state')) === 'active',
+		5_000,
+		`${name} library tab did not select`
+	);
+}
+
+async function visitDeepLink(driver, path, label) {
+	await driver.executeScript(
+		`
+		const path = arguments[0];
+		document.querySelector('[data-e2e-deeplink]')?.remove();
+		const link = document.createElement('a');
+		link.dataset.e2eDeeplink = '1';
+		link.href = path;
+		link.textContent = path;
+		link.style.cssText = 'position:fixed;left:8px;top:8px;z-index:2147483647';
+		document.body.append(link);
+	`,
+		path
+	);
+	const link = await displayed(driver, By.css('[data-e2e-deeplink]'), `${label} deep link`);
+	await link.click();
+	await driver.executeScript("document.querySelector('[data-e2e-deeplink]')?.remove()");
+}
+
+async function assertCenterUsable(driver, label) {
+	const text = await driver.executeScript(
+		'return document.querySelector("[data-center-region]")?.innerText ?? ""'
+	);
+	assert.ok(
+		text.length > 12,
+		`${label} center is empty: ${JSON.stringify(text).slice(0, 200)}`
+	);
+	await assertGlobalListenTogether(driver);
+}
+
+async function assertWholeAppSurfaces(driver) {
+	await setViewport(driver, 1100, 860);
+	await ensureSidebar(driver, true);
+
+	const primary = [
+		['/', 'Home'],
+		['/library', 'Library'],
+		['/library?tab=recent', 'Recently Played'],
+		['/library?tab=songs', 'Songs'],
+		['/playlist/VLLM', 'Liked Music'],
+		['/library?tab=albums', 'Albums'],
+		['/library?tab=artists', 'Artists']
+	];
+	for (const [href, label] of primary) {
+		await clickNav(driver, href);
+		await assertCenterUsable(driver, label);
+		await capture(driver, `surface-${label.toLowerCase().replaceAll(' ', '-')}`, false);
+	}
+	// Expanded sidebar Search is a field, not an <a href="/search">.
+	await visitDeepLink(driver, '/search', 'Search');
+	await waitForPath(driver, '/search');
+	await assertCenterUsable(driver, 'Search');
+	await capture(driver, 'surface-search', false);
+
+	await clickNav(driver, '/library');
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//h1[normalize-space(.)='Library']`), 'Library heading');
+	for (const name of ['All', 'Songs', 'Recently Played', 'Playlists', 'Albums', 'Artists', 'Local']) {
+		await clickCenterTab(driver, name);
+		await assertCenterUsable(driver, `Library ${name}`);
+	}
+	await displayed(
+		driver,
+		By.xpath("//*[@role='button' and starts-with(@title, 'Native E2E Collection')]"),
+		'Local tab fixture album'
+	);
+	const localSongs = await displayed(
+		driver,
+		By.xpath(`${CENTER_XPATH}//*[@role='tab' and starts-with(normalize-space(.), 'Songs (')]`),
+		'Local songs view'
+	);
+	await localSongs.click();
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//button[normalize-space(.)='Play all']`), 'Local Play all');
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//button[normalize-space(.)='Shuffle']`), 'Local Shuffle');
+
+	await visitDeepLink(driver, '/artist/e2e-offline', 'offline artist');
+	await waitForPath(driver, '/artist/e2e-offline');
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//button[normalize-space(.)='Try again']`), 'artist recovery');
+
+	await visitDeepLink(driver, '/search-more?q=offline&cat=songs', 'search-more');
+	await waitForPath(driver, '/search-more');
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//button[normalize-space(.)='Try again']`), 'search-more recovery');
+
+	await visitDeepLink(driver, '/list?id=FEmusic_charts&title=Charts', 'browse list');
+	await waitForPath(driver, '/list');
+	await displayed(driver, By.xpath(`${CENTER_XPATH}//button[normalize-space(.)='Try again']`), 'browse-list recovery');
+
+	const settingsTrigger = await displayed(
+		driver,
+		By.css(`${PRIMARY_NAV} button[title="Settings"]`),
+		'Settings trigger'
+	);
+	await settingsTrigger.click();
+	await displayed(driver, By.css('[role="dialog"]'), 'Settings dialog');
+	const settingsPanels = [
+		['General', 'Watch history'],
+		['Look', 'Preset'],
+		['Playback', 'Speaker / IEM profile'],
+		['Data', 'Clear caches'],
+		['About', 'Desk keys']
+	];
+	for (const [name, marker] of settingsPanels) {
+		const tab = await displayed(
+			driver,
+			By.xpath(`//div[@role='dialog']//button[@role='tab' and normalize-space(.)=${JSON.stringify(name)}]`),
+			`${name} settings section`
+		);
+		await tab.click();
+		await driver.wait(
+			async () => (await tab.getAttribute('aria-selected')) === 'true',
+			3_000,
+			`${name} settings section did not select`
+		);
+		await displayed(
+			driver,
+			By.xpath(`//div[@role='dialog']//*[normalize-space(.)=${JSON.stringify(marker)}]`),
+			`${name} settings content`
+		);
+	}
+	// Settings keeps the last tab while the dialog stays mounted. Later Reduce motion lives on General.
+	const generalTab = await displayed(
+		driver,
+		By.xpath("//div[@role='dialog']//button[@role='tab' and normalize-space(.)='General']"),
+		'General settings section'
+	);
+	await generalTab.click();
+	await driver.wait(
+		async () => (await generalTab.getAttribute('aria-selected')) === 'true',
+		3_000,
+		'General settings section did not restore'
+	);
+	await closeDialogWithEscape(driver, settingsTrigger, 'Settings');
+	await clickNav(driver, '/');
 }
 
 async function ensureSidebar(driver, expanded) {
@@ -574,7 +733,7 @@ test('Tauri CSP is non-null and least-privilege', async () => {
 	assert.equal(csp.includes('*'), false, 'CSP must not contain wildcard sources');
 });
 
-test('native desktop journey preserves queue, settings, focus, and responsive geometry', { timeout: 120_000 }, async () => {
+test('native desktop journey preserves queue, settings, focus, and responsive geometry', { timeout: 180_000 }, async () => {
 	assert.ok(appPath, 'YAPEL_E2E_APP_PATH must name the compiled native executable');
 	assert.ok(dataHome, 'YAPEL_E2E_DATA_HOME must name the disposable XDG data root');
 	assert.ok(sqlitePath, 'YAPEL_E2E_SQLITE must name the sqlite3 executable');
@@ -656,6 +815,7 @@ test('native desktop journey preserves queue, settings, focus, and responsive ge
 				'native fixture album'
 			);
 			assert.equal(await localAlbum.isDisplayed(), true);
+			await assertWholeAppSurfaces(driver);
 		await clickNav(driver, '/');
 		await setViewport(driver, 900, 620);
 		await clickNav(driver, '/search');
@@ -996,6 +1156,17 @@ test('native desktop journey preserves queue, settings, focus, and responsive ge
 				motionDialog
 			);
 			assert.deepEqual(undersizedSettingsTargets, [], 'Settings contains targets below 44x44px');
+			const generalForMotion = await displayed(
+				driver,
+				By.xpath("//div[@role='dialog']//button[@role='tab' and normalize-space(.)='General']"),
+				'General settings tab for Reduce motion'
+			);
+			await generalForMotion.click();
+			await driver.wait(
+				async () => (await generalForMotion.getAttribute('aria-selected')) === 'true',
+				3_000,
+				'General settings tab did not select for Reduce motion'
+			);
 			const reduceMotion = await displayed(
 				driver,
 				By.xpath("//div[@role='dialog']//*[normalize-space(.)='Reduce motion']/ancestor::div[contains(@class,'justify-between')][1]//*[@role='switch']"),

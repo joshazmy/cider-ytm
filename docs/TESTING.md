@@ -105,7 +105,7 @@ The journey covers:
 
 - native Tauri handshake, bundled assets, IPC, exact CSP policy, and a runtime blocked-resource probe;
 - cold queue restore from real SQLite state;
-- Home, Library, and Search navigation;
+- Home, Library (every tab), Liked Music, Search, offline artist/search-more/list recovery, and every Settings section;
 - offline Search combobox/listbox keyboard behavior, including 200% effective-scale containment;
 - exact 900, 1023, 1024, 1099, 1100, 1101, and 1440 CSS viewport geometry;
 - remembered 64/240px sidebar behavior and the 1100px rail boundary;

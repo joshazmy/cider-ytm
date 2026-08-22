@@ -4,58 +4,61 @@
 > runtime output, tests, source, and Git before continuing.
 
 ## Goal
-Finish an original-Yapel, Cider-4-informed desktop UI; prove it through a retry-free real
-Tauri/WebKitGTK native journey; pass immutable Ten-Star Check; push a private PR; wait for required
-GitHub checks; and merge only the unchanged READY SHA. No deploy, release, signing, or publication.
+Prove the compiled Tauri/WebKitGTK app through a retry-free whole-app native journey.
+Linux/WebKitGTK only. No live Google account, no deploy, no release.
 
 ## Current state
-The visual/harness implementation was READY at `4d92e9e` and opened as private PR #2. GitHub native
-E2E, frontend, and rustfmt passed on that SHA. Pure Rust tests failed linking `-lmpv` because the
-job never installed `libmpv-dev`. That CI gap is now fixed in the working tree and invalidates the
-previous review; Check must rerun on the new HEAD.
+PR #2 is merged. READY SHA `8024ee5dbbf2969d9735999c2aa9a6b9598baa3a` is an ancestor of
+`origin/master` via merge `b21d051ca8ee39394bca84d1f924418fd497cb8f`.
+
+This commit adds the post-merge whole-app surface walk on the real desktop path. Latest
+green local run before commit: `artifacts/desktop-e2e/run-20260822T050608Z-2637439` — 2/2,
+53.6s, already-built debug binary (no `--build`). Local artifact directories are disposable
+and were cleaned after that proof.
 
 The attested Plan digest is unchanged:
 `33781f3985edd3b2922942eadd87b51cb64d826131cc5706747ae03237fc8a8d`.
 Never edit approved-plan artifacts directly.
 
 ## Decisions
-- Preserve Yapel identity; borrow only high-level music-player layout grammar. Do not copy Cider
-  branding, assets, source, or unsupported feature claims.
-- Linux/WebKitGTK is the only fully validated platform for this task.
-- Use the real Tauri application, real WebKitWebDriver/tauri-driver, disposable XDG/SQLite state,
-  closed outbound proxy, no browser surrogate, no mocked IPC, no retry, and no arbitrary sleep.
-- Native 200% zoom is tested through `zoomHotkeysEnabled` and only
-  `core:webview:allow-set-webview-zoom`.
-- The CI Pure Rust tests job must install `libmpv-dev` and `pkg-config` because `-p player` links
-  libmpv. Do not drop player from that job to paper over a missing library.
-- Josh authorized commit, private push, PR, required-check wait, and merge of the exact READY SHA.
-  No deploy/release is authorized.
+- Preserve Yapel identity; borrow only high-level music-player layout grammar.
+- Real Tauri app, WebKitWebDriver/tauri-driver, disposable XDG/SQLite, closed outbound proxy,
+  no mocked IPC, no retry, no arbitrary sleep.
+- Expanded sidebar Search is a field, not `a[href="/search"]`. Reach `/search` via a temporary
+  in-page deep link (or the collapsed-rail icon at `<1024`).
+- Settings keeps the last tab while the dialog stays mounted. Reduce motion lives on General.
+- Library Local **Play all** / **Shuffle** exist on the nested songs view. Do not click Play
+  all if a later assertion still needs the seeded Deterministic Upcoming row.
+- One niced native E2E at a time. Do not set `YAPEL_E2E_ALLOW_HOST_DISPLAY`.
 
-## Files changed
-Product/harness scope plus the rust-tests link-deps fix:
-- CI/docs: `.github/workflows/checks.yml`, `docs/TESTING.md`
-- Prior implementation remains in range from `74f6eee`
-- Continuity: this handoff
+## Files in this follow-up
+- `ui/e2e/desktop.e2e.mjs` — whole-app surface tour inside the seeded journey
+- `docs/TESTING.md` — journey coverage
+- this handoff
 
 ## Verification
-Previous SHA `4d92e9e` proven locally and on GitHub native E2E. This handoff lands before the
-replacement Check. Re-run fmt, unit, svelte-check, build, selected Rust tests, `git diff --check`,
-and one niced native E2E, then `ten-star-gate ready` on the new HEAD.
+```
+export PATH="/tmp/cider-ytm-xvfb/root/usr/bin:$PATH"
+export YAPEL_E2E_CARGO=/home/jhondoe/.cargo/bin/cargo
+export YAPEL_E2E_SQLITE=/home/linuxbrew/.linuxbrew/bin/sqlite3
+export YAPEL_E2E_TAURI_CLI=/home/jhondoe/.cargo/bin/cargo-tauri
+export YAPEL_E2E_TAURI_DRIVER=/tmp/cider-ytm-tauri-driver/bin/tauri-driver
+export YAPEL_E2E_XVFB_RUN=/tmp/cider-ytm-xvfb/root/usr/bin/xvfb-run
+APP=/tmp/cursor-sandbox-cache/ca675b0de3e290c62be734de78de36b5/cargo-target/debug/Yapel
+nice -n 15 ionice -c3 ./scripts/run-desktop-e2e.sh --app "$APP" --artifacts artifacts/desktop-e2e
+```
+Result: pass 2 / fail 0.
 
 ## Git state
 - Worktree: `/home/jhondoe/orca/cider-ytm.worktrees/native-e2e-and-cider-4-visual-coherence`
 - Branch: `task/native-e2e-and-cider-4-visual-coherence`
-- Base: `74f6eee5044824dbd159bf5775702fff6f61d1b9`
-- Previous READY (invalidated by this edit): `4d92e9ea54ca528a93e5f21616f8d12e8aaca499`
-- Remote: private `https://github.com/joshazmy/cider-ytm`; PR #2 is open and will move with HEAD
+- Remote: private `https://github.com/joshazmy/cider-ytm`
 - Required identity: Joshua James <jothantranston@pm.me>
+- No deploy/release
 
 ## Known problems
-1. Previous READY evidence is stale the moment this handoff/CI fix is committed.
-2. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` are host-local.
+1. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` are host-local.
+2. No signed-in YouTube Music, Windows, or macOS coverage.
 
 ## Next action
-1. Commit this CI/docs/handoff fix.
-2. Rerun complete Check on the new HEAD; require `ten-star-gate ready`.
-3. Push the exact new READY SHA, wait for all independent GitHub checks, verify PR head, merge.
-   Do not deploy or release.
+Push this follow-up and open a PR into `master`. Do not deploy.
