@@ -10,9 +10,9 @@ GitHub checks; and merge only the unchanged READY SHA. No deploy, release, signi
 
 ## Current state
 The five final UI/accessibility blockers are fixed and re-proven on the real native path. Frontend,
-Rust, and a retry-free 2-test WebDriver journey with 12 required screenshots all pass. The task is
-still **not READY or merged**: the implementation remains dirty until the scoped commit, then
-immutable Check must run over `74f6eee..HEAD`.
+Rust, and a retry-free 2-test WebDriver journey with 12 required screenshots all pass. The scoped
+implementation is committed as `724222b`. The task is still **not READY or merged**: immutable
+Check must run over `74f6eee..724222b`.
 
 The attested Plan digest is unchanged:
 `33781f3985edd3b2922942eadd87b51cb64d826131cc5706747ae03237fc8a8d`.
@@ -82,24 +82,22 @@ Completed successfully before this handoff:
 - Worktree: `/home/jhondoe/orca/cider-ytm.worktrees/native-e2e-and-cider-4-visual-coherence`
 - Branch: `task/native-e2e-and-cider-4-visual-coherence`
 - Base: `74f6eee5044824dbd159bf5775702fff6f61d1b9`
-- HEAD: `c7a5cb539c007b61ec90c6463bb4a4181670224b`
-- Existing task commits: 3 (`7ec44b8`, `334685e`, `c7a5cb5`).
-- Tree: dirty with the scoped product/harness changes and this handoff; artifacts are ignored.
+- HEAD: `724222b42a5d59c55de8587063684c10d6a22fab`
+- Existing task commits: 4 (`7ec44b8`, `334685e`, `c7a5cb5`, `724222b`).
+- Tree: clean product files after `724222b`; this handoff update is the last coordinator edit
+  before Check. Artifacts are ignored.
 - Remote: private `https://github.com/joshazmy/cider-ytm`; nothing from this branch is pushed.
 - Required identity: Joshua James <jothantranston@pm.me>.
 - Lock owner: `a205180c-7ec1-4552-8119-87af13df57ee`; takeover provenance is helper-recorded.
   Do not delete `.brain/task.lock`.
 
 ## Known problems
-1. No immutable Check, READY marker, commit of the current implementation, push, PR, CI result,
-   or merge has happened.
+1. No immutable Check, READY marker, push, PR, CI result, or merge has happened.
 2. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` were recreated this session
    and are not part of the repository.
 
 ## Next action
-1. Stage only explicit scoped paths, commit with the required identity, and make the tree clean
-   except helper lock files.
-2. Run Ten-Star preflight and immutable security/acceptance review over `74f6eee..HEAD`; require
+1. Run Ten-Star preflight and immutable security/acceptance review over `74f6eee..724222b`; require
    `ten-star-gate ready`.
-3. Push the exact READY SHA, open the private PR, wait for all independent GitHub checks, verify the
+2. Push the exact READY SHA, open the private PR, wait for all independent GitHub checks, verify the
    PR head is unchanged, merge it, and record the merged SHA. Do not deploy or release.
