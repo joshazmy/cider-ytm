@@ -9,10 +9,10 @@ Tauri/WebKitGTK native journey; pass immutable Ten-Star Check; push a private PR
 GitHub checks; and merge only the unchanged READY SHA. No deploy, release, signing, or publication.
 
 ## Current state
-The five final UI/accessibility blockers are fixed and re-proven on the real native path. Frontend,
-Rust, and a retry-free 2-test WebDriver journey with 12 required screenshots all pass. The scoped
-implementation is committed as `724222b`. The task is still **not READY or merged**: immutable
-Check must run over `74f6eee..724222b`.
+The visual/harness implementation was READY at `4d92e9e` and opened as private PR #2. GitHub native
+E2E, frontend, and rustfmt passed on that SHA. Pure Rust tests failed linking `-lmpv` because the
+job never installed `libmpv-dev`. That CI gap is now fixed in the working tree and invalidates the
+previous review; Check must rerun on the new HEAD.
 
 The attested Plan digest is unchanged:
 `33781f3985edd3b2922942eadd87b51cb64d826131cc5706747ae03237fc8a8d`.
@@ -24,80 +24,38 @@ Never edit approved-plan artifacts directly.
 - Linux/WebKitGTK is the only fully validated platform for this task.
 - Use the real Tauri application, real WebKitWebDriver/tauri-driver, disposable XDG/SQLite state,
   closed outbound proxy, no browser surrogate, no mocked IPC, no retry, and no arbitrary sleep.
-- Deterministic fixture rows may cover queue, a disposable local folder/media item, lyrics cache,
-  and play history; production schemas/profiles remain untouched.
 - Native 200% zoom is tested through `zoomHotkeysEnabled` and only
   `core:webview:allow-set-webview-zoom`.
-- Evidence lives under ignored `artifacts/desktop-e2e/`, is per-run, hashed, redaction-scanned,
-  and uploaded in CI with missing-file failure.
-- Hero geometry uses a 0/1 `100vw` step at 1240px instead of min-width media queries because the
-  production CSS optimizer rewrites those queries into ranges that WebKitGTK can mis-apply.
-- Player compact composition starts at a 960px center container so a 1440×900 expanded desk
-  (~883px center) cannot overlap time/volume/actions.
-- Josh explicitly authorized autonomous product choices plus commit, private branch push, PR,
-  required-check wait, and merge of the exact READY SHA. No deploy/release is authorized.
+- The CI Pure Rust tests job must install `libmpv-dev` and `pkg-config` because `-p player` links
+  libmpv. Do not drop player from that job to paper over a missing library.
+- Josh authorized commit, private push, PR, required-check wait, and merge of the exact READY SHA.
+  No deploy/release is authorized.
 
 ## Files changed
-Current product/harness scope is 32 paths:
-- CI/evidence: `.github/workflows/checks.yml`, `.gitignore`,
-  `scripts/run-desktop-e2e.sh`, `docs/TESTING.md`.
-- Native policy: `src-tauri/tauri.conf.json`,
-  `src-tauri/capabilities/default.json`.
-- Native test: `ui/e2e/desktop.e2e.mjs`, `ui/e2e/fixtures/seed.sql`.
-- Shell/theme/routes: `ui/src/routes/+layout.svelte`, `+page.svelte`, `layout.css`,
-  `album/[id]/+page.svelte`, `playlist/[id]/+page.svelte`, `search/+page.svelte`,
-  `ui/src/lib/theme.svelte.ts`.
-- UI components: HomeHero, LyricsPanel, LyricsView, NowPlaying, NowPlayingRail, PlayerBar,
-  QueueList, QueuePanel, SearchSuggest, SettingsDialog, Sidebar, Titlebar, TrackFilter, TrackMenu,
-  TrackRow, and the shared button primitive.
-- Continuity: this handoff. Ten-Star internal lock/attestation markers remain helper-owned.
+Product/harness scope plus the rust-tests link-deps fix:
+- CI/docs: `.github/workflows/checks.yml`, `docs/TESTING.md`
+- Prior implementation remains in range from `74f6eee`
+- Continuity: this handoff
 
 ## Verification
-Completed successfully before this handoff:
-- `pnpm --dir ui test:unit`: 11 passed, 0 failed.
-- `pnpm --dir ui check`: 0 errors, 0 warnings.
-- `pnpm --dir ui build`: production build passed.
-- `/home/jhondoe/.cargo/bin/cargo fmt --all --check`: passed.
-- `/home/jhondoe/.cargo/bin/cargo test -p innertube -p player -p listen-protocol`:
-  67 passed, 0 failed.
-- `bash -n scripts/run-desktop-e2e.sh`, `node --check ui/e2e/desktop.e2e.mjs`,
-  both Tauri JSON parses, and `git diff --check`: passed.
-- Native command passed without retry:
-  `YAPEL_E2E_CARGO=/home/jhondoe/.cargo/bin/cargo
-  YAPEL_E2E_SQLITE=/home/linuxbrew/.linuxbrew/bin/sqlite3
-  YAPEL_E2E_TAURI_CLI=/home/jhondoe/.cargo/bin/cargo-tauri
-  YAPEL_E2E_TAURI_DRIVER=/tmp/cider-ytm-tauri-driver/bin/tauri-driver
-  YAPEL_E2E_XVFB_RUN=/tmp/cider-ytm-xvfb/root/usr/bin/xvfb-run
-  ./scripts/run-desktop-e2e.sh --build --artifacts artifacts/desktop-e2e`.
-- Green evidence:
-  `artifacts/desktop-e2e/run-20260822T034852Z-349283/manifest.json`, status passed,
-  exit 0, 12 PNGs + 3 logs, each SHA-256 recorded. Logs were redaction-scanned.
-- Native assertions now also cover 1241 hero sizing, 1440 player non-overlap, 44px
-  seek/volume/sleep/lyrics/queue-clear targets, immersive column flow, and un-nested
-  immersive play/credits.
-- Canonical Plan remains attested at
-  `FULL_PLAN_SHA256=33781f3985edd3b2922942eadd87b51cb64d826131cc5706747ae03237fc8a8d`.
+Previous SHA `4d92e9e` proven locally and on GitHub native E2E. This handoff lands before the
+replacement Check. Re-run fmt, unit, svelte-check, build, selected Rust tests, `git diff --check`,
+and one niced native E2E, then `ten-star-gate ready` on the new HEAD.
 
 ## Git state
 - Worktree: `/home/jhondoe/orca/cider-ytm.worktrees/native-e2e-and-cider-4-visual-coherence`
 - Branch: `task/native-e2e-and-cider-4-visual-coherence`
 - Base: `74f6eee5044824dbd159bf5775702fff6f61d1b9`
-- HEAD: `724222b42a5d59c55de8587063684c10d6a22fab`
-- Existing task commits: 4 (`7ec44b8`, `334685e`, `c7a5cb5`, `724222b`).
-- Tree: clean product files after `724222b`; this handoff update is the last coordinator edit
-  before Check. Artifacts are ignored.
-- Remote: private `https://github.com/joshazmy/cider-ytm`; nothing from this branch is pushed.
-- Required identity: Joshua James <jothantranston@pm.me>.
-- Lock owner: `a205180c-7ec1-4552-8119-87af13df57ee`; takeover provenance is helper-recorded.
-  Do not delete `.brain/task.lock`.
+- Previous READY (invalidated by this edit): `4d92e9ea54ca528a93e5f21616f8d12e8aaca499`
+- Remote: private `https://github.com/joshazmy/cider-ytm`; PR #2 is open and will move with HEAD
+- Required identity: Joshua James <jothantranston@pm.me>
 
 ## Known problems
-1. No immutable Check, READY marker, push, PR, CI result, or merge has happened.
-2. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` were recreated this session
-   and are not part of the repository.
+1. Previous READY evidence is stale the moment this handoff/CI fix is committed.
+2. Disposable `/tmp/cider-ytm-tauri-driver` and `/tmp/cider-ytm-xvfb` are host-local.
 
 ## Next action
-1. Run Ten-Star preflight and immutable security/acceptance review over `74f6eee..724222b`; require
-   `ten-star-gate ready`.
-2. Push the exact READY SHA, open the private PR, wait for all independent GitHub checks, verify the
-   PR head is unchanged, merge it, and record the merged SHA. Do not deploy or release.
+1. Commit this CI/docs/handoff fix.
+2. Rerun complete Check on the new HEAD; require `ten-star-gate ready`.
+3. Push the exact new READY SHA, wait for all independent GitHub checks, verify PR head, merge.
+   Do not deploy or release.

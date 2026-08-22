@@ -103,6 +103,14 @@ jobs:
         with:
           workspaces: . -> target
 
+      # `player` links libmpv. Without this, the job fails at rust-lld with "unable to find library -lmpv".
+      - name: Player link dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libmpv-dev \
+            pkg-config
+
       - name: Pure Rust tests
         run: cargo test -p innertube -p player -p listen-protocol
 

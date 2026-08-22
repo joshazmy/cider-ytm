@@ -51,7 +51,8 @@ git diff --check
 ```
 
 `test:unit` invokes Node's built-in test runner over `src/lib/*.check.ts` and currently reports 11
-passing checks.
+passing checks. `cargo test -p player` links `libmpv`; install `libmpv-dev` and `pkg-config` first.
+The CI Pure Rust tests job installs those packages for the same reason.
 
 ## Install the native tools without changing the repository
 
