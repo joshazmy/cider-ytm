@@ -1,4 +1,5 @@
 /target
+/artifacts/
 .mcp.json
 .idea/
 # rustypipe scratch (older builds wrote these into CWD; now redirected to temp)

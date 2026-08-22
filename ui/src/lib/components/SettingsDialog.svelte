@@ -104,13 +104,24 @@
 	}
 
 	let tab = $state<TabId>('general');
+	let tabsVertical = $state(false);
 	let settings = $state<Record<string, string>>({});
 	let clients = $state<string[]>([]);
 	let proxyInput = $state('');
 	let loaded = $state(false);
 	let clearing = $state(false);
+	let fadeSaving = $state(false);
+	let fadeSaveGeneration = 0;
 	let version = $state('');
 	getVersion().then((v) => (version = v));
+
+	onMount(() => {
+		const media = window.matchMedia('(min-width: 640px)');
+		const updateOrientation = () => (tabsVertical = media.matches);
+		updateOrientation();
+		media.addEventListener('change', updateOrientation);
+		return () => media.removeEventListener('change', updateOrientation);
+	});
 
 	// (Re)load whenever the modal opens, so it reflects the current persisted values. Also clear the
 	// stale update-check result so re-opening the modal doesn't show it until pressed again.
@@ -149,7 +160,6 @@
 	const hideVideosOn = $derived(settings.hide_videos === 'true');
 	const boiduOn = $derived(settings.lyrics_boidu === 'true');
 	const audioProfile = $derived(settings.audio_profile === 'dimisco' ? 'dimisco' : 'dry');
-	const fadeOn = $derived(settings.fade_secs !== '0');
 	const warnQueueOn = $derived(settings.warn_before_queue_override !== 'false');
 	const preventDuplicatesOn = $derived(settings.prevent_duplicates === 'true');
 	const discordOn = $derived(settings.discord_rpc === 'true');
@@ -209,9 +219,40 @@
 		await api.setSetting('audio_profile', profile);
 	}
 
-	async function setFade(on: boolean) {
-		settings.fade_secs = on ? '5' : '0';
-		await api.setSetting('fade_secs', settings.fade_secs);
+	async function setFadeSeconds(seconds: number) {
+		if (fadeSaving) return;
+		const previous = settings.fade_secs ?? '5';
+		const next = String(seconds);
+		const generation = ++fadeSaveGeneration;
+		fadeSaving = true;
+		settings.fade_secs = next;
+		try {
+			await api.setSetting('fade_secs', next);
+		} catch (error) {
+			if (generation === fadeSaveGeneration) {
+				settings.fade_secs = previous;
+				toast.error(`Could not save fade setting: ${String(error)}`);
+			}
+		} finally {
+			if (generation === fadeSaveGeneration) fadeSaving = false;
+		}
+	}
+
+	function onTabKeydown(event: KeyboardEvent, index: number) {
+		let next = index;
+		if (event.key === 'Home') next = 0;
+		else if (event.key === 'End') next = TABS.length - 1;
+		else if ((tabsVertical && event.key === 'ArrowDown') || (!tabsVertical && event.key === 'ArrowRight')) {
+			next = (index + 1) % TABS.length;
+		} else if ((tabsVertical && event.key === 'ArrowUp') || (!tabsVertical && event.key === 'ArrowLeft')) {
+			next = (index - 1 + TABS.length) % TABS.length;
+		} else {
+			return;
+		}
+
+		event.preventDefault();
+		tab = TABS[next].id;
+		requestAnimationFrame(() => document.getElementById(`settings-tab-${TABS[next].id}`)?.focus());
 	}
 
 	async function setWarnQueue(on: boolean) {
@@ -305,19 +346,25 @@
 </script>
 
 <Dialog.Root bind:open={ui.settingsOpen}>
-	<Dialog.Content class="gap-0 overflow-hidden p-0 sm:max-w-3xl">
+	<Dialog.Content data-settings-surface class="flex h-[min(46rem,86vh)] w-[min(920px,92vw)] max-w-none flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-[min(920px,92vw)]">
 		<div class="flex items-center border-b px-6 py-3.5">
 			<Dialog.Title class="text-[17px] font-semibold">Settings</Dialog.Title>
 			<Dialog.Description class="sr-only">Application settings</Dialog.Description>
 		</div>
 
-		<div class="flex h-[min(36rem,72vh)]">
+		<div class="flex min-h-0 flex-1 flex-col sm:flex-row">
 			<!-- Tab rail. Frost plate, not factory rose. -->
-			<nav class="w-48 shrink-0 border-r p-2">
-				{#each TABS as t (t.id)}
-					<button
-						onclick={() => (tab = t.id)}
-						class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors {tab ===
+				<div class="flex w-full shrink-0 overflow-x-auto border-b p-2 sm:w-[184px] sm:flex-col sm:overflow-x-visible sm:border-r sm:border-b-0" role="tablist" aria-label="Settings sections" aria-orientation={tabsVertical ? 'vertical' : 'horizontal'}>
+					{#each TABS as t, index (t.id)}
+						<button
+							id="settings-tab-{t.id}"
+							role="tab"
+							aria-selected={tab === t.id}
+							aria-controls="settings-panel-{t.id}"
+							tabindex={tab === t.id ? 0 : -1}
+							onclick={() => (tab = t.id)}
+							onkeydown={(event) => onTabKeydown(event, index)}
+						class="desk-focus flex h-11 shrink-0 items-center gap-2.5 rounded-lg px-3 text-left text-[13px] font-medium transition-colors sm:w-full {tab ===
 						t.id
 							? 'bg-white/[0.10] text-foreground'
 							: 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'}"
@@ -326,11 +373,17 @@
 						{t.label}
 					</button>
 				{/each}
-			</nav>
+			</div>
 
 			<!-- Content pane. min-w-0: a flex child's min-width is auto, so without it one wide row
 			     (a long font name, a long path) widens the pane and pushes every tab off the modal. -->
-			<div class="min-w-0 flex-1 overflow-y-auto px-6 py-4">
+			<div
+				id="settings-panel-{tab}"
+				role="tabpanel"
+				aria-labelledby="settings-tab-{tab}"
+				tabindex="0"
+				class="min-h-0 min-w-0 flex-1 overflow-y-auto px-6 py-4 outline-none"
+			>
 				{#if !loaded}
 					<p class="text-sm text-muted-foreground">Loading…</p>
 				{:else if tab === 'general'}
@@ -447,13 +500,10 @@
 								Cut fly-ins and other animation in this app.
 							</p>
 						</div>
-						<Switch
-							checked={appearance.reduceMotion}
-							onCheckedChange={(on) => {
-								setAppearance({ reduceMotion: on });
-								document.documentElement.classList.toggle('reduce-motion', on);
-							}}
-						/>
+							<Switch
+								checked={appearance.reduceMotion}
+								onCheckedChange={(on) => setAppearance({ reduceMotion: on })}
+							/>
 					</div>
 					<div class="flex items-start justify-between gap-4 border-b py-3">
 						<div class="min-w-0">
@@ -789,19 +839,18 @@
 						</div>
 					</div>
 					<div class="border-b py-3">
-						<div class="font-medium">Crossfade</div>
+						<div class="font-medium">Fade between tracks</div>
 						<p class="mt-0.5 mb-3 text-sm text-muted-foreground">
 							Seconds to fade out/in at a track change. Not overlapping automix.
 						</p>
-						<div class="flex gap-2">
+						<div class="flex flex-wrap gap-2" role="group" aria-label="Fade between tracks" aria-busy={fadeSaving}>
 							{#each [0, 3, 5, 8, 10] as s (s)}
 								<Button
-									variant={(settings.fade_secs ?? '0') === String(s) ? 'default' : 'outline'}
-									size="sm"
-									onclick={async () => {
-										settings.fade_secs = String(s);
-										await api.setSetting('fade_secs', String(s));
-									}}>{s === 0 ? 'Off' : `${s}s`}</Button
+									variant={(settings.fade_secs ?? '5') === String(s) ? 'default' : 'outline'}
+									class="h-11 min-w-11"
+									aria-pressed={(settings.fade_secs ?? '5') === String(s)}
+									disabled={fadeSaving}
+									onclick={() => setFadeSeconds(s)}>{s === 0 ? 'Off' : `${s}s`}</Button
 								>
 							{/each}
 						</div>
@@ -956,3 +1005,15 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style>
+	/* Visual glyphs stay compact, while the entire Settings interaction surface keeps the
+	   binding desktop/touch target contract — including the dialog primitive's close button. */
+	:global([data-settings-surface] button),
+	:global([data-settings-surface] [role='switch']),
+	:global([data-settings-surface] input:not([type='hidden'])),
+	:global([data-settings-surface] select) {
+		min-width: 44px;
+		min-height: 44px;
+	}
+</style>

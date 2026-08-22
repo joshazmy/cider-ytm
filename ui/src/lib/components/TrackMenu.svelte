@@ -33,7 +33,8 @@
 		onAdd,
 		onRemove,
 		removeLabel = 'Remove from playlist',
-		linksOnly = false
+		linksOnly = false,
+		triggerText = ''
 	}: {
 		song: SongItem;
 		/** Classes for the ⋯ trigger button (positioning differs per host: inline vs overlay). */
@@ -46,18 +47,28 @@
 		/** Player-bar variant: ⋮ trigger, and only artist/album/shortcuts (queue and like already
 		    have their own buttons there). */
 		linksOnly?: boolean;
+		/** Optional visible copy when the shared trigger is used as a full-width overflow row. */
+		triggerText?: string;
 	} = $props();
 
 	let menuOpen = $state(false);
+	let trigger: HTMLButtonElement | undefined = $state();
 	// Player-bar only: tempo/pitch belong to playback, not to a row you happen to be pointing at.
 	let advancedOpen = $state(false);
 	let mx = $state(0);
 	let my = $state(0);
 	let openUp = $state(false);
+	let maxMenuHeight = $state(280);
 
 	function openMenu(e: MouseEvent) {
 		e.stopPropagation();
-		({ right: mx, y: my, openUp } = anchorMenu(e.currentTarget as HTMLElement));
+		const target = e.currentTarget as HTMLElement;
+		const targetRect = target.getBoundingClientRect();
+		({ right: mx, y: my, openUp } = anchorMenu(target));
+		maxMenuHeight = Math.max(
+			44,
+			openUp ? targetRect.top - 8 : window.innerHeight - targetRect.bottom - 8
+		);
 		menuOpen = true;
 	}
 	// stopPropagation everywhere: the trigger sits inside a clickable row (TrackRow's whole row is a
@@ -73,6 +84,13 @@
 		e.stopPropagation();
 		menuOpen = false;
 	}
+	function onWindowKeydown(e: KeyboardEvent) {
+		if (e.key !== 'Escape' || !menuOpen) return;
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		menuOpen = false;
+		requestAnimationFrame(() => trigger?.focus());
+	}
 
 	const rated = $derived(ratingOf(song));
 	// A local file has no YouTube identity: liking it or putting it in a YTM playlist is not a
@@ -80,7 +98,8 @@
 	const isLocal = $derived(api.isLocalId(song.video_id));
 </script>
 
-<button class="{triggerClass} {menuOpen ? 'opacity-100' : ''}" onclick={openMenu} aria-label="Track options">
+<svelte:window onkeydown={onWindowKeydown} />
+<button bind:this={trigger} class="{triggerClass} {menuOpen ? 'opacity-100' : ''}" onclick={openMenu} aria-label="Track options">
 	<!-- icon swap via altIcon/showAlt — `icon` is frozen at mount -->
 	<HugeiconsIcon
 		icon={MoreHorizontalIcon}
@@ -88,6 +107,7 @@
 		showAlt={linksOnly}
 		class="h-4 w-4"
 	/>
+	{#if triggerText}<span>{triggerText}</span>{/if}
 </button>
 
 {#if menuOpen}
@@ -97,11 +117,12 @@
 		aria-label="Close menu"
 		{@attach toBody}
 	></button>
-	<div
-		class="fixed z-50 min-w-44 animate-in rounded-lg border bg-popover p-1 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95 {openUp
+		<div
+			data-track-menu
+			class="fixed z-50 min-w-44 overflow-y-auto overscroll-contain animate-in rounded-lg border bg-popover p-1 text-popover-foreground shadow-xl duration-150 fade-in-0 zoom-in-95 {openUp
 			? 'origin-bottom-right'
 			: 'origin-top-right'}"
-		style="right:{mx}px; {openUp ? 'bottom' : 'top'}:{my}px;"
+			style="right:{mx}px; max-height:{maxMenuHeight}px; {openUp ? 'bottom' : 'top'}:{my}px;"
 		{@attach toBody}
 	>
 		{#if !linksOnly}
@@ -236,3 +257,10 @@
 {#if linksOnly}
 	<TempoPitchDialog bind:open={advancedOpen} />
 {/if}
+
+<style>
+	:global([data-track-menu] button) {
+		min-width: 44px;
+		min-height: 44px;
+	}
+</style>

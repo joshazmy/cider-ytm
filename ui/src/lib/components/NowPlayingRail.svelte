@@ -17,20 +17,21 @@
 </script>
 
 <aside
-	class="desk-glass hidden h-full w-[272px] shrink-0 flex-col rounded-none border-y-0 border-r-0 min-[1100px]:flex"
+	aria-label="Now playing queue"
+	class="hidden h-full w-[clamp(272px,22vw,320px)] shrink-0 flex-col border-l border-white/10 bg-sidebar min-[1100px]:flex min-[1440px]:w-[clamp(288px,22vw,340px)]"
 >
-	<div class="px-3 pt-3 pb-2">
+	<div class="border-b border-white/8 px-3 pt-3 pb-3">
 		<div class="flex items-center justify-between text-[12px] font-semibold text-muted-foreground">
 			<span>Playing</span>
 			<div class="flex items-center gap-1">
 				{#if total}
-					<span class="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal"
+					<span class="px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal"
 						>{at} of {total}</span
 					>
 				{/if}
 				<button
 					type="button"
-					class="rounded-full px-2 py-0.5 text-[10px] font-medium {desk.autoplay
+					class="desk-focus flex size-11 items-center justify-center rounded-lg text-[10px] font-medium {desk.autoplay
 						? 'text-foreground'
 						: 'text-muted-foreground hover:text-foreground'}"
 					onclick={() => setDeskAutoplay(!desk.autoplay)}
@@ -42,7 +43,8 @@
 				{#if canClear}
 					<button
 						type="button"
-						class="rounded-full px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal text-muted-foreground hover:bg-white/8 hover:text-foreground"
+						class="desk-focus flex h-11 min-w-11 items-center justify-center rounded-lg px-2 text-[11px] font-medium normal-case tracking-normal text-muted-foreground hover:bg-white/8 hover:text-foreground"
+						aria-label="Clear queue"
 						onclick={() => api.clearQueued()}
 					>
 						Clear
@@ -53,7 +55,7 @@
 		{#if playback.now}
 			<button
 				type="button"
-				class="mt-2 flex w-full items-center gap-2.5 rounded-xl bg-white/[0.05] p-2 text-left hover:bg-white/[0.08]"
+				class="desk-focus mt-2 flex min-h-16 w-full items-center gap-2.5 rounded-xl bg-white/[0.055] p-2 text-left ring-1 ring-white/[0.06] hover:bg-white/[0.09]"
 				onclick={() => {
 					np.open = true;
 					np.tab = 'lyrics';

@@ -205,21 +205,21 @@
 </script>
 
 {#if loading}
-    <div class="flex flex-col items-center gap-5 px-6 pb-8 pt-14">
-        <Skeleton class="h-52 w-52 shrink-0 rounded-3xl" />
-        <div class="flex flex-col items-center space-y-3">
-            <Skeleton class="h-3 w-16 rounded" />
-            <Skeleton class="h-12 w-64 rounded-lg" />
-            <Skeleton class="h-4 w-40 rounded" />
-        </div>
-        <div class="flex gap-3">
-            <Skeleton class="h-10 w-28 rounded-full" />
-            <Skeleton class="h-10 w-28 rounded-full" />
-        </div>
-    </div>
-    <div
-        class="mx-6 mb-6 overflow-hidden rounded-2xl bg-background/40 p-2 ring-1 ring-white/10 backdrop-blur-md"
-    >
+	    <div class="album-detail-hero grid shrink-0 items-end py-6">
+	        <Skeleton class="aspect-square w-full shrink-0 rounded-2xl" />
+	        <div class="min-w-0 self-end">
+	            <Skeleton class="h-12 w-[min(32rem,80%)] rounded-lg" />
+	            <Skeleton class="mt-3 h-4 w-40 rounded" />
+	            <div class="mt-5 flex flex-wrap gap-2">
+	                <Skeleton class="h-11 w-28 rounded-lg" />
+	                <Skeleton class="h-11 w-28 rounded-lg" />
+	                <Skeleton class="h-11 w-44 rounded-lg" />
+	            </div>
+	        </div>
+	    </div>
+	    <div
+	        class="relative mx-6 mb-6 overflow-hidden border-t border-white/10 pt-2"
+	    >
         {#each Array(8) as _, i (i)}
             <TrackRowSkeleton hideThumb />
         {/each}
@@ -227,50 +227,50 @@
 {:else if error}
     <div class="p-6"><ErrorState message={error} onRetry={() => load(id)} /></div>
 {:else if album}
-    <!-- Playlist-matching hero: cover wash, large rounded art, Play + Shuffle pills. -->
-    <div
-        class="content-in relative flex shrink-0 items-center px-6 py-3"
+    <!-- Artwork-led detail hero: large cover, readable metadata, and a single action composition. -->
+	    <div
+	        data-media-hero
+	        class="album-detail-hero content-in relative grid shrink-0 items-end overflow-hidden py-6"
     >
         {#if album.thumbnail}
             <!-- Blur-2xl destroys detail, so the smallest source that still holds the cover colours. -->
             <img
                 src={thumb(album.thumbnail, 96)}
                 alt=""
-                class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-80 blur-2xl saturate-150"
+                class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-[0.32] blur-3xl saturate-75"
             />
         {:else if artistHero}
             <img
                 src={artistHero}
                 alt=""
-                class="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-80 blur-2xl saturate-150"
+                class="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-[0.32] blur-3xl saturate-75"
             />
         {/if}
         <div
-            class="absolute inset-0 bg-gradient-to-b from-black/20 via-background/55 to-background"
+            class="absolute inset-0 bg-gradient-to-r from-background/90 via-background/55 to-background/90"
         ></div>
 
-        <div class="absolute right-5 top-5 z-10">
-            <TrackFilter bind:value={query} placeholder="Search this album" />
-        </div>
-
         {#if album.thumbnail}
-            <img
-                src={thumb(album.thumbnail, 400)}
+	            <img
+	                data-media-art
+	                src={thumb(album.thumbnail, 400)}
                 alt=""
-                class="relative h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+                class="relative aspect-square w-full shrink-0 rounded-2xl object-cover shadow-2xl ring-1 ring-white/12"
             />
         {:else}
-            <div
-                class="relative h-16 w-16 shrink-0 rounded-xl bg-muted ring-1 ring-white/10"
+	            <div
+	                data-media-art
+	                class="relative aspect-square w-full shrink-0 rounded-2xl bg-muted shadow-2xl ring-1 ring-white/10"
             ></div>
         {/if}
 
-        <div class="relative ml-3 min-w-0 flex-1">
-            <h1 class="truncate text-[1.25rem] font-semibold tracking-tight">
+        <div class="relative min-w-0 self-end">
+        <div class="min-w-0">
+            <h1 class="font-heading max-w-4xl text-[clamp(2.25rem,5vw,3.5rem)] leading-[0.98] font-semibold tracking-[-0.04em] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
                 {album.title ?? "Album"}
             </h1>
             <div
-                class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground"
+                class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"
             >
                 {#if album.explicit}
                     <ExplicitIcon class="h-4 w-4 shrink-0" />
@@ -299,16 +299,16 @@
             </div>
         </div>
 
-        <div class="relative ml-3 flex shrink-0 flex-wrap items-center gap-2">
+        <div class="relative mt-5 flex flex-wrap items-center gap-2">
             <button
-                class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background disabled:opacity-50"
+                class="desk-focus flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-foreground px-5 text-sm font-semibold text-background disabled:opacity-50"
                 onclick={() => playAll(null)}
                 disabled={!album.items.length}
             >
                 <HugeiconsIcon icon={PlayIcon} class="h-4 w-4" /> Play
             </button>
             <button
-                class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-white/10 px-4 text-[13px] font-semibold text-foreground disabled:opacity-50"
+                class="desk-focus flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-white/10 px-5 text-sm font-semibold text-foreground disabled:opacity-50"
                 onclick={shuffle}
                 disabled={!album.items.length}
             >
@@ -318,7 +318,7 @@
                  in or not. -->
             {#if !isLocal}
                 <button
-                    class="flex h-10 cursor-pointer items-center gap-2 rounded-full border px-5 text-sm font-semibold transition hover:bg-accent/10 disabled:opacity-50"
+                    class="desk-focus flex h-11 cursor-pointer items-center gap-2 rounded-lg border px-5 text-sm font-semibold transition hover:bg-accent/10 disabled:opacity-50"
                     class:border-primary={inLibrary}
                     class:text-primary={inLibrary}
                     onclick={toggleLibrary}
@@ -335,7 +335,7 @@
                 </button>
             {/if}
             <button
-                class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-muted-foreground transition hover:bg-accent/10 hover:text-foreground"
+                class="desk-focus flex size-11 cursor-pointer items-center justify-center rounded-lg border text-muted-foreground transition hover:bg-accent/10 hover:text-foreground"
                 onclick={() => (menuOpen = !menuOpen)}
                 aria-label="More options"
             >
@@ -407,12 +407,17 @@
                     </button>
                 </div>
             {/if}
+            <div class="ml-auto min-w-[220px] flex-1 min-[1180px]:max-w-[280px]">
+                <TrackFilter bind:value={query} placeholder="Search this album" />
+            </div>
+        </div>
         </div>
     </div>
 
     <!-- Numbered track list on a frosted plate over the page. -->
-    <div
-        class="content-in relative mx-6 mb-6 overflow-hidden rounded-2xl bg-background/40 p-2 ring-1 ring-white/10 backdrop-blur-md"
+	    <div
+	        data-track-list
+	        class="content-in relative mx-6 mb-6 overflow-hidden border-t border-white/10 pt-2"
     >
         {#each shown as item, i (item.video_id + i)}
             <TrackRow

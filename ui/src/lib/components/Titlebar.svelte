@@ -15,11 +15,13 @@
 		Cancel01Icon,
 		CheckmarkCircle01Icon,
 		Loading03Icon,
-		HotspotOfflineIcon
+		HotspotOfflineIcon,
+		UserGroup02Icon
 	} from '@hugeicons/core-free-icons';
 	import LastFmIcon from './LastFmIcon.svelte';
 	import * as api from '$lib/api';
-	import { toast } from '$lib/player.svelte';
+	import { toast, ui } from '$lib/player.svelte';
+	import { lt } from '$lib/lt.svelte';
 
 	const win = getCurrentWindow();
 
@@ -128,12 +130,12 @@
      at this z — it must outrank the panels below (LyricsPanel/QueuePanel, z-30). -->
 <header
 	data-tauri-drag-region
-	class="relative z-50 flex h-9 shrink-0 select-none items-center justify-between bg-transparent"
+	class="relative z-50 flex h-11 shrink-0 select-none items-center justify-between border-b border-white/10 bg-background/95"
 >
-	<div class="flex h-full items-center pl-1.5">
-		<div class="ml-0.5 flex h-7 overflow-hidden rounded-full bg-black/25">
+	<div class="flex h-full items-center pl-1">
+		<div class="flex h-11 overflow-hidden">
 			<button
-				class="flex h-full w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+				class="desk-focus flex size-11 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
 				onclick={() => history.back()}
 				disabled={depth === 0}
 				title="Back"
@@ -142,7 +144,7 @@
 				<HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} class="h-4 w-4" />
 			</button>
 			<button
-				class="flex h-full w-7 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
+				class="desk-focus flex size-11 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground disabled:pointer-events-none disabled:opacity-25"
 				onclick={() => history.forward()}
 				disabled={depth === deepest}
 				title="Forward"
@@ -154,6 +156,23 @@
 	</div>
 
 	<div class="flex h-full items-center">
+		<button
+			type="button"
+			data-global-action="listen-together"
+			class="desk-focus relative flex h-11 min-w-11 items-center justify-center gap-2 px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+			onclick={() => (ui.ltOpen = true)}
+			aria-label="Listen Together"
+			aria-haspopup="dialog"
+			aria-expanded={ui.ltOpen}
+			aria-pressed={lt.role !== 'none'}
+		>
+			<HugeiconsIcon icon={UserGroup02Icon} class="size-4" />
+			<span class="hidden min-[1060px]:inline">Listen Together</span>
+			{#if lt.role !== 'none'}
+				<span class="absolute top-2 right-2 size-1.5 rounded-full bg-primary ring-2 ring-background"></span>
+			{/if}
+		</button>
+
 		<!-- Listen Together / Discord / Last.fm live in Settings so the title strip cannot paint a
 		     lone Discord "D" mark. -->
 		<button
@@ -182,24 +201,24 @@
 			</span>
 		</button>
 
-		<div class="mx-1 h-3.5 w-px bg-white/10"></div>
+		<div class="h-4 w-px bg-white/10"></div>
 
 		<button
-			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+			class="desk-focus flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={() => win.minimize()}
 			aria-label="Minimize"
 		>
 			<HugeiconsIcon icon={MinusSignIcon} strokeWidth={2} class="h-4 w-4" />
 		</button>
 		<button
-			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+			class="desk-focus flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
 			onclick={() => win.toggleMaximize()}
 			aria-label="Maximize"
 		>
 			<HugeiconsIcon icon={SquareIcon} strokeWidth={2} class="h-3.5 w-3.5" />
 		</button>
 		<button
-			class="flex h-full w-10 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/80 hover:text-white"
+			class="desk-focus flex h-full w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/80 hover:text-white"
 			onclick={() => win.close()}
 			aria-label="Close"
 		>

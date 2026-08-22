@@ -3,6 +3,7 @@
 	import { desk, playback, setLyricsOffset } from '$lib/player.svelte';
 	import { applyUserLyricsSave, getUserLyrics, lyricsFromUserText } from '$lib/userLyrics';
 	import { parseClock } from '$lib/clock';
+	import { reducedMotion } from '$lib/theme.svelte';
 
 	// `expanded` only sizes the type and centres the column. The owner of the extra room (the side
 	// panel, or the now-playing view) decides how much there is. Toggling it must not remount this
@@ -84,6 +85,7 @@
 
 	$effect(() => {
 		const i = activeIndex;
+		const reduceMotion = reducedMotion();
 		// Re-centre after the layout width/font changes, and jump rather than glide across it.
 		// (Also fires on the first run, where both values are already at their defaults.)
 		if (expanded !== wasExpanded) {
@@ -94,7 +96,7 @@
 		if (i < 0 || !scroller || Date.now() < userScrollUntil) return;
 		scroller.querySelector(`[data-line="${i}"]`)?.scrollIntoView({
 			// Opening mid-song jumps straight to the line; after that, glide.
-			behavior: hasScrolled ? 'smooth' : 'instant',
+			behavior: hasScrolled && !reduceMotion ? 'smooth' : 'instant',
 			block: 'center'
 		});
 		hasScrolled = true;
@@ -153,6 +155,7 @@
 	}
 </script>
 
+<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 <!-- svelte-ignore a11y_no_static_element_interactions -- handlers only detect scroll intent -->
 <div
 	bind:this={scroller}
@@ -274,16 +277,26 @@
 	{/if}
 </div>
 {#if lyrics && !loading}
-	<p class="flex items-center justify-between gap-2 border-t px-4 py-2 text-xs text-muted-foreground">
+	<p class="flex items-center justify-between gap-2 border-t px-4 py-1 text-xs text-muted-foreground">
 		<span>{lyrics.source.startsWith('Source:') ? lyrics.source : `Lyrics from ${lyrics.source}`}</span>
 		<span class="flex items-center gap-1">
-			<button type="button" class="px-1 hover:text-foreground" onclick={() => setLyricsOffset(desk.lyricsOffset - 0.5)}>−</button>
+			<button
+				type="button"
+				class="desk-focus flex h-11 min-w-11 items-center justify-center rounded-lg hover:bg-white/8 hover:text-foreground"
+				aria-label="Decrease lyrics offset"
+				onclick={() => setLyricsOffset(desk.lyricsOffset - 0.5)}
+			>−</button>
 			<span class="tabular-nums">{desk.lyricsOffset === 0 ? '0.0s' : `${desk.lyricsOffset > 0 ? '+' : ''}${desk.lyricsOffset.toFixed(1)}s`}</span>
-			<button type="button" class="px-1 hover:text-foreground" onclick={() => setLyricsOffset(desk.lyricsOffset + 0.5)}>+</button>
+			<button
+				type="button"
+				class="desk-focus flex h-11 min-w-11 items-center justify-center rounded-lg hover:bg-white/8 hover:text-foreground"
+				aria-label="Increase lyrics offset"
+				onclick={() => setLyricsOffset(desk.lyricsOffset + 0.5)}
+			>+</button>
 		</span>
 	</p>
 {/if}
-<div class="border-t px-4 py-2">
+<div class="border-t px-4 py-1">
 	{#if editing}
 		<textarea
 			class="mb-2 h-28 w-full rounded-lg bg-white/5 p-2 text-sm outline-none"
@@ -291,15 +304,16 @@
 			bind:value={draft}
 		></textarea>
 		<div class="flex gap-2">
-			<button type="button" class="text-xs font-medium text-primary" onclick={saveMine}>Save</button>
-			<button type="button" class="text-xs text-muted-foreground" onclick={() => (editing = false)}
+			<button type="button" class="desk-focus flex h-11 min-w-11 items-center px-3 text-xs font-medium text-primary" onclick={saveMine}>Save</button>
+			<button type="button" class="desk-focus flex h-11 min-w-11 items-center px-3 text-xs text-muted-foreground" onclick={() => (editing = false)}
 				>Cancel</button
 			>
 		</div>
 	{:else}
 		<button
 			type="button"
-			class="text-xs text-muted-foreground hover:text-foreground"
+			class="desk-focus flex h-11 min-w-11 items-center rounded-lg px-2 text-xs text-muted-foreground hover:bg-white/8 hover:text-foreground"
+			aria-label="Add your lyrics"
 			onclick={() => {
 				draft = lyrics?.source === 'You' ? lyrics.lines.map((l) => l.text).join('\n') : '';
 				editing = true;
@@ -307,4 +321,4 @@
 		>
 	{/if}
 </div>
-
+</div>

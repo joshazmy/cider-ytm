@@ -54,9 +54,9 @@
 			res = fresh;
 			searched = q;
 			putCached(key, fresh);
-		} catch (e) {
+		} catch {
 			if (latest !== q) return;
-			if (!hit) error = String(e);
+			if (!hit) error = 'Search is unavailable right now. Check your connection and try again.';
 		} finally {
 			if (latest === q) searching = false;
 		}
@@ -103,7 +103,7 @@
 <div class="flex h-full flex-col">
 	<div class="px-6 pb-4 pt-5">
 		<form
-			class="flex max-w-xl"
+			class="flex max-w-[45rem]"
 			onsubmit={(e) => {
 				e.preventDefault();
 				runSearch();
@@ -112,6 +112,7 @@
 			<SearchSuggest
 				bind:value={query}
 				placeholder="Search songs, albums, artists, playlists…"
+				inputClass="h-12 rounded-xl px-4 text-[15px]"
 				onpick={() => (lastQuery = query)}
 			/>
 		</form>
