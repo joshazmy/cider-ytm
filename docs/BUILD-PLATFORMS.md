@@ -1,10 +1,16 @@
-# Building Limusic on each platform
+# Building Yapel on each platform
 
-Limusic is a Tauri 2 app (Rust core + SvelteKit SPA) that dynamically links **libmpv** (mpv API
-2.x, i.e. mpv ≥ 0.35). Tauri does **not** cross-compile — build each OS on that OS. The Rust link
+Yapel is a Tauri 2 app (Rust core + SvelteKit SPA) that dynamically links **libmpv** (mpv API
+2.x, i.e. mpv ≥ 0.35). The crate and some bundle scripts still say `limusic` because this is a
+fork of [Limusic](https://github.com/SimoHypers/limusic); the binary and window title are `Yapel`.
+Tauri does **not** cross-compile — build each OS on that OS. The Rust link
 step just emits `cargo:rustc-link-lib=mpv` (via `libmpv2-sys`), so "getting it to build" is really
 "putting libmpv's import library on the linker's search path"; "getting it to run" is "shipping the
 matching shared library next to the app."
+
+Installer bundles (`cargo tauri build`) also require `TAURI_SIGNING_PRIVATE_KEY`. That key is not
+published. To run from source without an installer, use `cargo tauri dev` or
+`cargo build --release -p limusic-app --bin Yapel` as in the README.
 
 Bundle targets are set per platform: `tauri.conf.json` → `rpm` (Linux), `tauri.windows.conf.json` →
 `nsis` + `msi`, `tauri.macos.conf.json` → `app` + `dmg`. Tauri auto-merges the platform file over
@@ -25,7 +31,7 @@ the base for the current OS.
 sudo dnf install mpv-libs mpv-libs-devel webkit2gtk4.1-devel \
   gcc gcc-c++ make openssl-devel librsvg2-devel   # + standard Tauri build deps
 cd ui && pnpm install && pnpm build
-cargo tauri build            # → target/release/bundle/rpm/limusic-*.rpm
+cargo tauri build            # → target/release/bundle/rpm/Yapel-*.rpm
 ```
 
 - libmpv is system-provided (`mpv-libs`), found on the default linker path — no bundling needed.
@@ -76,7 +82,7 @@ cargo tauri build            # → target/release/bundle/rpm/limusic-*.rpm
 6. **Build:**
    ```powershell
    cd ui; pnpm build; cd ..
-   cargo tauri build          # → target/release/bundle/{msi,nsis}/limusic_*.{msi,exe}
+   cargo tauri build          # → target/release/bundle/{msi,nsis}/Yapel_*.{msi,exe}
    ```
 - Media keys use **SMTC** (the volume-flyout media card). souvlaki binds it to the main window
   handle — see the validation checklist below.
@@ -96,17 +102,17 @@ cargo tauri build            # → target/release/bundle/rpm/limusic-*.rpm
 4. **Build:**
    ```bash
    cd ui && pnpm build && cd ..
-   cargo tauri build          # → target/release/bundle/{macos,dmg}/limusic.{app,dmg}
+   cargo tauri build          # → target/release/bundle/{macos,dmg}/Yapel.{app,dmg}
    ```
 5. **Bundle the dylib + fix the load path.** `tauri.macos.conf.json` lists
    `bundle.macOS.frameworks: ["libmpv.2.dylib"]`, which copies the dylib into
-   `Limusic.app/Contents/Frameworks/`. Because the binary was linked against Homebrew's absolute
+   `Yapel.app/Contents/Frameworks/`. Because the binary was linked against Homebrew's absolute
    install name, rewrite it to load the bundled copy (if the app fails to launch with a
    "dyld: libmpv.2.dylib not found" error):
    ```bash
-   APP=target/release/bundle/macos/limusic.app
+   APP=target/release/bundle/macos/Yapel.app
    install_name_tool -change "$(brew --prefix)/lib/libmpv.2.dylib" \
-     "@executable_path/../Frameworks/libmpv.2.dylib" "$APP/Contents/MacOS/limusic"
+     "@executable_path/../Frameworks/libmpv.2.dylib" "$APP/Contents/MacOS/Yapel"
    ```
 - Media keys use **MPNowPlayingInfoCenter / MPRemoteCommandCenter** (Control Center + the Now
   Playing widget). Works from the `.app` bundle; a bare binary run won't register.
@@ -124,7 +130,7 @@ Bare unsigned bundles (no code signing / notarization — deferred to Phase 5), 
 4. **OS media widget** — title/artist/artwork show in the platform widget (MPRIS/`playerctl` on
    Linux, SMTC flyout on Windows, Now Playing on macOS); play/pause/next/previous and the scrubber
    control playback.
-5. **Login** — cookie-paste and/or the Google sign-in webview populate the library.
+5. **Login** — Google opens in the system browser; Yapel imports the YouTube session from Zen, Firefox, or LibreWolf.
 6. **Settings persist** — change quality / history / a disabled client, relaunch, values stick.
 7. **Queue restore** — play a queue, quit, relaunch → the queue + current track come back paused
    and resume at the saved position when you press play.

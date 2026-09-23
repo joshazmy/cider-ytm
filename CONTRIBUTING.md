@@ -4,7 +4,7 @@ Thanks for wanting to help. This is a small project, so this is short.
 
 ## Getting set up
 
-Prerequisites and the build are in the [README](README.md#building-from-source).
+Prerequisites and the build are in the [README](README.md#build-on-linux).
 Windows and macOS specifics live in [docs/BUILD-PLATFORMS.md](docs/BUILD-PLATFORMS.md).
 
 Run the app with hot reload:
