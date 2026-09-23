@@ -4,7 +4,7 @@ Linux desktop player for YouTube Music. Rust, Tauri 2, and libmpv — the UI is 
 
 Yapel is a GPL fork of [Limusic](https://github.com/SimoHypers/limusic) by SimoHypers. The fork point is Limusic 0.4.5 (`cd1ca3f`). Modifications started on 2026-08-16: a desk layout (sidebar, catalog, now-playing rail, docked transport), sign-in through the system browser, and updates that open this repo’s releases page instead of installing upstream Limusic over the app.
 
-There are no prebuilt downloads yet. Build it from source on Linux.
+Linux AppImage: [Yapel 0.5.0](https://github.com/joshazmy/cider-ytm/releases/download/v0.5.0/Yapel_0.5.0_amd64.AppImage). It needs glibc 2.39 or newer (Ubuntu 24.04+, Debian 13+, Fedora 40+, current Arch). Mark it executable and run it. Building from source is below.
 
 ## What works
 
@@ -13,7 +13,7 @@ There are no prebuilt downloads yet. Build it from source on Linux.
 - Queue with radio continuation, restored across restarts
 - Synced lyrics, plus lyrics you paste yourself
 - Local audio files
-- Google sign-in by importing a YouTube session from Zen, Firefox, or LibreWolf
+- Google sign-in from Zen, Firefox, or LibreWolf, or by pasting a YouTube Cookie header
 - Last.fm scrobbling and Discord Rich Presence
 - MPRIS media keys on Linux, a system tray, and an optional mini player
 - Listen Together: a small self-hosted WebSocket relay (`cargo run -p sync-server`)
