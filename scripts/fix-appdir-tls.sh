@@ -59,11 +59,17 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 BUNDLE="${1:-target/release/bundle/appimage}"
-APPDIR="$(readlink -f "$BUNDLE/limusic.AppDir" 2>/dev/null || true)"
+if [ -d "$BUNDLE/Yapel.AppDir" ]; then
+  APPDIR="$(readlink -f "$BUNDLE/Yapel.AppDir")"
+elif [ -d "$BUNDLE/limusic.AppDir" ]; then
+  APPDIR="$(readlink -f "$BUNDLE/limusic.AppDir")"
+else
+  APPDIR=""
+fi
 [ -n "$APPDIR" ] && [ -d "$APPDIR" ] || {
-  echo "no AppDir at $BUNDLE/limusic.AppDir — run \`cargo tauri build --bundles appimage\` first"; exit 1; }
-APPIMAGE="$(ls "$BUNDLE"/limusic_*.AppImage 2>/dev/null | head -1 || true)"
-[ -n "$APPIMAGE" ] || { echo "no limusic_*.AppImage in $BUNDLE"; exit 1; }
+  echo "no AppDir at $BUNDLE/Yapel.AppDir — run \`cargo tauri build --bundles appimage\` first"; exit 1; }
+APPIMAGE="$(ls "$BUNDLE"/Yapel_*.AppImage "$BUNDLE"/limusic_*.AppImage 2>/dev/null | head -1 || true)"
+[ -n "$APPIMAGE" ] || { echo "no Yapel_*.AppImage in $BUNDLE"; exit 1; }
 APPIMAGE="$(readlink -f "$APPIMAGE")"
 
 # Copy every DT_NEEDED of $1 that the AppDir doesn't already have. glibc and the loader are the

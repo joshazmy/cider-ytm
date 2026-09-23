@@ -312,9 +312,10 @@ jobs:
             rm -rf "$1" && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir "$1"
           }
 
-          EXE="target/release/bundle/nsis/limusic_${VERSION}_x64-setup.exe"
+          EXE="target/release/bundle/nsis/Yapel_${VERSION}_x64-setup.exe"
+          [ -f "$EXE" ] || EXE="target/release/bundle/nsis/limusic_${VERSION}_x64-setup.exe"
           SIG="$EXE.sig"
-          MSI="$(ls target/release/bundle/msi/limusic_${VERSION}_*.msi 2>/dev/null | head -1 || true)"
+          MSI="$(ls target/release/bundle/msi/Yapel_${VERSION}_*.msi target/release/bundle/msi/limusic_${VERSION}_*.msi 2>/dev/null | head -1 || true)"
 
           if [ ! -f "$EXE" ]; then
             echo "::error::expected installer not found: $EXE"; find target/release/bundle -maxdepth 2; exit 1

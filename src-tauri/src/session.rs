@@ -312,6 +312,39 @@ fn cookies_from_firefox_db(path: &std::path::Path) -> Option<String> {
     result
 }
 
+/// Turn a pasted Cookie header, or one `name=value` per line, into the header `sign_in` expects.
+/// Drops `ST-*` request tokens the same way the Firefox importer does. Does not log the paste.
+pub fn normalize_pasted_cookie(raw: &str) -> Result<String, String> {
+    let text = raw.trim().trim_matches(|c| c == '\'' || c == '"');
+    let text = text
+        .strip_prefix("Cookie:")
+        .or_else(|| text.strip_prefix("cookie:"))
+        .unwrap_or(text)
+        .trim();
+    let mut jar = std::collections::BTreeMap::<String, String>::new();
+    for part in text.split(|c: char| c == ';' || c == '\n' || c == '\r') {
+        let part = part.trim().trim_matches(|c| c == '\'' || c == '"');
+        if part.is_empty() {
+            continue;
+        }
+        let Some((name, value)) = part.split_once('=') else { continue };
+        let name = name.trim();
+        let value = value.trim();
+        if name.is_empty() || value.is_empty() || name.starts_with("ST-") {
+            continue;
+        }
+        jar.insert(name.to_string(), value.to_string());
+    }
+    let header = jar.into_iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("; ");
+    if innertube::cookie_sapisid(&header).is_none() {
+        return Err(
+            "That paste has no SAPISID. On music.youtube.com, copy the Cookie request header and paste it here."
+                .into(),
+        );
+    }
+    Ok(header)
+}
+
 pub(crate) fn import_youtube_cookies() -> Option<String> {
     for db in firefox_cookie_dbs() {
         if let Some(cookie) = cookies_from_firefox_db(&db) {
@@ -415,6 +448,31 @@ mod tests {
         let defaults = profiles_ini_default_dirs(&dir);
         assert_eq!(defaults, vec![dir.join("evg8svcv.Default (release)")]);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn pasted_cookie_header_keeps_sapisid_and_drops_st_tokens() {
+        let header =
+            normalize_pasted_cookie("Cookie: SAPISID=abc; SID=yt; ST-huge=xxxxxxxx; HSID=h")
+                .expect("header");
+        assert!(header.contains("SAPISID=abc"), "{header}");
+        assert!(header.contains("SID=yt"), "{header}");
+        assert!(header.contains("HSID=h"), "{header}");
+        assert!(!header.contains("ST-huge"), "{header}");
+    }
+
+    #[test]
+    fn pasted_cookie_accepts_one_pair_per_line() {
+        let header = normalize_pasted_cookie("__Secure-3PAPISID=secure\nSID=yt\n").expect("lines");
+        assert!(header.contains("__Secure-3PAPISID=secure"), "{header}");
+        assert!(innertube::cookie_sapisid(&header).is_some());
+    }
+
+    #[test]
+    fn pasted_cookie_without_sapisid_is_rejected() {
+        let err = normalize_pasted_cookie("SID=only").unwrap_err();
+        assert!(err.contains("SAPISID"), "{err}");
+        assert!(!err.contains("only"), "the error must not echo the paste");
     }
 
     #[test]

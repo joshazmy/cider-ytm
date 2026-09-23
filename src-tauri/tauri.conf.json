@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Yapel",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "identifier": "com.joshazmy.yapel",
   "build": {
     "frontendDist": "../ui/build",
@@ -18,7 +18,7 @@
         "minWidth": 900,
         "minHeight": 620,
         "resizable": true,
-		"zoomHotkeysEnabled": true,
+        "zoomHotkeysEnabled": true,
         "fullscreen": false,
         "decorations": false,
         "transparent": true
@@ -59,7 +59,7 @@
       "endpoints": [
         "https://github.com/joshazmy/cider-ytm/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk0MENDMzA1NUFGMDI0NTQKUldSVUpQQmFCY01NbENPbW9XOTRvVU9YQ2lCQytOU2RyeDhHNFhkWHlNc1dITkFmbkd1ZTBlM1gK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2RkUyRjY3REY4MTE5MEIKUldRTEdZSGZaeS8rMW1TdkVpU2RtSTNINGhCWGk0Q2RVQ01kbjRpYy82dDY4MUo2S0MweUNEcm4K",
       "windows": {
         "installMode": "quiet"
       }

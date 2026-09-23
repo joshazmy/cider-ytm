@@ -93,7 +93,7 @@ export async function startGoogleSignIn() {
 		// Already signed into YTM in Zen? Import and skip the tab.
 		if (await tryImport()) return;
 		await api.openInBrowser(api.GOOGLE_LOGIN);
-		toast('Opened Google sign-in in Zen. Pick your account — click Sign in again to cancel.');
+		toast('Opened Google sign-in in your browser. Pick your account — click Sign in again to cancel.');
 		for (let i = 0; i < 90; i++) {
 			if (!desk.signingIn) return;
 			if (auth.account?.signedIn) return;
@@ -101,7 +101,8 @@ export async function startGoogleSignIn() {
 			if (await tryImport()) return;
 		}
 		toast.error(
-			lastErr || 'Still no YouTube session. Finish Google in Zen, then Settings → Import.'
+			lastErr ||
+				'Still no YouTube session. Finish Google in Firefox, Zen, or LibreWolf, or paste the Cookie header from the account menu.'
 		);
 	} catch (e) {
 		toast.error(String(e));

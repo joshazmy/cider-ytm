@@ -14,6 +14,8 @@
 	let menuOpen = $state(false);
 	let mx = $state(0);
 	let my = $state(0);
+	let cookiePaste = $state('');
+	let pasting = $state(false);
 
 	function openMenu(e: MouseEvent) {
 		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -36,6 +38,22 @@
 
 	function signInGoogle() {
 		void startGoogleSignIn();
+	}
+
+	async function pasteCookie() {
+		const cookie = cookiePaste.trim();
+		if (!cookie || pasting) return;
+		pasting = true;
+		try {
+			await api.signInWithCookie(cookie);
+			cookiePaste = '';
+			menuOpen = false;
+			toast.success('Signed in');
+		} catch (e) {
+			toast.error(String(e));
+		} finally {
+			pasting = false;
+		}
 	}
 
 	function switchChannel() {
@@ -131,6 +149,23 @@
 						toast.error(String(e));
 					}
 				}}>I've signed in</Button>
+			>
+			<p class="mt-3 text-xs text-muted-foreground">
+				Firefox, Zen, and LibreWolf can be imported. For Chrome or another browser, paste the
+				Cookie header from a music.youtube.com request. It needs SAPISID.
+			</p>
+			<textarea
+				bind:value={cookiePaste}
+				spellcheck="false"
+				autocomplete="off"
+				aria-label="YouTube Cookie header"
+				class="mt-2 h-20 w-full resize-none rounded-md border bg-background px-2 py-1.5 font-mono text-[11px]"
+			></textarea>
+			<Button
+				variant="outline"
+				class="mt-2 w-full"
+				disabled={pasting || cookiePaste.trim() === ''}
+				onclick={pasteCookie}>{pasting ? 'Signing in…' : 'Use pasted session'}</Button
 			>
 		{/if}
 	</div>

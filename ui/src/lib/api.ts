@@ -322,6 +322,9 @@ export const signOut = () => invoke<void>('sign_out');
 /** Open Google sign-in in the OS browser. Session is imported from Zen/Firefox cookies. */
 export const loginWebview = () => invoke<void>('login_webview');
 export const importBrowserCookies = () => invoke<string>('import_browser_cookies');
+/** Sign in with a Cookie header copied from music.youtube.com. Any browser. */
+export const signInWithCookie = (cookie: string) =>
+	invoke<string>('sign_in_with_cookie', { cookie });
 /** Google account UI, then YTM. `continue` is encoded so openers cannot treat
  *  `https://music.youtube.com/` as a second URL. AccountChooser + passive=false
  *  so an existing Zen Google session cannot skip straight to the YTM home page. */

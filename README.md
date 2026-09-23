@@ -24,7 +24,9 @@ Linux with WebKitGTK is the platform CI actually runs. Windows and macOS build n
 
 Sign in opens Google in your default browser, then reads the YouTube cookies from a Zen, Firefox, or LibreWolf profile on this machine (including Flatpak Zen). Finish signing in at YouTube Music in that browser, then choose **I've signed in** if the app is still waiting.
 
-Chrome, Chromium, and other browsers are not imported. Library playback still works without an account; your playlists need a session.
+Chrome and other browsers are not read from disk. In the account menu, paste the `Cookie` header from a `music.youtube.com` request. The paste has to include `SAPISID`.
+
+Library playback still works without an account. Your playlists need a session.
 
 ## Build on Linux
 

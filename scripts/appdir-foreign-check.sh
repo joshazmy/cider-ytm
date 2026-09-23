@@ -21,7 +21,15 @@
 set -uo pipefail
 
 APPDIR=/app
-BIN="$APPDIR/usr/bin/limusic-app"
+if [ -x "$APPDIR/usr/bin/Yapel" ]; then
+  BIN="$APPDIR/usr/bin/Yapel"
+elif [ -x "$APPDIR/usr/bin/limusic-app" ]; then
+  BIN="$APPDIR/usr/bin/limusic-app"
+else
+  echo "   no Yapel binary in $APPDIR/usr/bin"
+  ls -la "$APPDIR/usr/bin" 2>/dev/null || true
+  exit 1
+fi
 FAIL=0
 step() { printf '\n── %s\n' "$1"; }
 bad()  { echo "   FAIL: $1"; FAIL=1; }

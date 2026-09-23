@@ -390,6 +390,7 @@ pub fn run() {
             commands::sign_out,
             commands::login_webview,
             commands::import_browser_cookies,
+            commands::sign_in_with_cookie,
             commands::open_mini,
             commands::close_mini,
             commands::get_home,

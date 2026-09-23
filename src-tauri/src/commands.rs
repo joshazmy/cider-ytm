@@ -360,6 +360,16 @@ pub async fn import_browser_cookies(state: St<'_>) -> Result<String, String> {
     }
 }
 
+/// Sign in from a Cookie header copied out of any browser. Chrome cannot be imported from disk.
+#[tauri::command]
+pub async fn sign_in_with_cookie(state: St<'_>, cookie: String) -> Result<String, String> {
+    let cookie = crate::session::normalize_pasted_cookie(&cookie)?;
+    match state.inner().sign_in(cookie).await? {
+        crate::state::SignInOutcome::Complete => Ok("signed-in".into()),
+        crate::state::SignInOutcome::SelectionRequired => Ok("pick-channel".into()),
+    }
+}
+
 /// The current track, play state, position and duration in one shot. Events are the normal
 /// channel; this is for a webview that started after them (the mini player, or the main window
 /// on a cold start, where the queue is restored before the UI subscribes).
