@@ -4,7 +4,12 @@ Linux desktop player for YouTube Music. Rust, Tauri 2, and libmpv — the UI is 
 
 Yapel is a GPL fork of [Limusic](https://github.com/SimoHypers/limusic) by SimoHypers. The fork point is Limusic 0.4.5 (`cd1ca3f`). Modifications started on 2026-08-16: a desk layout (sidebar, catalog, now-playing rail, docked transport), sign-in through the system browser, and updates that open this repo’s releases page instead of installing upstream Limusic over the app.
 
-Linux AppImage: [Yapel 0.5.0](https://github.com/joshazmy/cider-ytm/releases/download/v0.5.0/Yapel_0.5.0_amd64.AppImage). It needs glibc 2.39 or newer (Ubuntu 24.04+, Debian 13+, Fedora 40+, current Arch). Mark it executable and run it. Building from source is below.
+Downloads for [v0.5.0](https://github.com/joshazmy/cider-ytm/releases/tag/v0.5.0):
+
+- Linux: [Yapel_0.5.0_amd64.AppImage](https://github.com/joshazmy/cider-ytm/releases/download/v0.5.0/Yapel_0.5.0_amd64.AppImage). Needs glibc 2.39 or newer (Ubuntu 24.04+, Debian 13+, Fedora 40+, current Arch). Mark it executable and run it.
+- Windows: [Yapel_0.5.0_x64-setup.exe](https://github.com/joshazmy/cider-ytm/releases/download/v0.5.0/Yapel_0.5.0_x64-setup.exe), or the [MSI](https://github.com/joshazmy/cider-ytm/releases/download/v0.5.0/Yapel_0.5.0_x64_en-US.msi).
+
+Building from source is below. macOS is build-from-source only.
 
 ## What works
 
@@ -18,7 +23,7 @@ Linux AppImage: [Yapel 0.5.0](https://github.com/joshazmy/cider-ytm/releases/dow
 - MPRIS media keys on Linux, a system tray, and an optional mini player
 - Listen Together: a small self-hosted WebSocket relay (`cargo run -p sync-server`)
 
-Linux with WebKitGTK is the platform CI actually runs. Windows and macOS build notes are in [docs/BUILD-PLATFORMS.md](docs/BUILD-PLATFORMS.md). Those installers are not published from this repo.
+Linux with WebKitGTK is the platform the desktop test runs on. Windows installers are built in GitHub Actions. macOS build notes are in [docs/BUILD-PLATFORMS.md](docs/BUILD-PLATFORMS.md).
 
 ## Sign in
 
