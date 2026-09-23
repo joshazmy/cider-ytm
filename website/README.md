@@ -1,9 +1,11 @@
-# Limusic website
+# Yapel website
 
-Static landing page (Vite + React + Tailwind + React Bits), deployed to GitHub Pages at https://simohypers.github.io/limusic/ by .github/workflows/website.yml on every push to master touching website/.
+Static landing page for this fork. GitHub Pages publishes it from `.github/workflows/website.yml` when `website/` changes on `master`.
+
+The site URL is `https://joshazmy.github.io/cider-ytm/`. `vite.config.ts` sets `base` to `/cider-ytm/` so that path resolves.
 
 ```bash
 pnpm install
-pnpm dev      # local dev
-pnpm build    # outputs dist/
+pnpm dev
+pnpm build
 ```

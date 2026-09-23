@@ -27,10 +27,6 @@ import SpotlightCard from '@/components/SpotlightCard'
 import { useGitHub, detectOS, REPO_URL, RELEASES_URL } from '@/lib/github'
 
 import logo from '@/assets/logo.png'
-import screenPlaylist from '@/assets/screen-playlist.webp'
-import screenLyrics from '@/assets/screen-lyrics.webp'
-import screenArtist from '@/assets/screen-artist.webp'
-import screenTogether from '@/assets/screen-listen-together.webp'
 
 const SPOTLIGHT = 'rgba(229, 72, 110, 0.16)' as const
 
@@ -38,7 +34,7 @@ const FEATURES = [
   {
     icon: MusicNote01Icon,
     title: 'No ads, ever',
-    body: 'Limusic plays the audio stream directly, so there is nothing to interrupt. No ad breaks, no premium subscription.',
+    body: 'Yapel plays the audio stream directly, so there is nothing to interrupt. No ad breaks, no premium subscription.',
   },
   {
     icon: DashboardSpeed01Icon,
@@ -71,31 +67,7 @@ const EXTRAS = [
   { icon: KeyboardIcon, label: 'Media keys' },
   { icon: LastFmIcon, label: 'Last.fm scrobbling' },
   { icon: Moon02Icon, label: 'Themes' },
-  { icon: RefreshIcon, label: 'Auto-updates' },
-]
-
-const SCREENS = [
-  {
-    eyebrow: 'Lyrics',
-    title: 'Sing every word',
-    body: 'Synced lyrics stay locked to the music. The current line lights up and the rest fades back, so you never lose your place.',
-    img: screenLyrics,
-    alt: 'Limusic showing time-synced lyrics',
-  },
-  {
-    eyebrow: 'Browse',
-    title: 'Go down the rabbit hole',
-    body: 'Artists, albums, singles, moods and mixes — the full YouTube Music catalog in a fast native window, with search that feels instant.',
-    img: screenArtist,
-    alt: 'An artist page in Limusic with top songs and albums',
-  },
-  {
-    eyebrow: 'Together',
-    title: 'Press play with friends',
-    body: 'Start a Listen Together session and send one invite code. Every play, skip and queue change stays in sync for everyone.',
-    img: screenTogether,
-    alt: 'The Listen Together dialog in Limusic',
-  },
+  { icon: RefreshIcon, label: 'Mini player' },
 ]
 
 function Nav({ stars }: { stars: number | null }) {
@@ -104,11 +76,10 @@ function Nav({ stars }: { stars: number | null }) {
       <nav className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <a href="#" className="flex items-center gap-2.5 font-semibold tracking-wide">
           <img src={logo} alt="" className="size-6" />
-          Limusic
+          Yapel
         </a>
         <div className="ml-auto hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
           <a href="#features" className="transition-colors hover:text-foreground">Features</a>
-          <a href="#screens" className="transition-colors hover:text-foreground">Screens</a>
           <a href="#download" className="transition-colors hover:text-foreground">Download</a>
         </div>
         <a
@@ -144,7 +115,7 @@ function Hero({ version, downloadHref, osLabel }: { version: string | null; down
       <div className="relative mx-auto max-w-6xl px-4 pt-36 pb-20 text-center sm:px-6 sm:pt-44">
         <FadeContent duration={800}>
           <p className="mx-auto mb-6 w-fit rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs tracking-widest text-muted-foreground uppercase">
-            Free · Open source · Linux &amp; Windows
+            Linux desktop · GPL fork of Limusic
           </p>
         </FadeContent>
 
@@ -159,8 +130,8 @@ function Hero({ version, downloadHref, osLabel }: { version: string | null; down
 
         <FadeContent duration={900} delay={400}>
           <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Limusic is a lightweight desktop player for YouTube Music. Search any song, hit play, and
-            listen without ads — no browser, no premium, no bloat.
+            Yapel is a Linux desktop player for YouTube Music. Search, press play, and listen
+            without ads. Rust and libmpv, with your library when you sign in.
           </p>
         </FadeContent>
 
@@ -184,21 +155,9 @@ function Hero({ version, downloadHref, osLabel }: { version: string | null; down
             </a>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            {version ? `Latest release ${version}` : 'Latest release'} · macOS not packaged yet
+            {version ? `Latest release ${version}` : 'Build from source until a release is attached'}
           </p>
         </FadeContent>
-
-        <AnimatedContent distance={80} duration={1.1} delay={0.25} scale={0.96} threshold={0}>
-          <div className="mt-16">
-            <img
-              src={screenPlaylist}
-              alt="Limusic playing a playlist, with the queue open"
-              width={1920}
-              height={1043}
-              className="w-full rounded-xl border border-white/10 shadow-[0_0_120px_-24px_var(--primary-bright)]"
-            />
-          </div>
-        </AnimatedContent>
       </div>
     </section>
   )
@@ -208,7 +167,7 @@ function Features() {
   return (
     <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-24 sm:px-6">
       <FadeContent duration={800}>
-        <p className="text-center text-xs font-semibold tracking-widest text-primary-bright uppercase">Why Limusic</p>
+        <p className="text-center text-xs font-semibold tracking-widest text-primary-bright uppercase">Why Yapel</p>
         <h2 className="mx-auto mt-3 max-w-2xl text-center font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl">
           Everything the web player should have been
         </h2>
@@ -248,36 +207,6 @@ function Features() {
   )
 }
 
-function Screens() {
-  return (
-    <section id="screens" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-8 sm:px-6">
-      <div className="space-y-24">
-        {SCREENS.map((s, i) => (
-          <AnimatedContent key={s.title} distance={60} duration={0.9} threshold={0.15}>
-            <div className={`flex flex-col items-center gap-8 lg:gap-14 ${i % 2 ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
-              <div className="lg:w-2/5">
-                <p className="text-xs font-semibold tracking-widest text-primary-bright uppercase">{s.eyebrow}</p>
-                <h3 className="mt-3 font-heading text-2xl font-bold tracking-tight sm:text-3xl">{s.title}</h3>
-                <p className="mt-4 leading-relaxed text-muted-foreground">{s.body}</p>
-              </div>
-              <div className="lg:w-3/5">
-                <img
-                  src={s.img}
-                  alt={s.alt}
-                  width={1920}
-                  height={1043}
-                  loading="lazy"
-                  className="w-full rounded-xl border border-white/10 shadow-2xl shadow-black/50"
-                />
-              </div>
-            </div>
-          </AnimatedContent>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 interface DownloadCard {
   os: string
   icon: typeof PackageIcon
@@ -296,7 +225,7 @@ function Download({ info, os }: { info: ReturnType<typeof useGitHub>; os: string
         { label: '.AppImage — any distro', href: info.appimage },
         { label: '.rpm — Fedora / RHEL', href: info.rpm },
       ],
-      note: 'The AppImage updates itself automatically.',
+      note: 'glibc 2.39 or newer. Yapel does not install updates by itself.',
     },
     {
       os: 'Windows',
@@ -320,7 +249,7 @@ function Download({ info, os }: { info: ReturnType<typeof useGitHub>; os: string
     <section id="download" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-24 sm:px-6">
       <FadeContent duration={800}>
         <p className="text-center text-xs font-semibold tracking-widest text-primary-bright uppercase">Download</p>
-        <h2 className="mt-3 text-center font-heading text-3xl font-bold tracking-tight sm:text-4xl">Get Limusic</h2>
+        <h2 className="mt-3 text-center font-heading text-3xl font-bold tracking-tight sm:text-4xl">Get Yapel</h2>
         <p className="mx-auto mt-4 max-w-xl text-center text-muted-foreground">
           Free and open source. Install it, sign in with your YouTube account if you want your
           library, and press play.
@@ -377,10 +306,10 @@ function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-10 text-center text-sm text-muted-foreground sm:px-6">
         <div className="flex items-center gap-2 font-semibold text-foreground">
           <img src={logo} alt="" className="size-5" />
-          Limusic
+          Yapel
         </div>
         <p className="max-w-2xl text-xs leading-relaxed">
-          Limusic is an unofficial, open-source client and is not affiliated with or endorsed by
+          Yapel is an unofficial GPL fork of Limusic. It is not affiliated with or endorsed by
           YouTube or Google. YouTube Music is a trademark of Google LLC.
         </p>
         <div className="flex items-center gap-5">
@@ -409,7 +338,6 @@ export default function App() {
       <main>
         <Hero version={info.version} downloadHref={downloadHref} osLabel={osLabel} />
         <Features />
-        <Screens />
         <Download info={info} os={os} />
       </main>
       <Footer />
